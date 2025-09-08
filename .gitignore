@@ -79,9 +79,6 @@ tmp/
 *.log
 logs/
 
-# Claude Code Specific (if not wanted in git)
-.claude/
-
 # MCP Server Runtime
 mcp-server.pid
 *.sock
