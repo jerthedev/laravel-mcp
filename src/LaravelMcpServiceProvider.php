@@ -4,6 +4,8 @@ namespace JTD\LaravelMCP;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use JTD\LaravelMCP\Commands\ListCommand;
+use JTD\LaravelMCP\Commands\ServeCommand;
 use JTD\LaravelMCP\Http\Middleware\McpAuthMiddleware;
 use JTD\LaravelMCP\Http\Middleware\McpCorsMiddleware;
 use JTD\LaravelMCP\Protocol\CapabilityNegotiator;
@@ -317,12 +319,12 @@ class LaravelMcpServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
-                // Commands will be registered here in future implementation
-                // ServeCommand::class,
+                ServeCommand::class,
+                ListCommand::class,
+                // Future commands to be added:
                 // MakeToolCommand::class,
                 // MakeResourceCommand::class,
                 // MakePromptCommand::class,
-                // ListCommand::class,
                 // RegisterCommand::class,
             ]);
         }
