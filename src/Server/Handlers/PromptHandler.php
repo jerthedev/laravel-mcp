@@ -59,7 +59,7 @@ class PromptHandler extends BaseHandler
             if (in_array($e->getCode(), [-32600, -32601, -32602])) {
                 throw $e;
             }
-            
+
             return $this->handleException($e, $method, $context);
         } catch (\Throwable $e) {
             return $this->handleException($e, $method, $context);

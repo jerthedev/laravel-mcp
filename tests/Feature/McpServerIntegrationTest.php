@@ -151,22 +151,58 @@ class McpServerIntegrationTest extends TestCase
         $promptRegistry = $this->app->make(\JTD\LaravelMCP\Registry\PromptRegistry::class);
 
         // Register test components
-        $toolRegistry->register('test-tool', new class {
-            public function execute($params) { return 'test'; }
-            public function getDescription() { return 'Test tool'; }
-            public function getInputSchema() { return ['type' => 'object']; }
-        });
-        
-        $resourceRegistry->register('test-resource', new class {
-            public function getUri() { return 'test://resource'; }
-            public function getDescription() { return 'Test resource'; }
-            public function getMimeType() { return 'text/plain'; }
-            public function read($params) { return 'test content'; }
+        $toolRegistry->register('test-tool', new class
+        {
+            public function execute($params)
+            {
+                return 'test';
+            }
+
+            public function getDescription()
+            {
+                return 'Test tool';
+            }
+
+            public function getInputSchema()
+            {
+                return ['type' => 'object'];
+            }
         });
 
-        $promptRegistry->register('test-prompt', new class {
-            public function getDescription() { return 'Test prompt'; }
-            public function process($params) { return 'test prompt'; }
+        $resourceRegistry->register('test-resource', new class
+        {
+            public function getUri()
+            {
+                return 'test://resource';
+            }
+
+            public function getDescription()
+            {
+                return 'Test resource';
+            }
+
+            public function getMimeType()
+            {
+                return 'text/plain';
+            }
+
+            public function read($params)
+            {
+                return 'test content';
+            }
+        });
+
+        $promptRegistry->register('test-prompt', new class
+        {
+            public function getDescription()
+            {
+                return 'Test prompt';
+            }
+
+            public function process($params)
+            {
+                return 'test prompt';
+            }
         });
 
         $server = $this->app->make(ServerInterface::class);

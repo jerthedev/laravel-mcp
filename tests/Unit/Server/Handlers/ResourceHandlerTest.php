@@ -140,8 +140,10 @@ class ResourceHandlerTest extends TestCase
         $goodResource->shouldReceive('getMimeType')->andReturn('text/plain');
         $goodResource->shouldReceive('getMetadata')->andReturn([]);
 
-        $badResource = new class {
-            public function getUri() {
+        $badResource = new class
+        {
+            public function getUri()
+            {
                 throw new \RuntimeException('Bad resource');
             }
         };
@@ -158,14 +160,14 @@ class ResourceHandlerTest extends TestCase
 
         $this->assertArrayHasKey('resources', $response);
         $this->assertCount(2, $response['resources']); // Both resources included, bad resource with fallback values
-        
+
         // Check good resource
         $goodResourceDef = $response['resources'][0];
         $this->assertSame('good-resource', $goodResourceDef['name']);
         $this->assertSame('test://good', $goodResourceDef['uri']);
         $this->assertSame('Good resource', $goodResourceDef['description']);
         $this->assertSame('text/plain', $goodResourceDef['mimeType']);
-        
+
         // Check bad resource with fallback values
         $badResourceDef = $response['resources'][1];
         $this->assertSame('bad-resource', $badResourceDef['name']);
@@ -327,12 +329,15 @@ class ResourceHandlerTest extends TestCase
     #[Test]
     public function handle_resources_read_reads_resource_with_invoke_method(): void
     {
-        $mockResource = new class {
-            public function getUri() {
+        $mockResource = new class
+        {
+            public function getUri()
+            {
                 return 'test://resource';
             }
-            
-            public function __invoke(array $params) {
+
+            public function __invoke(array $params)
+            {
                 return 'Invoked result';
             }
         };

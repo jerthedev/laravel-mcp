@@ -138,8 +138,10 @@ class PromptHandlerTest extends TestCase
         $goodPrompt->shouldReceive('getDescription')->andReturn('Good prompt');
         $goodPrompt->shouldReceive('getArguments')->andReturn([]);
 
-        $badPrompt = new class {
-            public function getDescription() {
+        $badPrompt = new class
+        {
+            public function getDescription()
+            {
                 throw new \RuntimeException('Bad prompt');
             }
         };
@@ -156,12 +158,12 @@ class PromptHandlerTest extends TestCase
 
         $this->assertArrayHasKey('prompts', $response);
         $this->assertCount(2, $response['prompts']); // Both prompts included, bad prompt with fallback values
-        
+
         // Check good prompt
         $goodPromptDef = $response['prompts'][0];
         $this->assertSame('good-prompt', $goodPromptDef['name']);
         $this->assertSame('Good prompt', $goodPromptDef['description']);
-        
+
         // Check bad prompt with fallback values
         $badPromptDef = $response['prompts'][1];
         $this->assertSame('bad-prompt', $badPromptDef['name']);
@@ -340,12 +342,15 @@ class PromptHandlerTest extends TestCase
     #[Test]
     public function handle_prompts_get_processes_prompt_with_invoke_method(): void
     {
-        $mockPrompt = new class {
-            public function getDescription() {
+        $mockPrompt = new class
+        {
+            public function getDescription()
+            {
                 return 'Test prompt';
             }
-            
-            public function __invoke(array $arguments) {
+
+            public function __invoke(array $arguments)
+            {
                 return 'Simple text response';
             }
         };
@@ -522,12 +527,15 @@ class PromptHandlerTest extends TestCase
     #[Test]
     public function handle_prompts_get_handles_processing_failures(): void
     {
-        $mockPrompt = new class {
-            public function getDescription() {
+        $mockPrompt = new class
+        {
+            public function getDescription()
+            {
                 return 'Failing prompt';
             }
-            
-            public function process($arguments) {
+
+            public function process($arguments)
+            {
                 throw new \RuntimeException('Processing failed');
             }
         };

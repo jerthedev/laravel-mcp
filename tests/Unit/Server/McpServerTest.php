@@ -86,7 +86,7 @@ class McpServerTest extends TestCase
     public function test_can_initialize_server(): void
     {
         $this->setupCommonMockExpectations();
-        
+
         $clientInfo = [
             'clientInfo' => ['name' => 'Test Client', 'version' => '1.0'],
             'capabilities' => ['tools' => ['listChanged' => true]],
@@ -129,7 +129,7 @@ class McpServerTest extends TestCase
     public function test_cannot_initialize_server_twice(): void
     {
         $this->setupCommonMockExpectations();
-        
+
         // First initialization
         $this->mockCapabilityManager
             ->shouldReceive('negotiateWithClient')
@@ -414,7 +414,7 @@ class McpServerTest extends TestCase
     public function test_can_increment_request_count(): void
     {
         $this->setupCommonMockExpectations();
-        
+
         $this->server->incrementRequestCount();
         $metrics = $this->server->getMetrics();
 
@@ -424,7 +424,7 @@ class McpServerTest extends TestCase
     public function test_can_increment_error_count(): void
     {
         $this->setupCommonMockExpectations();
-        
+
         $this->server->incrementErrorCount();
         $metrics = $this->server->getMetrics();
 
@@ -495,7 +495,7 @@ class McpServerTest extends TestCase
     private function initializeServer(): void
     {
         $this->setupCommonMockExpectations();
-        
+
         $this->mockCapabilityManager
             ->shouldReceive('negotiateWithClient')
             ->andReturn([])

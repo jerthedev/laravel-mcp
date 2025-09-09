@@ -214,7 +214,7 @@ class CapabilityManagerTest extends TestCase
         ];
 
         $invalidNegotiated = $freshCapabilityManager->negotiateWithClient($invalidClientCapabilities);
-        
+
         // When no tools are available, the capability manager still includes tools capability
         // but with safe default values rather than excluding it entirely
         $this->assertArrayHasKey('tools', $invalidNegotiated);

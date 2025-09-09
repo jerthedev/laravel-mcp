@@ -270,6 +270,73 @@ List Command Feature (JTD\LaravelMCP\Tests\Feature\Commands\ListCommandFeature)
  [x] Command truncates long descriptions
  [x] Command formats class names
 
+Make Commands Integration (JTD\LaravelMCP\Tests\Integration\Commands\MakeCommandsIntegration)
+ [x] It generates valid tool class that compiles
+ [x] It generates valid resource class that compiles
+ [x] It generates valid prompt class that compiles
+ [x] It generates classes with proper inheritance structure
+ [x] It handles complex nested namespace generation
+ [x] It generates classes with proper mcp schema structure
+ [x] It handles force overwrite correctly across all commands
+
+Make Prompt Command (JTD\LaravelMCP\Tests\Unit\Commands\MakePromptCommand)
+ [x] It extends generator command
+ [x] It has correct signature
+ [x] It has correct description
+ [x] It returns correct stub path
+ [x] It returns correct default namespace
+ [x] It generates correct prompt name from class
+ [x] It creates prompt file successfully
+ [x] It creates prompt with template integration
+ [x] It validates variables json
+ [x] It validates variable definitions
+ [x] It validates invalid class names
+ [x] It handles nonexistent template gracefully
+ [x] It resolves template paths correctly
+ [x] It handles nested namespaces
+ [x] It handles force option to overwrite existing files
+ [x] It displays success message with details
+ [x] It generates description with template context
+ [x] It handles empty options gracefully
+ [x] It handles filesystem errors gracefully
+
+Make Resource Command (JTD\LaravelMCP\Tests\Unit\Commands\MakeResourceCommand)
+ [x] It extends generator command
+ [x] It has correct signature
+ [x] It has correct description
+ [x] It returns correct stub path
+ [x] It returns correct default namespace
+ [x] It generates correct resource name from class
+ [x] It creates resource file successfully
+ [x] It creates resource with model integration
+ [x] It creates resource with custom uri template
+ [x] It validates invalid class names
+ [x] It validates uri template format
+ [x] It handles nonexistent model gracefully
+ [x] It handles nested namespaces
+ [x] It handles force option to overwrite existing files
+ [x] It displays success message with details
+ [x] It generates appropriate uri for model resources
+ [x] It qualifies model class correctly
+ [x] It handles filesystem errors gracefully
+
+Make Tool Command (JTD\LaravelMCP\Tests\Unit\Commands\MakeToolCommand)
+ [x] It extends generator command
+ [x] It has correct signature
+ [x] It has correct description
+ [x] It returns correct stub path
+ [x] It returns correct default namespace
+ [x] It generates correct tool name from class
+ [x] It creates tool file successfully
+ [x] It creates tool with custom description
+ [x] It validates parameters json
+ [x] It handles invalid class names
+ [x] It handles force option to overwrite existing files
+ [x] It generates default description when none provided
+ [x] It handles nested namespaces
+ [x] It displays success message with details
+ [x] It handles filesystem errors gracefully
+
 Mcp Auth Middleware (JTD\LaravelMCP\Tests\Unit\Http\Middleware\McpAuthMiddleware)
  [x] It passes through when auth disabled
  [x] It passes through when no api key configured

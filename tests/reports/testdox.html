@@ -335,6 +335,77 @@
             <li class="success">Command truncates long descriptions</li>
             <li class="success">Command formats class names</li>
         </ul>
+        <h2>Make Commands Integration (JTD\LaravelMCP\Tests\Integration\Commands\MakeCommandsIntegration)</h2>
+        <ul>
+            <li class="success">It generates valid tool class that compiles</li>
+            <li class="success">It generates valid resource class that compiles</li>
+            <li class="success">It generates valid prompt class that compiles</li>
+            <li class="success">It generates classes with proper inheritance structure</li>
+            <li class="success">It handles complex nested namespace generation</li>
+            <li class="success">It generates classes with proper mcp schema structure</li>
+            <li class="success">It handles force overwrite correctly across all commands</li>
+        </ul>
+        <h2>Make Prompt Command (JTD\LaravelMCP\Tests\Unit\Commands\MakePromptCommand)</h2>
+        <ul>
+            <li class="success">It extends generator command</li>
+            <li class="success">It has correct signature</li>
+            <li class="success">It has correct description</li>
+            <li class="success">It returns correct stub path</li>
+            <li class="success">It returns correct default namespace</li>
+            <li class="success">It generates correct prompt name from class</li>
+            <li class="success">It creates prompt file successfully</li>
+            <li class="success">It creates prompt with template integration</li>
+            <li class="success">It validates variables json</li>
+            <li class="success">It validates variable definitions</li>
+            <li class="success">It validates invalid class names</li>
+            <li class="success">It handles nonexistent template gracefully</li>
+            <li class="success">It resolves template paths correctly</li>
+            <li class="success">It handles nested namespaces</li>
+            <li class="success">It handles force option to overwrite existing files</li>
+            <li class="success">It displays success message with details</li>
+            <li class="success">It generates description with template context</li>
+            <li class="success">It handles empty options gracefully</li>
+            <li class="success">It handles filesystem errors gracefully</li>
+        </ul>
+        <h2>Make Resource Command (JTD\LaravelMCP\Tests\Unit\Commands\MakeResourceCommand)</h2>
+        <ul>
+            <li class="success">It extends generator command</li>
+            <li class="success">It has correct signature</li>
+            <li class="success">It has correct description</li>
+            <li class="success">It returns correct stub path</li>
+            <li class="success">It returns correct default namespace</li>
+            <li class="success">It generates correct resource name from class</li>
+            <li class="success">It creates resource file successfully</li>
+            <li class="success">It creates resource with model integration</li>
+            <li class="success">It creates resource with custom uri template</li>
+            <li class="success">It validates invalid class names</li>
+            <li class="success">It validates uri template format</li>
+            <li class="success">It handles nonexistent model gracefully</li>
+            <li class="success">It handles nested namespaces</li>
+            <li class="success">It handles force option to overwrite existing files</li>
+            <li class="success">It displays success message with details</li>
+            <li class="success">It generates appropriate uri for model resources</li>
+            <li class="success">It qualifies model class correctly</li>
+            <li class="success">It handles filesystem errors gracefully</li>
+        </ul>
+        <h2>Make Tool Command (JTD\LaravelMCP\Tests\Unit\Commands\MakeToolCommand)</h2>
+        <ul>
+            <li class="success">It extends generator command</li>
+            <li class="success">It has correct signature</li>
+            <li class="success">It has correct description</li>
+            <li class="success">It returns correct stub path</li>
+            <li class="success">It returns correct default namespace</li>
+            <li class="success">It generates correct tool name from class</li>
+            <li class="success">It creates tool file successfully</li>
+            <li class="success">It creates tool with custom description</li>
+            <li class="success">It validates parameters json</li>
+            <li class="success">It handles invalid class names</li>
+            <li class="success">It handles force option to overwrite existing files</li>
+            <li class="success">It generates default description when none provided</li>
+            <li class="success">It handles nested namespaces</li>
+            <li class="success">It displays success message with details</li>
+            <li class="success">It handles filesystem errors gracefully</li>
+        </ul>
         <h2>Mcp Auth Middleware (JTD\LaravelMCP\Tests\Unit\Http\Middleware\McpAuthMiddleware)</h2>
         <ul>
             <li class="success">It passes through when auth disabled</li>

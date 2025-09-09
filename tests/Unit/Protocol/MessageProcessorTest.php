@@ -531,7 +531,7 @@ class MessageProcessorTest extends TestCase
         $reflection = new \ReflectionClass($processor);
         $method = $reflection->getMethod('handleToolsList');
         $method->setAccessible(true);
-        
+
         // This should throw ProtocolException because not initialized
         $method->invoke($processor, []);
     }

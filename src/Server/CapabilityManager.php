@@ -110,10 +110,10 @@ class CapabilityManager extends CapabilityNegotiator
     private function validateNegotiatedCapabilities(): void
     {
         // Ensure we have at least one capability enabled, but only if we have components
-        $hasComponents = !empty($this->registry->getTools()) || 
-                        !empty($this->registry->getResources()) || 
-                        !empty($this->registry->getPrompts());
-        
+        $hasComponents = ! empty($this->registry->getTools()) ||
+                        ! empty($this->registry->getResources()) ||
+                        ! empty($this->registry->getPrompts());
+
         if (empty($this->negotiatedCapabilities) && $hasComponents) {
             Log::warning('No capabilities negotiated - enabling minimal toolset');
             $this->negotiatedCapabilities = $this->createMinimalCapabilities();
@@ -447,11 +447,11 @@ class CapabilityManager extends CapabilityNegotiator
     {
         // First, do normal negotiation
         $negotiated = $this->negotiate($clientCapabilities, $serverCapabilities);
-        
+
         // Then, check for client capabilities that weren't included but have invalid values
         // For these, we provide safe defaults even when no components are registered
         foreach ($clientCapabilities as $capability => $features) {
-            if (!isset($negotiated[$capability]) && $this->hasInvalidClientValues($capability, $features)) {
+            if (! isset($negotiated[$capability]) && $this->hasInvalidClientValues($capability, $features)) {
                 $negotiated[$capability] = $this->negotiateCapability(
                     $capability,
                     $this->getDefaultCapabilityFeatures($capability),
@@ -459,7 +459,7 @@ class CapabilityManager extends CapabilityNegotiator
                 );
             }
         }
-        
+
         return $negotiated;
     }
 
@@ -468,18 +468,18 @@ class CapabilityManager extends CapabilityNegotiator
      */
     private function hasInvalidClientValues(string $capability, $features): bool
     {
-        if (!is_array($features)) {
+        if (! is_array($features)) {
             return false;
         }
-        
+
         switch ($capability) {
             case 'tools':
-                return isset($features['listChanged']) && !is_bool($features['listChanged']);
+                return isset($features['listChanged']) && ! is_bool($features['listChanged']);
             case 'resources':
-                return (isset($features['subscribe']) && !is_bool($features['subscribe'])) ||
-                       (isset($features['listChanged']) && !is_bool($features['listChanged']));
+                return (isset($features['subscribe']) && ! is_bool($features['subscribe'])) ||
+                       (isset($features['listChanged']) && ! is_bool($features['listChanged']));
             case 'prompts':
-                return isset($features['listChanged']) && !is_bool($features['listChanged']);
+                return isset($features['listChanged']) && ! is_bool($features['listChanged']);
             default:
                 return false;
         }
@@ -492,11 +492,11 @@ class CapabilityManager extends CapabilityNegotiator
     {
         switch ($capability) {
             case 'tools':
-                return !empty($this->registry->getTools());
+                return ! empty($this->registry->getTools());
             case 'resources':
-                return !empty($this->registry->getResources());
+                return ! empty($this->registry->getResources());
             case 'prompts':
-                return !empty($this->registry->getPrompts());
+                return ! empty($this->registry->getPrompts());
             default:
                 return parent::canSupportCapability($capability);
         }
