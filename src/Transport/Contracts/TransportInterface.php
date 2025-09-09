@@ -19,28 +19,28 @@ interface TransportInterface
     public function initialize(array $config = []): void;
 
     /**
-     * Start listening for incoming messages.
+     * Start the transport.
      */
-    public function listen(): void;
+    public function start(): void;
+
+    /**
+     * Stop the transport.
+     */
+    public function stop(): void;
 
     /**
      * Send a message to the client.
      *
-     * @param  array  $message  The MCP message to send
+     * @param  string  $message  The message to send
      */
-    public function send(array $message): void;
+    public function send(string $message): void;
 
     /**
      * Receive a message from the client.
      *
-     * @return array|null The received MCP message, or null if no message available
+     * @return string|null The received message, or null if no message available
      */
-    public function receive(): ?array;
-
-    /**
-     * Close the transport connection.
-     */
-    public function close(): void;
+    public function receive(): ?string;
 
     /**
      * Check if the transport is currently connected/active.
@@ -48,9 +48,11 @@ interface TransportInterface
     public function isConnected(): bool;
 
     /**
-     * Get transport-specific configuration.
+     * Get connection information.
+     *
+     * @return array Connection information
      */
-    public function getConfig(): array;
+    public function getConnectionInfo(): array;
 
     /**
      * Set the message handler for processing received messages.
