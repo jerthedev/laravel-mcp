@@ -116,7 +116,7 @@ class PromptHandlerTest extends TestCase
         $this->promptRegistry
             ->shouldReceive('all')
             ->once()
-            ->andReturn(['test-prompt' => $mockPrompt]);
+            ->andReturn(['test-prompt' => ['handler' => $mockPrompt, 'options' => []]]);
 
         $response = $this->handler->handle('prompts/list', []);
 
@@ -150,8 +150,8 @@ class PromptHandlerTest extends TestCase
             ->shouldReceive('all')
             ->once()
             ->andReturn([
-                'good-prompt' => $goodPrompt,
-                'bad-prompt' => $badPrompt,
+                'good-prompt' => ['handler' => $goodPrompt, 'options' => []],
+                'bad-prompt' => ['handler' => $badPrompt, 'options' => []],
             ]);
 
         $response = $this->handler->handle('prompts/list', []);
@@ -190,9 +190,9 @@ class PromptHandlerTest extends TestCase
             ->shouldReceive('all')
             ->once()
             ->andReturn([
-                'prompt1' => $mockPrompt1,
-                'prompt2' => $mockPrompt2,
-                'prompt3' => $mockPrompt3,
+                'prompt1' => ['handler' => $mockPrompt1, 'options' => []],
+                'prompt2' => ['handler' => $mockPrompt2, 'options' => []],
+                'prompt3' => ['handler' => $mockPrompt3, 'options' => []],
             ]);
 
         // Create cursor for pagination (skip first 1, limit 1)
@@ -210,7 +210,7 @@ class PromptHandlerTest extends TestCase
     {
         $prompts = [];
         for ($i = 1; $i <= 60; $i++) {
-            $prompts["prompt{$i}"] = $this->createMockPrompt("Prompt {$i}");
+            $prompts["prompt{$i}"] = ['handler' => $this->createMockPrompt("Prompt {$i}"), 'options' => []];
         }
 
         $this->promptRegistry
@@ -289,7 +289,7 @@ class PromptHandlerTest extends TestCase
             ->shouldReceive('get')
             ->with('test-prompt')
             ->once()
-            ->andReturn($mockPrompt);
+            ->andReturn(['handler' => $mockPrompt, 'options' => []]);
 
         $response = $this->handler->handle('prompts/get', [
             'name' => 'test-prompt',
@@ -327,7 +327,7 @@ class PromptHandlerTest extends TestCase
             ->shouldReceive('get')
             ->with('test-prompt')
             ->once()
-            ->andReturn($mockPrompt);
+            ->andReturn(['handler' => $mockPrompt, 'options' => []]);
 
         $response = $this->handler->handle('prompts/get', [
             'name' => 'test-prompt',
@@ -365,7 +365,7 @@ class PromptHandlerTest extends TestCase
             ->shouldReceive('get')
             ->with('test-prompt')
             ->once()
-            ->andReturn($mockPrompt);
+            ->andReturn(['handler' => $mockPrompt, 'options' => []]);
 
         $response = $this->handler->handle('prompts/get', [
             'name' => 'test-prompt',
@@ -416,7 +416,7 @@ class PromptHandlerTest extends TestCase
             ->shouldReceive('get')
             ->with('callable-prompt')
             ->once()
-            ->andReturn($promptWrapper);
+            ->andReturn(['handler' => $promptWrapper, 'options' => []]);
 
         $response = $this->handler->handle('prompts/get', [
             'name' => 'callable-prompt',
@@ -449,7 +449,7 @@ class PromptHandlerTest extends TestCase
             ->shouldReceive('get')
             ->with('non-processable')
             ->once()
-            ->andReturn($nonProcessablePrompt);
+            ->andReturn(['handler' => $nonProcessablePrompt, 'options' => []]);
 
         $response = $this->handler->handle('prompts/get', [
             'name' => 'non-processable',
@@ -481,7 +481,7 @@ class PromptHandlerTest extends TestCase
             ->shouldReceive('get')
             ->with('validating-prompt')
             ->once()
-            ->andReturn($mockPrompt);
+            ->andReturn(['handler' => $mockPrompt, 'options' => []]);
 
         $this->expectException(ProtocolException::class);
         $this->expectExceptionCode(-32602);
@@ -513,7 +513,7 @@ class PromptHandlerTest extends TestCase
             ->shouldReceive('get')
             ->with('non-validating-prompt')
             ->once()
-            ->andReturn($mockPrompt);
+            ->andReturn(['handler' => $mockPrompt, 'options' => []]);
 
         $response = $this->handler->handle('prompts/get', [
             'name' => 'non-validating-prompt',
@@ -550,7 +550,7 @@ class PromptHandlerTest extends TestCase
             ->shouldReceive('get')
             ->with('failing-prompt')
             ->once()
-            ->andReturn($mockPrompt);
+            ->andReturn(['handler' => $mockPrompt, 'options' => []]);
 
         $response = $this->handler->handle('prompts/get', [
             'name' => 'failing-prompt',
@@ -583,7 +583,7 @@ class PromptHandlerTest extends TestCase
             ->shouldReceive('get')
             ->with('test-prompt')
             ->once()
-            ->andReturn($mockPrompt);
+            ->andReturn(['handler' => $mockPrompt, 'options' => []]);
 
         $response = $this->handler->handle('prompts/get', [
             'name' => 'test-prompt',
@@ -722,7 +722,7 @@ class PromptHandlerTest extends TestCase
             ->shouldReceive('get')
             ->with('test-prompt')
             ->once()
-            ->andReturn($mockPrompt);
+            ->andReturn(['handler' => $mockPrompt, 'options' => []]);
 
         $response = $this->handler->handle('prompts/get', [
             'name' => 'test-prompt',
@@ -794,7 +794,7 @@ class PromptHandlerTest extends TestCase
             ->shouldReceive('get')
             ->with('test-prompt')
             ->once()
-            ->andReturn($mockPrompt);
+            ->andReturn(['handler' => $mockPrompt, 'options' => []]);
 
         $response = $this->handler->handle('prompts/get', [
             'name' => 'test-prompt',

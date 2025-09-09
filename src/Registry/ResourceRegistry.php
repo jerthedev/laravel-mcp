@@ -2,6 +2,7 @@
 
 namespace JTD\LaravelMCP\Registry;
 
+use JTD\LaravelMCP\Abstracts\McpResource;
 use JTD\LaravelMCP\Exceptions\RegistrationException;
 use JTD\LaravelMCP\Registry\Contracts\RegistryInterface;
 
@@ -27,6 +28,15 @@ class ResourceRegistry implements RegistryInterface
      * Registry type identifier.
      */
     protected string $type = 'resources';
+
+    /**
+     * Initialize the resource registry.
+     */
+    public function initialize(): void
+    {
+        // Resource registry initialization
+        // Any initialization logic can be added here in future
+    }
 
     /**
      * Register a resource with the registry.
@@ -74,7 +84,7 @@ class ResourceRegistry implements RegistryInterface
     /**
      * Get a registered resource.
      */
-    public function get(string $name)
+    public function get(string $name): mixed
     {
         if (! $this->has($name)) {
             throw new RegistrationException("Resource '{$name}' is not registered");
@@ -89,6 +99,14 @@ class ResourceRegistry implements RegistryInterface
     public function all(): array
     {
         return $this->resources;
+    }
+
+    /**
+     * Get all registered resources (alias for all()).
+     */
+    public function getAll(): array
+    {
+        return $this->all();
     }
 
     /**
@@ -193,7 +211,22 @@ class ResourceRegistry implements RegistryInterface
         $resource = $this->get($name);
 
         if (is_string($resource) && class_exists($resource)) {
-            $resource = new $resource;
+            // Try to instantiate with name parameter first, then without
+            try {
+                $reflection = new \ReflectionClass($resource);
+                $constructor = $reflection->getConstructor();
+                
+                if ($constructor && $constructor->getNumberOfRequiredParameters() > 0) {
+                    // If constructor requires parameters, try passing the name
+                    $resource = new $resource($name);
+                } else {
+                    // No required parameters, instantiate without arguments
+                    $resource = new $resource();
+                }
+            } catch (\Exception $e) {
+                // Fall back to no arguments
+                $resource = new $resource();
+            }
         }
 
         if (! is_object($resource) || ! method_exists($resource, 'read')) {

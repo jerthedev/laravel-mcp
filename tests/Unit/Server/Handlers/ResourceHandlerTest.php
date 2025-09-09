@@ -116,7 +116,7 @@ class ResourceHandlerTest extends TestCase
         $this->resourceRegistry
             ->shouldReceive('all')
             ->once()
-            ->andReturn(['test-resource' => $mockResource]);
+            ->andReturn(['test-resource' => ['handler' => $mockResource, 'options' => []]]);
 
         $response = $this->handler->handle('resources/list', []);
 
@@ -152,8 +152,8 @@ class ResourceHandlerTest extends TestCase
             ->shouldReceive('all')
             ->once()
             ->andReturn([
-                'good-resource' => $goodResource,
-                'bad-resource' => $badResource,
+                'good-resource' => ['handler' => $goodResource, 'options' => []],
+                'bad-resource' => ['handler' => $badResource, 'options' => []],
             ]);
 
         $response = $this->handler->handle('resources/list', []);
@@ -196,9 +196,9 @@ class ResourceHandlerTest extends TestCase
             ->shouldReceive('all')
             ->once()
             ->andReturn([
-                'resource1' => $mockResource1,
-                'resource2' => $mockResource2,
-                'resource3' => $mockResource3,
+                'resource1' => ['handler' => $mockResource1, 'options' => []],
+                'resource2' => ['handler' => $mockResource2, 'options' => []],
+                'resource3' => ['handler' => $mockResource3, 'options' => []],
             ]);
 
         // Create cursor for pagination (skip first 1, limit 1)
@@ -216,7 +216,7 @@ class ResourceHandlerTest extends TestCase
     {
         $resources = [];
         for ($i = 1; $i <= 60; $i++) {
-            $resources["resource{$i}"] = $this->createMockResource("Resource {$i}");
+            $resources["resource{$i}"] = ['handler' => $this->createMockResource("Resource {$i}"), 'options' => []];
         }
 
         $this->resourceRegistry
@@ -284,7 +284,7 @@ class ResourceHandlerTest extends TestCase
         $this->resourceRegistry
             ->shouldReceive('all')
             ->once()
-            ->andReturn(['test-resource' => $mockResource]);
+            ->andReturn(['test-resource' => ['handler' => $mockResource, 'options' => []]]);
 
         $response = $this->handler->handle('resources/read', [
             'uri' => 'test://resource',
@@ -312,7 +312,7 @@ class ResourceHandlerTest extends TestCase
         $this->resourceRegistry
             ->shouldReceive('all')
             ->once()
-            ->andReturn(['test-resource' => $mockResource]);
+            ->andReturn(['test-resource' => ['handler' => $mockResource, 'options' => []]]);
 
         $response = $this->handler->handle('resources/read', [
             'uri' => 'test://resource',
@@ -345,7 +345,7 @@ class ResourceHandlerTest extends TestCase
         $this->resourceRegistry
             ->shouldReceive('all')
             ->once()
-            ->andReturn(['test-resource' => $mockResource]);
+            ->andReturn(['test-resource' => ['handler' => $mockResource, 'options' => []]]);
 
         $response = $this->handler->handle('resources/read', [
             'uri' => 'test://resource',
@@ -390,7 +390,7 @@ class ResourceHandlerTest extends TestCase
         $this->resourceRegistry
             ->shouldReceive('all')
             ->once()
-            ->andReturn(['callable-resource' => $resourceWrapper]);
+            ->andReturn(['callable-resource' => ['handler' => $resourceWrapper, 'options' => []]]);
 
         $response = $this->handler->handle('resources/read', [
             'uri' => 'test://callable',
@@ -416,7 +416,7 @@ class ResourceHandlerTest extends TestCase
         $this->resourceRegistry
             ->shouldReceive('all')
             ->once()
-            ->andReturn(['non-readable' => $nonReadableResource]);
+            ->andReturn(['non-readable' => ['handler' => $nonReadableResource, 'options' => []]]);
 
         $response = $this->handler->handle('resources/read', [
             'uri' => 'test://non-readable',
@@ -440,7 +440,7 @@ class ResourceHandlerTest extends TestCase
         $this->resourceRegistry
             ->shouldReceive('all')
             ->once()
-            ->andReturn(['test-resource' => $mockResource]);
+            ->andReturn(['test-resource' => ['handler' => $mockResource, 'options' => []]]);
 
         $response = $this->handler->handle('resources/read', [
             'uri' => 'test://resource',
@@ -468,7 +468,7 @@ class ResourceHandlerTest extends TestCase
         $this->resourceRegistry
             ->shouldReceive('all')
             ->once()
-            ->andReturn(['test-resource' => $mockResource]);
+            ->andReturn(['test-resource' => ['handler' => $mockResource, 'options' => []]]);
 
         $response = $this->handler->handle('resources/read', [
             'uri' => 'test://resource',
@@ -491,7 +491,7 @@ class ResourceHandlerTest extends TestCase
         $this->resourceRegistry
             ->shouldReceive('all')
             ->once()
-            ->andReturn(['test-resource' => $mockResource]);
+            ->andReturn(['test-resource' => ['handler' => $mockResource, 'options' => []]]);
 
         $response = $this->handler->handle('resources/read', [
             'uri' => 'test://resource',

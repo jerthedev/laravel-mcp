@@ -2,6 +2,7 @@
 
 namespace JTD\LaravelMCP\Registry;
 
+use JTD\LaravelMCP\Abstracts\McpTool;
 use JTD\LaravelMCP\Exceptions\RegistrationException;
 use JTD\LaravelMCP\Registry\Contracts\RegistryInterface;
 
@@ -27,6 +28,15 @@ class ToolRegistry implements RegistryInterface
      * Registry type identifier.
      */
     protected string $type = 'tools';
+
+    /**
+     * Initialize the tool registry.
+     */
+    public function initialize(): void
+    {
+        // Tool registry initialization
+        // Any initialization logic can be added here in future
+    }
 
     /**
      * Register a tool with the registry.
@@ -73,7 +83,7 @@ class ToolRegistry implements RegistryInterface
     /**
      * Get a registered tool.
      */
-    public function get(string $name)
+    public function get(string $name): mixed
     {
         if (! $this->has($name)) {
             throw new RegistrationException("Tool '{$name}' is not registered");
@@ -88,6 +98,14 @@ class ToolRegistry implements RegistryInterface
     public function all(): array
     {
         return $this->tools;
+    }
+
+    /**
+     * Get all registered tools (alias for all()).
+     */
+    public function getAll(): array
+    {
+        return $this->all();
     }
 
     /**
@@ -194,7 +212,22 @@ class ToolRegistry implements RegistryInterface
         $tool = $this->get($name);
 
         if (is_string($tool) && class_exists($tool)) {
-            $tool = new $tool;
+            // Try to instantiate with name parameter first, then without
+            try {
+                $reflection = new \ReflectionClass($tool);
+                $constructor = $reflection->getConstructor();
+                
+                if ($constructor && $constructor->getNumberOfRequiredParameters() > 0) {
+                    // If constructor requires parameters, try passing the name
+                    $tool = new $tool($name);
+                } else {
+                    // No required parameters, instantiate without arguments
+                    $tool = new $tool();
+                }
+            } catch (\Exception $e) {
+                // Fall back to no arguments
+                $tool = new $tool();
+            }
         }
 
         if (! is_object($tool) || ! method_exists($tool, 'execute')) {
