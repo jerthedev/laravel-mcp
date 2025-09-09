@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests;
+namespace JTD\LaravelMCP\Tests;
 
 use JTD\LaravelMCP\Facades\Mcp;
 use JTD\LaravelMCP\LaravelMcpServiceProvider;

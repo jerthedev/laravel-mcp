@@ -4,6 +4,7 @@ namespace JTD\LaravelMCP;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use JTD\LaravelMCP\Commands\DocumentationCommand;
 use JTD\LaravelMCP\Commands\ListCommand;
 use JTD\LaravelMCP\Commands\MakePromptCommand;
 use JTD\LaravelMCP\Commands\MakeResourceCommand;
@@ -30,6 +31,7 @@ use JTD\LaravelMCP\Server\McpServer;
 use JTD\LaravelMCP\Server\ServerInfo;
 use JTD\LaravelMCP\Support\ConfigGenerator;
 use JTD\LaravelMCP\Support\DocumentationGenerator;
+use JTD\LaravelMCP\Support\SchemaDocumenter;
 use JTD\LaravelMCP\Transport\Contracts\TransportInterface;
 use JTD\LaravelMCP\Transport\HttpTransport;
 use JTD\LaravelMCP\Transport\StdioTransport;
@@ -394,6 +396,7 @@ class LaravelMcpServiceProvider extends ServiceProvider
                 MakeResourceCommand::class,
                 MakePromptCommand::class,
                 RegisterCommand::class,
+                DocumentationCommand::class,
             ]);
         }
     }
@@ -542,6 +545,10 @@ class LaravelMcpServiceProvider extends ServiceProvider
                 $app->make(ResourceRegistry::class),
                 $app->make(PromptRegistry::class)
             );
+        });
+
+        $this->app->singleton(SchemaDocumenter::class, function ($app) {
+            return new SchemaDocumenter;
         });
 
         $this->app->singleton(ConfigGenerator::class, function ($app) {
