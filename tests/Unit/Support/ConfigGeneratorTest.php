@@ -1,51 +1,25 @@
 <?php
 
 /**
- * Laravel MCP Package - ConfigGenerator Unit Tests
- *
- * This file contains unit tests for the ConfigGenerator class,
- * testing configuration generation methods for various AI clients.
- *
- * @category    Support
- *
- * @version     1.0.0
- *
- * @since       2024-01-15
- *
- * @author      JTD Development Team
- * @copyright   2024 JTD Development
- * @license     MIT
- *
- * Test Organization:
- * - Epic: Laravel MCP Package Development
- * - Sprint: Command Implementation (Sprint 3)
- * - Ticket: ARTISANCOMMANDS-007 - RegisterCommand Implementation
- *
- * Coverage Areas:
- * - Client-specific configuration generation methods
- * - Configuration validation functionality
- * - File path resolution and OS detection
- * - Configuration merging capabilities
- * - Error handling and edge cases
- *
- * Dependencies:
- * - ConfigGenerator class
- * - McpRegistry for component information
- * - File system operations
+ * Test file header for traceability:
+ * EPIC: N/A
+ * SPEC: docs/Specs/09-ClientRegistration.md
+ * SPRINT: N/A
+ * TICKET: 019-ClientConfigGeneration
  */
 
 namespace Tests\Unit\Support;
 
 use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Support\ConfigGenerator;
-use JTD\LaravelMCP\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 #[Group('unit')]
 #[Group('support')]
 #[Group('config-generator')]
-#[Group('ticket-ARTISANCOMMANDS-007')]
+#[Group('ticket-019')]
 class ConfigGeneratorTest extends TestCase
 {
     protected ConfigGenerator $configGenerator;

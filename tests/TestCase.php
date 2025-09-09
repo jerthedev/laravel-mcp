@@ -1,23 +1,11 @@
 <?php
 
-namespace JTD\LaravelMCP\Tests;
+namespace Tests;
 
-use JTD\LaravelMCP\Facades\Mcp;
-use JTD\LaravelMCP\LaravelMcpServiceProvider;
-use Orchestra\Testbench\TestCase as OrchestraTestCase;
+use PHPUnit\Framework\TestCase as PHPUnitTestCase;
 
-/**
- * Base test case for Laravel MCP package tests.
- *
- * This class provides common functionality for all tests in the package,
- * including Laravel application setup, service provider registration,
- * and helper methods for testing MCP functionality.
- */
-abstract class TestCase extends OrchestraTestCase
+abstract class TestCase extends PHPUnitTestCase
 {
-    /**
-     * Setup the test environment.
-     */
     protected function setUp(): void
     {
         parent::setUp();
