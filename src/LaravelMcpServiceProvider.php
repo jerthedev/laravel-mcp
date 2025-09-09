@@ -16,16 +16,16 @@ use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Registry\PromptRegistry;
 use JTD\LaravelMCP\Registry\ResourceRegistry;
 use JTD\LaravelMCP\Registry\ToolRegistry;
+use JTD\LaravelMCP\Server\CapabilityManager;
+use JTD\LaravelMCP\Server\Contracts\ServerInterface;
+use JTD\LaravelMCP\Server\McpServer;
+use JTD\LaravelMCP\Server\ServerInfo;
 use JTD\LaravelMCP\Support\ConfigGenerator;
 use JTD\LaravelMCP\Support\DocumentationGenerator;
 use JTD\LaravelMCP\Transport\Contracts\TransportInterface;
 use JTD\LaravelMCP\Transport\HttpTransport;
 use JTD\LaravelMCP\Transport\StdioTransport;
 use JTD\LaravelMCP\Transport\TransportManager;
-use JTD\LaravelMCP\Server\Contracts\ServerInterface;
-use JTD\LaravelMCP\Server\McpServer;
-use JTD\LaravelMCP\Server\ServerInfo;
-use JTD\LaravelMCP\Server\CapabilityManager;
 
 class LaravelMcpServiceProvider extends ServiceProvider
 {

@@ -4,9 +4,6 @@ namespace JTD\LaravelMCP\Tests\Unit\Server;
 
 use Illuminate\Support\Facades\Config;
 use JTD\LaravelMCP\Registry\McpRegistry;
-use JTD\LaravelMCP\Registry\ToolRegistry;
-use JTD\LaravelMCP\Registry\ResourceRegistry;
-use JTD\LaravelMCP\Registry\PromptRegistry;
 use JTD\LaravelMCP\Server\CapabilityManager;
 use JTD\LaravelMCP\Tests\TestCase;
 use Mockery;
@@ -14,12 +11,13 @@ use Mockery;
 class CapabilityManagerTest extends TestCase
 {
     private CapabilityManager $capabilityManager;
+
     private McpRegistry $mockRegistry;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->mockRegistry = Mockery::mock(McpRegistry::class);
         $this->capabilityManager = new CapabilityManager($this->mockRegistry);
     }
@@ -39,10 +37,10 @@ class CapabilityManagerTest extends TestCase
     {
         Config::set('laravel-mcp.capabilities.tools.list_changed_notifications', false);
         Config::set('laravel-mcp.capabilities.resources.subscriptions', true);
-        
+
         $manager = new CapabilityManager($this->mockRegistry);
         $serverCapabilities = $manager->getServerCapabilities();
-        
+
         $this->assertFalse($serverCapabilities['tools']['listChanged']);
         $this->assertTrue($serverCapabilities['resources']['subscribe']);
     }
@@ -52,15 +50,15 @@ class CapabilityManagerTest extends TestCase
         $this->mockRegistry->shouldReceive('getTools')->andReturn(['tool1', 'tool2']);
         $this->mockRegistry->shouldReceive('getResources')->andReturn(['resource1']);
         $this->mockRegistry->shouldReceive('getPrompts')->andReturn(['prompt1']);
-        
+
         $clientCapabilities = [
             'tools' => ['listChanged' => true],
             'resources' => ['subscribe' => false, 'listChanged' => true],
             'prompts' => ['listChanged' => true],
         ];
-        
+
         $negotiated = $this->capabilityManager->negotiateWithClient($clientCapabilities);
-        
+
         $this->assertIsArray($negotiated);
         $this->assertArrayHasKey('tools', $negotiated);
         $this->assertArrayHasKey('resources', $negotiated);
@@ -72,15 +70,15 @@ class CapabilityManagerTest extends TestCase
         $this->mockRegistry->shouldReceive('getTools')->andReturn([]);
         $this->mockRegistry->shouldReceive('getResources')->andReturn([]);
         $this->mockRegistry->shouldReceive('getPrompts')->andReturn([]);
-        
+
         $clientCapabilities = [
             'tools' => ['listChanged' => true],
             'resources' => ['subscribe' => true],
             'prompts' => ['listChanged' => true],
         ];
-        
+
         $negotiated = $this->capabilityManager->negotiateWithClient($clientCapabilities);
-        
+
         $this->assertEmpty($negotiated['tools']);
         $this->assertEmpty($negotiated['resources']);
         $this->assertEmpty($negotiated['prompts']);
@@ -91,10 +89,10 @@ class CapabilityManagerTest extends TestCase
         $this->mockRegistry->shouldReceive('getTools')->andReturn(['tool1']);
         $this->mockRegistry->shouldReceive('getResources')->andReturn(['resource1']);
         $this->mockRegistry->shouldReceive('getPrompts')->andReturn(['prompt1']);
-        
+
         $clientCapabilities = ['tools' => ['listChanged' => true]];
         $this->capabilityManager->negotiateWithClient($clientCapabilities);
-        
+
         $this->assertTrue($this->capabilityManager->isCapabilityEnabled('tools'));
         $this->assertTrue($this->capabilityManager->isCapabilityEnabled('resources'));
         $this->assertTrue($this->capabilityManager->isCapabilityEnabled('prompts'));
@@ -105,14 +103,14 @@ class CapabilityManagerTest extends TestCase
         $this->mockRegistry->shouldReceive('getTools')->andReturn(['tool1']);
         $this->mockRegistry->shouldReceive('getResources')->andReturn(['resource1']);
         $this->mockRegistry->shouldReceive('getPrompts')->andReturn(['prompt1']);
-        
+
         $clientCapabilities = [
             'tools' => ['listChanged' => true],
             'resources' => ['subscribe' => false, 'listChanged' => true],
         ];
-        
+
         $this->capabilityManager->negotiateWithClient($clientCapabilities);
-        
+
         $this->assertTrue($this->capabilityManager->isFeatureEnabled('tools', 'listChanged'));
         $this->assertFalse($this->capabilityManager->isFeatureEnabled('resources', 'subscribe'));
         $this->assertTrue($this->capabilityManager->isFeatureEnabled('resources', 'listChanged'));
@@ -123,13 +121,13 @@ class CapabilityManagerTest extends TestCase
         $this->mockRegistry->shouldReceive('getTools')->andReturn(['tool1']);
         $this->mockRegistry->shouldReceive('getResources')->andReturn([]);
         $this->mockRegistry->shouldReceive('getPrompts')->andReturn([]);
-        
+
         $clientCapabilities = ['tools' => ['listChanged' => true]];
         $this->capabilityManager->negotiateWithClient($clientCapabilities);
-        
+
         $toolsInfo = $this->capabilityManager->getCapabilityInfo('tools');
         $unknownInfo = $this->capabilityManager->getCapabilityInfo('unknown');
-        
+
         $this->assertIsArray($toolsInfo);
         $this->assertNull($unknownInfo);
     }
@@ -139,10 +137,10 @@ class CapabilityManagerTest extends TestCase
         $updates = [
             'custom' => ['enabled' => true],
         ];
-        
+
         $this->capabilityManager->updateServerCapabilities($updates);
         $serverCapabilities = $this->capabilityManager->getServerCapabilities();
-        
+
         $this->assertArrayHasKey('custom', $serverCapabilities);
         $this->assertTrue($serverCapabilities['custom']['enabled']);
     }
@@ -152,13 +150,13 @@ class CapabilityManagerTest extends TestCase
         $this->mockRegistry->shouldReceive('getTools')->andReturn(['tool1']);
         $this->mockRegistry->shouldReceive('getResources')->andReturn([]);
         $this->mockRegistry->shouldReceive('getPrompts')->andReturn([]);
-        
+
         $clientCapabilities = ['tools' => ['listChanged' => true]];
         $this->capabilityManager->negotiateWithClient($clientCapabilities);
-        
+
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Cannot update server capabilities after negotiation');
-        
+
         $this->capabilityManager->updateServerCapabilities(['test' => true]);
     }
 
@@ -167,14 +165,14 @@ class CapabilityManagerTest extends TestCase
         $this->mockRegistry->shouldReceive('getTools')->andReturn(['tool1']);
         $this->mockRegistry->shouldReceive('getResources')->andReturn([]);
         $this->mockRegistry->shouldReceive('getPrompts')->andReturn([]);
-        
+
         $clientCapabilities = ['tools' => ['listChanged' => true]];
         $this->capabilityManager->negotiateWithClient($clientCapabilities);
-        
+
         $this->assertTrue($this->capabilityManager->areCapabilitiesLocked());
-        
+
         $this->capabilityManager->resetCapabilities();
-        
+
         $this->assertFalse($this->capabilityManager->areCapabilitiesLocked());
         $this->assertEmpty($this->capabilityManager->getNegotiatedCapabilities());
     }
@@ -182,9 +180,9 @@ class CapabilityManagerTest extends TestCase
     public function test_can_lock_capabilities(): void
     {
         $this->assertFalse($this->capabilityManager->areCapabilitiesLocked());
-        
+
         $this->capabilityManager->lockCapabilities();
-        
+
         $this->assertTrue($this->capabilityManager->areCapabilitiesLocked());
     }
 
@@ -193,22 +191,22 @@ class CapabilityManagerTest extends TestCase
         $this->mockRegistry->shouldReceive('getTools')->andReturn(['tool1']);
         $this->mockRegistry->shouldReceive('getResources')->andReturn([]);
         $this->mockRegistry->shouldReceive('getPrompts')->andReturn([]);
-        
+
         $validClientCapabilities = [
             'tools' => ['listChanged' => true],
         ];
-        
+
         $invalidClientCapabilities = [
             'tools' => ['listChanged' => 'invalid'],
         ];
-        
+
         $validNegotiated = $this->capabilityManager->negotiateWithClient($validClientCapabilities);
         $this->assertArrayHasKey('tools', $validNegotiated);
-        
+
         $this->capabilityManager->resetCapabilities();
-        
+
         $invalidNegotiated = $this->capabilityManager->negotiateWithClient($invalidClientCapabilities);
-        $this->assertTrue(empty($invalidNegotiated['tools']) || !isset($invalidNegotiated['tools']));
+        $this->assertTrue(empty($invalidNegotiated['tools']) || ! isset($invalidNegotiated['tools']));
     }
 
     public function test_validates_resources_capability(): void
@@ -216,11 +214,11 @@ class CapabilityManagerTest extends TestCase
         $this->mockRegistry->shouldReceive('getTools')->andReturn([]);
         $this->mockRegistry->shouldReceive('getResources')->andReturn(['resource1']);
         $this->mockRegistry->shouldReceive('getPrompts')->andReturn([]);
-        
+
         $validClientCapabilities = [
             'resources' => ['subscribe' => true, 'listChanged' => false],
         ];
-        
+
         $validNegotiated = $this->capabilityManager->negotiateWithClient($validClientCapabilities);
         $this->assertArrayHasKey('resources', $validNegotiated);
     }
@@ -230,36 +228,36 @@ class CapabilityManagerTest extends TestCase
         $this->mockRegistry->shouldReceive('getTools')->andReturn([]);
         $this->mockRegistry->shouldReceive('getResources')->andReturn([]);
         $this->mockRegistry->shouldReceive('getPrompts')->andReturn([]);
-        
+
         $validClientCapabilities = [
             'logging' => ['level' => 'debug'],
         ];
-        
+
         $invalidClientCapabilities = [
             'logging' => ['level' => 'invalid_level'],
         ];
-        
+
         $validNegotiated = $this->capabilityManager->negotiateWithClient($validClientCapabilities);
         $this->assertArrayHasKey('logging', $validNegotiated);
-        
+
         $this->capabilityManager->resetCapabilities();
-        
+
         $invalidNegotiated = $this->capabilityManager->negotiateWithClient($invalidClientCapabilities);
-        $this->assertTrue(empty($invalidNegotiated['logging']) || !isset($invalidNegotiated['logging']));
+        $this->assertTrue(empty($invalidNegotiated['logging']) || ! isset($invalidNegotiated['logging']));
     }
 
     public function test_gets_mcp10_requirements(): void
     {
         $requirements = $this->capabilityManager->getMcp10Requirements();
-        
+
         $this->assertArrayHasKey('required_capabilities', $requirements);
         $this->assertArrayHasKey('optional_capabilities', $requirements);
         $this->assertArrayHasKey('required_methods', $requirements);
-        
+
         $this->assertContains('tools', $requirements['required_capabilities']);
         $this->assertContains('resources', $requirements['required_capabilities']);
         $this->assertContains('prompts', $requirements['required_capabilities']);
-        
+
         $this->assertContains('initialize', $requirements['required_methods']);
         $this->assertContains('tools/list', $requirements['required_methods']);
         $this->assertContains('tools/call', $requirements['required_methods']);
@@ -270,20 +268,20 @@ class CapabilityManagerTest extends TestCase
         $this->mockRegistry->shouldReceive('getTools')->andReturn(['tool1']);
         $this->mockRegistry->shouldReceive('getResources')->andReturn(['resource1']);
         $this->mockRegistry->shouldReceive('getPrompts')->andReturn(['prompt1']);
-        
+
         $clientCapabilities = [
             'tools' => ['listChanged' => true],
             'resources' => ['subscribe' => false, 'listChanged' => true],
             'prompts' => ['listChanged' => true],
         ];
-        
+
         $this->capabilityManager->negotiateWithClient($clientCapabilities);
         $compliance = $this->capabilityManager->validateMcp10Compliance();
-        
+
         $this->assertArrayHasKey('compliant', $compliance);
         $this->assertArrayHasKey('issues', $compliance);
         $this->assertArrayHasKey('negotiated_capabilities', $compliance);
-        
+
         $this->assertTrue($compliance['compliant']);
         $this->assertEmpty($compliance['issues']);
     }
@@ -293,9 +291,9 @@ class CapabilityManagerTest extends TestCase
         $this->mockRegistry->shouldReceive('getTools')->andReturn(['tool1', 'tool2']);
         $this->mockRegistry->shouldReceive('getResources')->andReturn([]);
         $this->mockRegistry->shouldReceive('getPrompts')->andReturn(['prompt1']);
-        
+
         $dynamicCapabilities = $this->capabilityManager->createDynamicCapabilities();
-        
+
         $this->assertArrayHasKey('tools', $dynamicCapabilities);
         $this->assertArrayNotHasKey('resources', $dynamicCapabilities);
         $this->assertArrayHasKey('prompts', $dynamicCapabilities);
@@ -307,16 +305,16 @@ class CapabilityManagerTest extends TestCase
         $this->mockRegistry->shouldReceive('getTools')->andReturn(['tool1']);
         $this->mockRegistry->shouldReceive('getResources')->andReturn(['resource1']);
         $this->mockRegistry->shouldReceive('getPrompts')->andReturn(['prompt1']);
-        
+
         $detailedInfo = $this->capabilityManager->getDetailedCapabilityInfo();
-        
+
         $this->assertArrayHasKey('server_capabilities', $detailedInfo);
         $this->assertArrayHasKey('negotiated_capabilities', $detailedInfo);
         $this->assertArrayHasKey('capabilities_locked', $detailedInfo);
         $this->assertArrayHasKey('component_counts', $detailedInfo);
         $this->assertArrayHasKey('mcp10_compliance', $detailedInfo);
         $this->assertArrayHasKey('capability_summary', $detailedInfo);
-        
+
         $this->assertEquals(1, $detailedInfo['component_counts']['tools']);
         $this->assertEquals(1, $detailedInfo['component_counts']['resources']);
         $this->assertEquals(1, $detailedInfo['component_counts']['prompts']);
@@ -327,12 +325,12 @@ class CapabilityManagerTest extends TestCase
         $this->mockRegistry->shouldReceive('getTools')->andReturn(['tool1']);
         $this->mockRegistry->shouldReceive('getResources')->andReturn([]);
         $this->mockRegistry->shouldReceive('getPrompts')->andReturn([]);
-        
+
         $clientCapabilities = ['tools' => ['listChanged' => true]];
-        
+
         $first = $this->capabilityManager->negotiateWithClient($clientCapabilities);
         $second = $this->capabilityManager->negotiateWithClient($clientCapabilities);
-        
+
         $this->assertEquals($first, $second);
     }
 
@@ -341,10 +339,10 @@ class CapabilityManagerTest extends TestCase
         $this->mockRegistry->shouldReceive('getTools')->andReturn([]);
         $this->mockRegistry->shouldReceive('getResources')->andReturn([]);
         $this->mockRegistry->shouldReceive('getPrompts')->andReturn([]);
-        
+
         $clientCapabilities = [];
         $negotiated = $this->capabilityManager->negotiateWithClient($clientCapabilities);
-        
+
         $this->assertNotEmpty($negotiated);
     }
 }

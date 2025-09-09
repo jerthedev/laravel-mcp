@@ -2,7 +2,6 @@
 
 namespace JTD\LaravelMCP\Tests\Unit\Server;
 
-use Illuminate\Support\Facades\Config;
 use JTD\LaravelMCP\Exceptions\McpException;
 use JTD\LaravelMCP\Protocol\MessageProcessor;
 use JTD\LaravelMCP\Registry\McpRegistry;
@@ -17,22 +16,27 @@ use Mockery;
 class McpServerTest extends TestCase
 {
     private McpServer $server;
+
     private ServerInfo $mockServerInfo;
+
     private CapabilityManager $mockCapabilityManager;
+
     private MessageProcessor $mockMessageProcessor;
+
     private TransportManager $mockTransportManager;
+
     private McpRegistry $mockRegistry;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->mockServerInfo = Mockery::mock(ServerInfo::class);
         $this->mockCapabilityManager = Mockery::mock(CapabilityManager::class);
         $this->mockMessageProcessor = Mockery::mock(MessageProcessor::class);
         $this->mockTransportManager = Mockery::mock(TransportManager::class);
         $this->mockRegistry = Mockery::mock(McpRegistry::class);
-        
+
         $this->server = new McpServer(
             $this->mockServerInfo,
             $this->mockCapabilityManager,
@@ -70,34 +74,34 @@ class McpServerTest extends TestCase
             'clientInfo' => ['name' => 'Test Client', 'version' => '1.0'],
             'capabilities' => ['tools' => ['listChanged' => true]],
         ];
-        
+
         $this->mockCapabilityManager
             ->shouldReceive('negotiateWithClient')
             ->with($clientInfo['capabilities'])
             ->andReturn(['tools' => ['listChanged' => true]]);
-            
+
         $this->mockServerInfo
             ->shouldReceive('updateRuntimeInfo')
             ->once();
-            
+
         $this->mockServerInfo
             ->shouldReceive('getProtocolVersion')
             ->andReturn('2024-11-05');
-            
+
         $this->mockServerInfo
             ->shouldReceive('getBasicInfo')
             ->andReturn(['name' => 'Test Server', 'version' => '1.0']);
-            
+
         $this->mockRegistry
             ->shouldReceive('initialize')
             ->once();
-            
+
         $this->mockMessageProcessor
             ->shouldReceive('setServerInfo')
             ->once();
-        
+
         $response = $this->server->initialize($clientInfo);
-        
+
         $this->assertTrue($this->server->isInitialized());
         $this->assertIsArray($response);
         $this->assertArrayHasKey('protocolVersion', $response);
@@ -116,12 +120,12 @@ class McpServerTest extends TestCase
         $this->mockServerInfo->shouldReceive('getBasicInfo')->andReturn([]);
         $this->mockRegistry->shouldReceive('initialize');
         $this->mockMessageProcessor->shouldReceive('setServerInfo');
-        
+
         $this->server->initialize([]);
-        
+
         // Second initialization should just return response without re-initializing
         $response = $this->server->initialize([]);
-        
+
         $this->assertIsArray($response);
     }
 
@@ -129,17 +133,17 @@ class McpServerTest extends TestCase
     {
         // Initialize first
         $this->initializeServer();
-        
+
         $this->mockTransportManager
             ->shouldReceive('startAllTransports')
             ->once();
-            
+
         $this->mockServerInfo
             ->shouldReceive('resetStartTime')
             ->once();
-        
+
         $this->server->start();
-        
+
         $this->assertTrue($this->server->isRunning());
     }
 
@@ -147,56 +151,56 @@ class McpServerTest extends TestCase
     {
         $this->expectException(McpException::class);
         $this->expectExceptionMessage('Server must be initialized before starting');
-        
+
         $this->server->start();
     }
 
     public function test_start_is_idempotent(): void
     {
         $this->initializeServer();
-        
+
         $this->mockTransportManager
             ->shouldReceive('startAllTransports')
             ->once();
         $this->mockServerInfo->shouldReceive('resetStartTime')->once();
-        
+
         $this->server->start();
         $this->server->start(); // Second call should not do anything
-        
+
         $this->assertTrue($this->server->isRunning());
     }
 
     public function test_can_stop_running_server(): void
     {
         $this->initializeAndStartServer();
-        
+
         $this->mockTransportManager
             ->shouldReceive('stopAllTransports')
             ->once();
-        
+
         $this->server->stop();
-        
+
         $this->assertFalse($this->server->isRunning());
     }
 
     public function test_stop_is_idempotent(): void
     {
         $this->initializeAndStartServer();
-        
+
         $this->mockTransportManager
             ->shouldReceive('stopAllTransports')
             ->once();
-        
+
         $this->server->stop();
         $this->server->stop(); // Second call should not do anything
-        
+
         $this->assertFalse($this->server->isRunning());
     }
 
     public function test_can_restart_server(): void
     {
         $this->initializeAndStartServer();
-        
+
         $this->mockTransportManager
             ->shouldReceive('stopAllTransports')
             ->once();
@@ -206,9 +210,9 @@ class McpServerTest extends TestCase
         $this->mockServerInfo
             ->shouldReceive('resetStartTime')
             ->once();
-        
+
         $this->server->restart();
-        
+
         $this->assertTrue($this->server->isRunning());
     }
 
@@ -217,15 +221,15 @@ class McpServerTest extends TestCase
         $this->mockServerInfo
             ->shouldReceive('getStatus')
             ->andReturn(['uptime' => 100]);
-            
+
         $this->mockCapabilityManager
             ->shouldReceive('getNegotiatedCapabilities')
             ->andReturn(['tools' => []]);
-            
+
         $this->mockTransportManager
             ->shouldReceive('getActiveTransportCount')
             ->andReturn(1);
-            
+
         $this->mockRegistry
             ->shouldReceive('getTools')
             ->andReturn(['tool1']);
@@ -235,9 +239,9 @@ class McpServerTest extends TestCase
         $this->mockRegistry
             ->shouldReceive('getPrompts')
             ->andReturn([]);
-        
+
         $status = $this->server->getStatus();
-        
+
         $this->assertIsArray($status);
         $this->assertArrayHasKey('initialized', $status);
         $this->assertArrayHasKey('running', $status);
@@ -253,7 +257,7 @@ class McpServerTest extends TestCase
         $this->mockTransportManager
             ->shouldReceive('getActiveTransportCount')
             ->andReturn(1);
-            
+
         $this->mockRegistry
             ->shouldReceive('getTools')
             ->andReturn(['tool1']);
@@ -263,19 +267,19 @@ class McpServerTest extends TestCase
         $this->mockRegistry
             ->shouldReceive('getPrompts')
             ->andReturn([]);
-            
+
         $this->mockServerInfo
             ->shouldReceive('getUptime')
             ->andReturn(100);
-        
+
         $health = $this->server->getHealth();
-        
+
         $this->assertIsArray($health);
         $this->assertArrayHasKey('healthy', $health);
         $this->assertArrayHasKey('checks', $health);
         $this->assertArrayHasKey('timestamp', $health);
         $this->assertArrayHasKey('uptime', $health);
-        
+
         $this->assertArrayHasKey('server_initialized', $health['checks']);
         $this->assertArrayHasKey('server_running', $health['checks']);
         $this->assertArrayHasKey('transports_healthy', $health['checks']);
@@ -290,36 +294,36 @@ class McpServerTest extends TestCase
             'version' => '1.0',
             'description' => 'Test Description',
         ];
-        
+
         $this->mockServerInfo
             ->shouldReceive('getServerInfo')
             ->andReturn($expectedInfo);
-        
+
         $info = $this->server->getServerInfo();
-        
+
         $this->assertEquals($expectedInfo, $info);
     }
 
     public function test_can_get_capabilities(): void
     {
         $expectedCapabilities = ['tools' => ['listChanged' => true]];
-        
+
         $this->mockCapabilityManager
             ->shouldReceive('getNegotiatedCapabilities')
             ->andReturn($expectedCapabilities);
-        
+
         $capabilities = $this->server->getCapabilities();
-        
+
         $this->assertEquals($expectedCapabilities, $capabilities);
     }
 
     public function test_can_set_and_get_configuration(): void
     {
         $config = ['test' => 'value'];
-        
+
         $this->server->setConfiguration($config);
         $serverConfig = $this->server->getConfiguration();
-        
+
         $this->assertArrayHasKey('test', $serverConfig);
         $this->assertEquals('value', $serverConfig['test']);
     }
@@ -327,14 +331,14 @@ class McpServerTest extends TestCase
     public function test_can_register_transport(): void
     {
         $transport = Mockery::mock(\JTD\LaravelMCP\Transport\Contracts\TransportInterface::class);
-        
+
         $this->mockTransportManager
             ->shouldReceive('registerTransport')
             ->with('test', $transport)
             ->once();
-        
+
         $this->server->registerTransport('test', $transport);
-        
+
         $transports = $this->server->getTransports();
         $this->assertArrayHasKey('test', $transports);
     }
@@ -342,7 +346,7 @@ class McpServerTest extends TestCase
     public function test_can_remove_transport(): void
     {
         $transport = Mockery::mock(\JTD\LaravelMCP\Transport\Contracts\TransportInterface::class);
-        
+
         $this->mockTransportManager
             ->shouldReceive('registerTransport')
             ->with('test', $transport);
@@ -350,10 +354,10 @@ class McpServerTest extends TestCase
             ->shouldReceive('removeTransport')
             ->with('test')
             ->once();
-        
+
         $this->server->registerTransport('test', $transport);
         $this->server->removeTransport('test');
-        
+
         $transports = $this->server->getTransports();
         $this->assertArrayNotHasKey('test', $transports);
     }
@@ -361,13 +365,13 @@ class McpServerTest extends TestCase
     public function test_can_get_uptime(): void
     {
         $expectedUptime = 123;
-        
+
         $this->mockServerInfo
             ->shouldReceive('getUptime')
             ->andReturn($expectedUptime);
-        
+
         $uptime = $this->server->getUptime();
-        
+
         $this->assertEquals($expectedUptime, $uptime);
     }
 
@@ -376,7 +380,7 @@ class McpServerTest extends TestCase
         $this->mockServerInfo
             ->shouldReceive('getUptime')
             ->andReturn(100);
-            
+
         $this->mockRegistry
             ->shouldReceive('getTools')
             ->andReturn(['tool1', 'tool2']);
@@ -386,15 +390,15 @@ class McpServerTest extends TestCase
         $this->mockRegistry
             ->shouldReceive('getPrompts')
             ->andReturn([]);
-        
+
         $metrics = $this->server->getMetrics();
-        
+
         $this->assertIsArray($metrics);
         $this->assertArrayHasKey('memory_usage', $metrics);
         $this->assertArrayHasKey('peak_memory', $metrics);
         $this->assertArrayHasKey('uptime', $metrics);
         $this->assertArrayHasKey('component_counts', $metrics);
-        
+
         $this->assertEquals(2, $metrics['component_counts']['tools']);
         $this->assertEquals(1, $metrics['component_counts']['resources']);
         $this->assertEquals(0, $metrics['component_counts']['prompts']);
@@ -403,13 +407,13 @@ class McpServerTest extends TestCase
     public function test_can_shutdown_gracefully(): void
     {
         $this->initializeAndStartServer();
-        
+
         $this->mockTransportManager
             ->shouldReceive('stopAllTransports')
             ->once();
-        
+
         $this->server->shutdown();
-        
+
         $this->assertFalse($this->server->isRunning());
     }
 
@@ -417,7 +421,7 @@ class McpServerTest extends TestCase
     {
         $this->server->incrementRequestCount();
         $metrics = $this->server->getMetrics();
-        
+
         $this->assertEquals(1, $metrics['requests_processed']);
     }
 
@@ -425,7 +429,7 @@ class McpServerTest extends TestCase
     {
         $this->server->incrementErrorCount();
         $metrics = $this->server->getMetrics();
-        
+
         $this->assertEquals(1, $metrics['errors_count']);
     }
 
@@ -439,9 +443,9 @@ class McpServerTest extends TestCase
         $this->mockRegistry->shouldReceive('getTools')->andReturn([]);
         $this->mockRegistry->shouldReceive('getResources')->andReturn([]);
         $this->mockRegistry->shouldReceive('getPrompts')->andReturn([]);
-        
+
         $diagnostics = $this->server->getDiagnostics();
-        
+
         $this->assertIsArray($diagnostics);
         $this->assertArrayHasKey('server', $diagnostics);
         $this->assertArrayHasKey('health', $diagnostics);
@@ -455,38 +459,38 @@ class McpServerTest extends TestCase
         $this->mockCapabilityManager
             ->shouldReceive('negotiateWithClient')
             ->andThrow(new \Exception('Negotiation failed'));
-        
+
         $this->expectException(McpException::class);
         $this->expectExceptionMessage('Server initialization failed');
-        
+
         $this->server->initialize([]);
     }
 
     public function test_handles_start_errors(): void
     {
         $this->initializeServer();
-        
+
         $this->mockTransportManager
             ->shouldReceive('startAllTransports')
             ->andThrow(new \Exception('Transport start failed'));
-        
+
         $this->expectException(McpException::class);
         $this->expectExceptionMessage('Server start failed');
-        
+
         $this->server->start();
     }
 
     public function test_handles_stop_errors(): void
     {
         $this->initializeAndStartServer();
-        
+
         $this->mockTransportManager
             ->shouldReceive('stopAllTransports')
             ->andThrow(new \Exception('Transport stop failed'));
-        
+
         $this->expectException(McpException::class);
         $this->expectExceptionMessage('Server stop failed');
-        
+
         $this->server->stop();
     }
 
@@ -500,17 +504,17 @@ class McpServerTest extends TestCase
         $this->mockServerInfo->shouldReceive('getBasicInfo')->andReturn([]);
         $this->mockRegistry->shouldReceive('initialize');
         $this->mockMessageProcessor->shouldReceive('setServerInfo');
-        
+
         $this->server->initialize([]);
     }
 
     private function initializeAndStartServer(): void
     {
         $this->initializeServer();
-        
+
         $this->mockTransportManager->shouldReceive('startAllTransports');
         $this->mockServerInfo->shouldReceive('resetStartTime');
-        
+
         $this->server->start();
     }
 }

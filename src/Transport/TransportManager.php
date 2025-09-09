@@ -284,7 +284,7 @@ class TransportManager
     {
         foreach ($this->transports as $name => $transport) {
             try {
-                if (!$transport->isConnected()) {
+                if (! $transport->isConnected()) {
                     $transport->connect();
                 }
             } catch (\Throwable $e) {
@@ -315,7 +315,7 @@ class TransportManager
      */
     public function getActiveTransportCount(): int
     {
-        return count(array_filter($this->transports, fn($transport) => $transport->isConnected()));
+        return count(array_filter($this->transports, fn ($transport) => $transport->isConnected()));
     }
 
     /**
@@ -334,7 +334,7 @@ class TransportManager
     {
         // Initialize default transports based on configuration
         $defaultTransports = config('mcp-transports.auto_start', []);
-        
+
         foreach ($defaultTransports as $driver) {
             if ($this->hasDriver($driver)) {
                 try {

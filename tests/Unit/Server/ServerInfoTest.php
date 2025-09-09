@@ -13,8 +13,8 @@ class ServerInfoTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
-        $this->serverInfo = new ServerInfo();
+
+        $this->serverInfo = new ServerInfo;
     }
 
     public function test_can_create_server_info_instance(): void
@@ -49,14 +49,14 @@ class ServerInfoTest extends TestCase
     public function test_can_get_protocol_version(): void
     {
         $protocolVersion = $this->serverInfo->getProtocolVersion();
-        
+
         $this->assertEquals('2024-11-05', $protocolVersion);
     }
 
     public function test_can_get_uptime(): void
     {
         $uptime = $this->serverInfo->getUptime();
-        
+
         $this->assertIsInt($uptime);
         $this->assertGreaterThanOrEqual(0, $uptime);
     }
@@ -64,7 +64,7 @@ class ServerInfoTest extends TestCase
     public function test_can_get_start_time(): void
     {
         $startTime = $this->serverInfo->getStartTime();
-        
+
         $this->assertIsInt($startTime);
         $this->assertLessThanOrEqual(time(), $startTime);
     }
@@ -72,7 +72,7 @@ class ServerInfoTest extends TestCase
     public function test_can_get_name(): void
     {
         $name = $this->serverInfo->getName();
-        
+
         $this->assertIsString($name);
         $this->assertNotEmpty($name);
     }
@@ -80,7 +80,7 @@ class ServerInfoTest extends TestCase
     public function test_can_get_version(): void
     {
         $version = $this->serverInfo->getVersion();
-        
+
         $this->assertIsString($version);
         $this->assertNotEmpty($version);
     }
@@ -88,7 +88,7 @@ class ServerInfoTest extends TestCase
     public function test_can_get_description(): void
     {
         $description = $this->serverInfo->getDescription();
-        
+
         $this->assertIsString($description);
         $this->assertNotEmpty($description);
     }
@@ -96,7 +96,7 @@ class ServerInfoTest extends TestCase
     public function test_can_get_vendor(): void
     {
         $vendor = $this->serverInfo->getVendor();
-        
+
         $this->assertIsString($vendor);
         $this->assertNotEmpty($vendor);
     }
@@ -105,7 +105,7 @@ class ServerInfoTest extends TestCase
     {
         $newName = 'Test Server';
         $this->serverInfo->setName($newName);
-        
+
         $this->assertEquals($newName, $this->serverInfo->getName());
     }
 
@@ -113,7 +113,7 @@ class ServerInfoTest extends TestCase
     {
         $newVersion = '2.0.0';
         $this->serverInfo->setVersion($newVersion);
-        
+
         $this->assertEquals($newVersion, $this->serverInfo->getVersion());
     }
 
@@ -121,7 +121,7 @@ class ServerInfoTest extends TestCase
     {
         $newDescription = 'Test Description';
         $this->serverInfo->setDescription($newDescription);
-        
+
         $this->assertEquals($newDescription, $this->serverInfo->getDescription());
     }
 
@@ -129,7 +129,7 @@ class ServerInfoTest extends TestCase
     {
         $newVendor = 'Test Vendor';
         $this->serverInfo->setVendor($newVendor);
-        
+
         $this->assertEquals($newVendor, $this->serverInfo->getVendor());
     }
 
@@ -139,9 +139,9 @@ class ServerInfoTest extends TestCase
             'name' => 'Updated Server',
             'version' => '3.0.0',
         ];
-        
+
         $this->serverInfo->updateServerInfo($updates);
-        
+
         $this->assertEquals('Updated Server', $this->serverInfo->getName());
         $this->assertEquals('3.0.0', $this->serverInfo->getVersion());
     }
@@ -151,10 +151,10 @@ class ServerInfoTest extends TestCase
         $updates = [
             'test_property' => 'test_value',
         ];
-        
+
         $this->serverInfo->updateRuntimeInfo($updates);
         $runtimeInfo = $this->serverInfo->getRuntimeInfo();
-        
+
         $this->assertArrayHasKey('test_property', $runtimeInfo);
         $this->assertEquals('test_value', $runtimeInfo['test_property']);
     }
@@ -162,7 +162,7 @@ class ServerInfoTest extends TestCase
     public function test_can_get_status(): void
     {
         $status = $this->serverInfo->getStatus();
-        
+
         $this->assertArrayHasKey('server', $status);
         $this->assertArrayHasKey('uptime', $status);
         $this->assertArrayHasKey('start_time', $status);
@@ -175,7 +175,7 @@ class ServerInfoTest extends TestCase
     public function test_can_get_detailed_info(): void
     {
         $detailedInfo = $this->serverInfo->getDetailedInfo();
-        
+
         $this->assertArrayHasKey('server', $detailedInfo);
         $this->assertArrayHasKey('runtime', $detailedInfo);
         $this->assertArrayHasKey('system', $detailedInfo);
@@ -185,7 +185,7 @@ class ServerInfoTest extends TestCase
     public function test_can_get_formatted_uptime(): void
     {
         $formattedUptime = $this->serverInfo->getUptimeFormatted();
-        
+
         $this->assertIsString($formattedUptime);
         $this->assertStringContainsString('s', $formattedUptime);
     }
@@ -194,19 +194,19 @@ class ServerInfoTest extends TestCase
     {
         $originalStartTime = $this->serverInfo->getStartTime();
         sleep(1);
-        
+
         $this->serverInfo->resetStartTime();
         $newStartTime = $this->serverInfo->getStartTime();
-        
+
         $this->assertGreaterThan($originalStartTime, $newStartTime);
     }
 
     public function test_can_convert_to_json(): void
     {
         $json = $this->serverInfo->toJson();
-        
+
         $this->assertJson($json);
-        
+
         $decoded = json_decode($json, true);
         $this->assertArrayHasKey('name', $decoded);
         $this->assertArrayHasKey('version', $decoded);
@@ -215,7 +215,7 @@ class ServerInfoTest extends TestCase
     public function test_can_convert_to_array(): void
     {
         $array = $this->serverInfo->toArray();
-        
+
         $this->assertIsArray($array);
         $this->assertArrayHasKey('name', $array);
         $this->assertArrayHasKey('version', $array);
@@ -227,9 +227,9 @@ class ServerInfoTest extends TestCase
         Config::set('laravel-mcp.server.version', '5.0.0');
         Config::set('laravel-mcp.server.description', 'Config Test Description');
         Config::set('laravel-mcp.server.vendor', 'Config Test Vendor');
-        
-        $serverInfo = new ServerInfo();
-        
+
+        $serverInfo = new ServerInfo;
+
         $this->assertEquals('Config Test Server', $serverInfo->getName());
         $this->assertEquals('5.0.0', $serverInfo->getVersion());
         $this->assertEquals('Config Test Description', $serverInfo->getDescription());
@@ -240,12 +240,12 @@ class ServerInfoTest extends TestCase
     {
         Config::set('laravel-mcp.server.name', env('MCP_SERVER_NAME', 'Env Test Server'));
         Config::set('laravel-mcp.server.description', env('MCP_SERVER_DESCRIPTION', 'Env Test Description'));
-        
-        $serverInfo = new ServerInfo();
-        
+
+        $serverInfo = new ServerInfo;
+
         $name = $serverInfo->getName();
         $description = $serverInfo->getDescription();
-        
+
         $this->assertIsString($name);
         $this->assertIsString($description);
     }
@@ -253,12 +253,12 @@ class ServerInfoTest extends TestCase
     public function test_runtime_info_contains_required_fields(): void
     {
         $runtimeInfo = $this->serverInfo->getRuntimeInfo();
-        
+
         $this->assertArrayHasKey('php_version', $runtimeInfo);
         $this->assertArrayHasKey('laravel_version', $runtimeInfo);
         $this->assertArrayHasKey('environment', $runtimeInfo);
         $this->assertArrayHasKey('timezone', $runtimeInfo);
-        
+
         $this->assertEquals(PHP_VERSION, $runtimeInfo['php_version']);
     }
 
@@ -266,11 +266,11 @@ class ServerInfoTest extends TestCase
     {
         $serverInfo = $this->serverInfo->getServerInfo();
         $implementation = $serverInfo['implementation'];
-        
+
         $this->assertArrayHasKey('name', $implementation);
         $this->assertArrayHasKey('version', $implementation);
         $this->assertArrayHasKey('repository', $implementation);
-        
+
         $this->assertEquals('Laravel MCP', $implementation['name']);
         $this->assertStringContains('github.com', $implementation['repository']);
     }
