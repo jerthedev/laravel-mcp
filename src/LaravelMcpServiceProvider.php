@@ -101,6 +101,11 @@ class LaravelMcpServiceProvider extends ServiceProvider
         $this->app->singleton('laravel-mcp', function ($app) {
             return $app->make(McpRegistry::class);
         });
+
+        // Register registry aliases for easier access
+        $this->app->singleton('mcp.registry', function ($app) {
+            return $app->make(McpRegistry::class);
+        });
     }
 
     private function registerInterfaces(): void

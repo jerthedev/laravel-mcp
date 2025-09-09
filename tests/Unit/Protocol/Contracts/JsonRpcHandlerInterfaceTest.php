@@ -1,9 +1,9 @@
 <?php
 
-namespace JTD\LaravelMCP\Tests\Unit\Protocol\Contracts;
+namespace Tests\Unit\Protocol\Contracts;
 
 use JTD\LaravelMCP\Protocol\Contracts\JsonRpcHandlerInterface;
-use JTD\LaravelMCP\Tests\TestCase;
+use Orchestra\Testbench\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 
 /**
