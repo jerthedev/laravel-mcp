@@ -170,6 +170,178 @@ class ConfigGenerator
     }
 
     /**
+     * Generate Claude Code configuration.
+     */
+    public function generateClaudeCodeConfig(array $options = []): array
+    {
+        $serverName = $options['server_name'] ?? 'laravel-mcp';
+        $command = $options['command'] ?? ['php', 'artisan', 'mcp:serve'];
+        $args = $options['args'] ?? [];
+        $env = $options['env'] ?? [];
+        $description = $options['description'] ?? 'Laravel MCP Server';
+
+        return [
+            'mcp' => [
+                'servers' => [
+                    $serverName => [
+                        'command' => $command[0],
+                        'args' => array_merge(array_slice($command, 1), $args),
+                        'env' => $env,
+                        'description' => $description,
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Generate ChatGPT Desktop configuration.
+     */
+    public function generateChatGptDesktopConfig(array $options = []): array
+    {
+        $serverName = $options['server_name'] ?? 'laravel-mcp';
+        $command = $options['command'] ?? ['php', 'artisan', 'mcp:serve'];
+        $args = $options['args'] ?? [];
+        $env = $options['env'] ?? [];
+        $description = $options['description'] ?? 'Laravel MCP Server';
+
+        return [
+            'mcp_servers' => [
+                [
+                    'name' => $serverName,
+                    'command' => array_merge($command, $args),
+                    'env' => $env,
+                    'description' => $description,
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Get client configuration file path based on OS.
+     */
+    public function getClientConfigPath(string $client): ?string
+    {
+        $os = $this->detectOperatingSystem();
+        $home = $this->getHomeDirectory();
+
+        $paths = [
+            'claude-desktop' => [
+                'windows' => $home.'/AppData/Roaming/Claude/claude_desktop_config.json',
+                'macos' => $home.'/Library/Application Support/Claude/claude_desktop_config.json',
+                'linux' => $home.'/.config/claude/claude_desktop_config.json',
+            ],
+            'claude-code' => [
+                'windows' => $home.'/AppData/Roaming/Code/User/claude_config.json',
+                'macos' => $home.'/Library/Application Support/Code/User/claude_config.json',
+                'linux' => $home.'/.config/Code/User/claude_config.json',
+            ],
+            'chatgpt' => [
+                'windows' => $home.'/AppData/Roaming/ChatGPT/chatgpt_config.json',
+                'macos' => $home.'/Library/Application Support/ChatGPT/chatgpt_config.json',
+                'linux' => $home.'/.config/chatgpt/chatgpt_config.json',
+            ],
+        ];
+
+        return $paths[$client][$os] ?? null;
+    }
+
+    /**
+     * Validate client configuration.
+     */
+    public function validateClientConfig(string $client, array $config): array
+    {
+        $errors = [];
+
+        switch ($client) {
+            case 'claude-desktop':
+                if (! isset($config['mcpServers']) || ! is_array($config['mcpServers'])) {
+                    $errors[] = 'Configuration must contain mcpServers object';
+                }
+                break;
+
+            case 'claude-code':
+                if (! isset($config['mcp']['servers']) || ! is_array($config['mcp']['servers'])) {
+                    $errors[] = 'Configuration must contain mcp.servers object';
+                }
+                break;
+
+            case 'chatgpt':
+                if (! isset($config['mcp_servers']) || ! is_array($config['mcp_servers'])) {
+                    $errors[] = 'Configuration must contain mcp_servers array';
+                }
+                break;
+
+            default:
+                $errors[] = "Unknown client type: $client";
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Save client configuration to file.
+     */
+    public function saveClientConfig(array $config, string $path, bool $force = false): bool
+    {
+        try {
+            // Check if file exists and force is not enabled
+            if (! $force && File::exists($path)) {
+                return false;
+            }
+
+            // Ensure directory exists
+            $directory = dirname($path);
+            if (! File::exists($directory)) {
+                File::makeDirectory($directory, 0755, true);
+            }
+
+            // Save as JSON
+            $content = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+            File::put($path, $content);
+
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Merge client configuration with existing config.
+     */
+    public function mergeClientConfig(string $client, array $newConfig, array $existingConfig = []): array
+    {
+        if (empty($existingConfig)) {
+            return $newConfig;
+        }
+
+        switch ($client) {
+            case 'claude-desktop':
+                $existingConfig['mcpServers'] = array_merge(
+                    $existingConfig['mcpServers'] ?? [],
+                    $newConfig['mcpServers'] ?? []
+                );
+                break;
+
+            case 'claude-code':
+                $existingConfig['mcp']['servers'] = array_merge(
+                    $existingConfig['mcp']['servers'] ?? [],
+                    $newConfig['mcp']['servers'] ?? []
+                );
+                break;
+
+            case 'chatgpt':
+                $existingConfig['mcp_servers'] = array_merge(
+                    $existingConfig['mcp_servers'] ?? [],
+                    $newConfig['mcp_servers'] ?? []
+                );
+                break;
+        }
+
+        return $existingConfig;
+    }
+
+    /**
      * Generate development configuration.
      */
     public function generateDevelopmentConfig(): array
@@ -399,5 +571,44 @@ class ConfigGenerator
                 $diff['removed'][$fullKey] = $value;
             }
         }
+    }
+
+    /**
+     * Detect the operating system.
+     */
+    protected function detectOperatingSystem(): string
+    {
+        if (stripos(PHP_OS, 'WIN') === 0) {
+            return 'windows';
+        }
+
+        if (stripos(PHP_OS, 'DARWIN') === 0) {
+            return 'macos';
+        }
+
+        return 'linux';
+    }
+
+    /**
+     * Get the user's home directory.
+     */
+    protected function getHomeDirectory(): string
+    {
+        $home = getenv('HOME');
+
+        if ($home) {
+            return $home;
+        }
+
+        // Windows fallback
+        $drive = getenv('HOMEDRIVE');
+        $path = getenv('HOMEPATH');
+
+        if ($drive && $path) {
+            return $drive.$path;
+        }
+
+        // Final fallback
+        return getenv('USERPROFILE') ?: '/tmp';
     }
 }

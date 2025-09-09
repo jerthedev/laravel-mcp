@@ -61,12 +61,18 @@ abstract class TestCase extends OrchestraTestCase
      */
     protected function defineEnvironment($app)
     {
+        // Set MCP_ENABLED environment variable - critical for commands
+        putenv('MCP_ENABLED=true');
+        $_ENV['MCP_ENABLED'] = 'true';
+        
         // Set test-specific configuration
+        $app['config']->set('laravel-mcp.enabled', true);
         $app['config']->set('laravel-mcp.debug', true);
-        $app['config']->set('laravel-mcp.discovery.enabled', true);
-        $app['config']->set('laravel-mcp.discovery.paths', [
-            app_path('Mcp'),
-        ]);
+        $app['config']->set('laravel-mcp.discovery.enabled', false); // Disable discovery in tests
+        $app['config']->set('laravel-mcp.discovery.paths', []);
+        
+        // Enable debug mode for commands
+        $app['config']->set('app.debug', true);
 
         // Set up test database
         $app['config']->set('database.default', 'testing');
