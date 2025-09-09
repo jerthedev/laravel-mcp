@@ -347,7 +347,7 @@ class RegisterCommand extends BaseCommand
             try {
                 $existingContent = File::get($path);
                 $existingConfig = json_decode($existingContent, true) ?? [];
-                
+
                 // Merge configurations if needed
                 if (! empty($existingConfig)) {
                     $config = $this->configGenerator->mergeClientConfig($client, $config, $existingConfig);

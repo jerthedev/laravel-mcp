@@ -3,7 +3,12 @@
 namespace JTD\LaravelMCP\Support;
 
 use Illuminate\Support\Facades\File;
+use JTD\LaravelMCP\Exceptions\ConfigurationException;
 use JTD\LaravelMCP\Registry\McpRegistry;
+use JTD\LaravelMCP\Support\Contracts\ClientGeneratorInterface;
+use JTD\LaravelMCP\Support\Generators\ChatGptGenerator;
+use JTD\LaravelMCP\Support\Generators\ClaudeCodeGenerator;
+use JTD\LaravelMCP\Support\Generators\ClaudeDesktopGenerator;
 
 /**
  * Configuration generator for MCP server.
@@ -19,6 +24,16 @@ class ConfigGenerator
     protected McpRegistry $registry;
 
     /**
+     * Client detector instance.
+     */
+    protected ClientDetector $clientDetector;
+
+    /**
+     * Client-specific generators.
+     */
+    protected array $clientGenerators = [];
+
+    /**
      * Default configuration templates.
      */
     protected array $configTemplates = [];
@@ -26,10 +41,12 @@ class ConfigGenerator
     /**
      * Create a new config generator instance.
      */
-    public function __construct(McpRegistry $registry)
+    public function __construct(McpRegistry $registry, ?ClientDetector $clientDetector = null)
     {
         $this->registry = $registry;
+        $this->clientDetector = $clientDetector ?? new ClientDetector;
         $this->initializeTemplates();
+        $this->initializeClientGenerators();
     }
 
     /**
@@ -153,20 +170,11 @@ class ConfigGenerator
      */
     public function generateClaudeDesktopConfig(array $options = []): array
     {
-        $serverName = $options['server_name'] ?? 'laravel-mcp';
-        $command = $options['command'] ?? ['php', 'artisan', 'mcp:serve'];
-        $args = $options['args'] ?? [];
-        $env = $options['env'] ?? [];
+        if (! isset($this->clientGenerators['claude-desktop'])) {
+            throw new ConfigurationException('Claude Desktop generator not available');
+        }
 
-        return [
-            'mcpServers' => [
-                $serverName => [
-                    'command' => $command[0],
-                    'args' => array_merge(array_slice($command, 1), $args),
-                    'env' => $env,
-                ],
-            ],
-        ];
+        return $this->clientGenerators['claude-desktop']->generate($options);
     }
 
     /**
@@ -174,24 +182,11 @@ class ConfigGenerator
      */
     public function generateClaudeCodeConfig(array $options = []): array
     {
-        $serverName = $options['server_name'] ?? 'laravel-mcp';
-        $command = $options['command'] ?? ['php', 'artisan', 'mcp:serve'];
-        $args = $options['args'] ?? [];
-        $env = $options['env'] ?? [];
-        $description = $options['description'] ?? 'Laravel MCP Server';
+        if (! isset($this->clientGenerators['claude-code'])) {
+            throw new ConfigurationException('Claude Code generator not available');
+        }
 
-        return [
-            'mcp' => [
-                'servers' => [
-                    $serverName => [
-                        'command' => $command[0],
-                        'args' => array_merge(array_slice($command, 1), $args),
-                        'env' => $env,
-                        'description' => $description,
-                    ],
-                ],
-            ],
-        ];
+        return $this->clientGenerators['claude-code']->generate($options);
     }
 
     /**
@@ -199,22 +194,11 @@ class ConfigGenerator
      */
     public function generateChatGptDesktopConfig(array $options = []): array
     {
-        $serverName = $options['server_name'] ?? 'laravel-mcp';
-        $command = $options['command'] ?? ['php', 'artisan', 'mcp:serve'];
-        $args = $options['args'] ?? [];
-        $env = $options['env'] ?? [];
-        $description = $options['description'] ?? 'Laravel MCP Server';
+        if (! isset($this->clientGenerators['chatgpt'])) {
+            throw new ConfigurationException('ChatGPT Desktop generator not available');
+        }
 
-        return [
-            'mcp_servers' => [
-                [
-                    'name' => $serverName,
-                    'command' => array_merge($command, $args),
-                    'env' => $env,
-                    'description' => $description,
-                ],
-            ],
-        ];
+        return $this->clientGenerators['chatgpt']->generate($options);
     }
 
     /**
@@ -222,28 +206,7 @@ class ConfigGenerator
      */
     public function getClientConfigPath(string $client): ?string
     {
-        $os = $this->detectOperatingSystem();
-        $home = $this->getHomeDirectory();
-
-        $paths = [
-            'claude-desktop' => [
-                'windows' => $home.'/AppData/Roaming/Claude/claude_desktop_config.json',
-                'macos' => $home.'/Library/Application Support/Claude/claude_desktop_config.json',
-                'linux' => $home.'/.config/claude/claude_desktop_config.json',
-            ],
-            'claude-code' => [
-                'windows' => $home.'/AppData/Roaming/Code/User/claude_config.json',
-                'macos' => $home.'/Library/Application Support/Code/User/claude_config.json',
-                'linux' => $home.'/.config/Code/User/claude_config.json',
-            ],
-            'chatgpt' => [
-                'windows' => $home.'/AppData/Roaming/ChatGPT/chatgpt_config.json',
-                'macos' => $home.'/Library/Application Support/ChatGPT/chatgpt_config.json',
-                'linux' => $home.'/.config/chatgpt/chatgpt_config.json',
-            ],
-        ];
-
-        return $paths[$client][$os] ?? null;
+        return $this->clientDetector->getDefaultConfigPath($client);
     }
 
     /**
@@ -251,32 +214,11 @@ class ConfigGenerator
      */
     public function validateClientConfig(string $client, array $config): array
     {
-        $errors = [];
-
-        switch ($client) {
-            case 'claude-desktop':
-                if (! isset($config['mcpServers']) || ! is_array($config['mcpServers'])) {
-                    $errors[] = 'Configuration must contain mcpServers object';
-                }
-                break;
-
-            case 'claude-code':
-                if (! isset($config['mcp']['servers']) || ! is_array($config['mcp']['servers'])) {
-                    $errors[] = 'Configuration must contain mcp.servers object';
-                }
-                break;
-
-            case 'chatgpt':
-                if (! isset($config['mcp_servers']) || ! is_array($config['mcp_servers'])) {
-                    $errors[] = 'Configuration must contain mcp_servers array';
-                }
-                break;
-
-            default:
-                $errors[] = "Unknown client type: $client";
+        if (! isset($this->clientGenerators[$client])) {
+            return ["Unknown client type: $client"];
         }
 
-        return $errors;
+        return $this->clientGenerators[$client]->validateConfig($config);
     }
 
     /**
@@ -311,34 +253,11 @@ class ConfigGenerator
      */
     public function mergeClientConfig(string $client, array $newConfig, array $existingConfig = []): array
     {
-        if (empty($existingConfig)) {
+        if (! isset($this->clientGenerators[$client])) {
             return $newConfig;
         }
 
-        switch ($client) {
-            case 'claude-desktop':
-                $existingConfig['mcpServers'] = array_merge(
-                    $existingConfig['mcpServers'] ?? [],
-                    $newConfig['mcpServers'] ?? []
-                );
-                break;
-
-            case 'claude-code':
-                $existingConfig['mcp']['servers'] = array_merge(
-                    $existingConfig['mcp']['servers'] ?? [],
-                    $newConfig['mcp']['servers'] ?? []
-                );
-                break;
-
-            case 'chatgpt':
-                $existingConfig['mcp_servers'] = array_merge(
-                    $existingConfig['mcp_servers'] ?? [],
-                    $newConfig['mcp_servers'] ?? []
-                );
-                break;
-        }
-
-        return $existingConfig;
+        return $this->clientGenerators[$client]->mergeConfig($newConfig, $existingConfig);
     }
 
     /**
@@ -516,6 +435,50 @@ class ConfigGenerator
     }
 
     /**
+     * Initialize client-specific generators.
+     */
+    protected function initializeClientGenerators(): void
+    {
+        $this->clientGenerators = [
+            'claude-desktop' => new ClaudeDesktopGenerator($this->registry),
+            'claude-code' => new ClaudeCodeGenerator($this->registry),
+            'chatgpt' => new ChatGptGenerator($this->registry),
+        ];
+    }
+
+    /**
+     * Get client generator for a specific client.
+     *
+     * @param  string  $client  Client identifier
+     * @return ClientGeneratorInterface|null Generator instance or null if not found
+     */
+    public function getClientGenerator(string $client): ?ClientGeneratorInterface
+    {
+        return $this->clientGenerators[$client] ?? null;
+    }
+
+    /**
+     * Check if a client is supported.
+     *
+     * @param  string  $client  Client identifier
+     * @return bool True if client is supported
+     */
+    public function isClientSupported(string $client): bool
+    {
+        return isset($this->clientGenerators[$client]);
+    }
+
+    /**
+     * Get list of supported clients.
+     *
+     * @return array Array of supported client identifiers
+     */
+    public function getSupportedClients(): array
+    {
+        return array_keys($this->clientGenerators);
+    }
+
+    /**
      * Get available configuration templates.
      */
     public function getTemplates(): array
@@ -571,44 +534,5 @@ class ConfigGenerator
                 $diff['removed'][$fullKey] = $value;
             }
         }
-    }
-
-    /**
-     * Detect the operating system.
-     */
-    protected function detectOperatingSystem(): string
-    {
-        if (stripos(PHP_OS, 'WIN') === 0) {
-            return 'windows';
-        }
-
-        if (stripos(PHP_OS, 'DARWIN') === 0) {
-            return 'macos';
-        }
-
-        return 'linux';
-    }
-
-    /**
-     * Get the user's home directory.
-     */
-    protected function getHomeDirectory(): string
-    {
-        $home = getenv('HOME');
-
-        if ($home) {
-            return $home;
-        }
-
-        // Windows fallback
-        $drive = getenv('HOMEDRIVE');
-        $path = getenv('HOMEPATH');
-
-        if ($drive && $path) {
-            return $drive.$path;
-        }
-
-        // Final fallback
-        return getenv('USERPROFILE') ?: '/tmp';
     }
 }
