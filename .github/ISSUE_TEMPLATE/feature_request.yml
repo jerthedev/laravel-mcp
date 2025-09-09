@@ -1,0 +1,100 @@
+name: Feature Request
+description: Suggest an idea for Laravel MCP
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to suggest a feature! Please fill out this form completely.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: Please confirm the following before submitting your feature request
+      options:
+        - label: I have searched the existing issues to make sure this feature has not been requested yet
+          required: true
+        - label: I have read the documentation to understand current capabilities
+          required: true
+        - label: This feature aligns with the Laravel MCP package goals and scope
+          required: true
+
+  - type: dropdown
+    id: feature-type
+    attributes:
+      label: Feature Type
+      description: What type of feature are you requesting?
+      options:
+        - New MCP Tool functionality
+        - New MCP Resource functionality
+        - New MCP Prompt functionality
+        - Transport improvements (HTTP/Stdio)
+        - Laravel integration enhancement
+        - Developer experience improvement
+        - Documentation improvement
+        - Performance enhancement
+        - Security improvement
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Description
+      description: Is your feature request related to a problem? Please describe the problem you're trying to solve.
+      placeholder: I'm always frustrated when...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see implemented
+      placeholder: I would like to see...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Describe any alternative solutions or features you've considered
+      placeholder: I considered...
+
+  - type: textarea
+    id: use-cases
+    attributes:
+      label: Use Cases
+      description: Provide specific use cases where this feature would be beneficial
+      placeholder: |
+        1. When building an e-commerce MCP server, this feature would...
+        2. For content management systems, this would enable...
+        3. In analytics applications, this could...
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Implementation Ideas
+      description: If you have ideas about how this could be implemented, please share them
+      placeholder: This could be implemented by...
+
+  - type: textarea
+    id: breaking-changes
+    attributes:
+      label: Breaking Changes
+      description: Would this feature require any breaking changes to the current API?
+      placeholder: This would/would not require breaking changes because...
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context, mockups, or examples about the feature request here
+      placeholder: Any additional information that might be helpful...

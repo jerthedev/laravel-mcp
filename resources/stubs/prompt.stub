@@ -1,0 +1,158 @@
+<?php
+
+namespace {{ namespace }};
+
+use JTD\LaravelMCP\Abstracts\McpPrompt;
+
+/**
+ * {{ class }} - MCP Prompt Implementation
+ * 
+ * This prompt provides {{ description }}.
+ * 
+ * @package {{ namespace }}
+ */
+class {{ class }} extends McpPrompt
+{
+    /**
+     * Prompt name identifier.
+     * 
+     * @var string
+     */
+    protected string $name = '{{ name }}';
+
+    /**
+     * Prompt description.
+     * 
+     * @var string
+     */
+    protected string $description = '{{ description }}';
+
+    /**
+     * Prompt arguments schema defining expected parameters.
+     * 
+     * @var array
+     */
+    protected array $argumentsSchema = [
+        'type' => 'object',
+        'properties' => [
+            // Define your prompt parameters here
+            // Example:
+            // 'topic' => [
+            //     'type' => 'string',
+            //     'description' => 'Topic for the prompt',
+            //     'required' => true,
+            // ],
+            // 'style' => [
+            //     'type' => 'string',
+            //     'description' => 'Writing style',
+            //     'enum' => ['formal', 'casual', 'technical'],
+            //     'default' => 'formal',
+            // ],
+        ],
+        'required' => [
+            // List required parameters here
+        ],
+    ];
+
+    /**
+     * Generate prompt messages based on the provided arguments.
+     * 
+     * This method should return an array of message objects
+     * that will be sent to the AI model. Each message should
+     * have a 'role' and 'content' structure.
+     * 
+     * @param array $arguments Prompt arguments
+     * @return array Prompt messages response
+     */
+    public function getMessages(array $arguments): array
+    {
+        // Implement your prompt generation logic here
+        
+        // Example implementation:
+        // $topic = $arguments['topic'] ?? 'general';
+        // $style = $arguments['style'] ?? 'formal';
+        // $content = $this->generatePromptContent($topic, $style);
+        
+        return [
+            'messages' => [
+                [
+                    'role' => 'user',
+                    'content' => [
+                        'type' => 'text',
+                        'text' => 'Generated prompt content goes here.',
+                    ],
+                ],
+            ],
+            'description' => $this->description,
+        ];
+    }
+
+    /**
+     * Get prompt metadata including name, description, and argument schema.
+     * 
+     * @return array Prompt metadata
+     */
+    public function getPromptInfo(): array
+    {
+        return [
+            'name' => $this->name,
+            'description' => $this->description,
+            'arguments' => $this->argumentsSchema,
+        ];
+    }
+
+    /**
+     * Validate prompt arguments against the schema.
+     * 
+     * @param array $arguments Arguments to validate
+     * @return array Validated arguments
+     * @throws \JTD\LaravelMCP\Exceptions\ProtocolException If validation fails
+     */
+    protected function validateArguments(array $arguments): array
+    {
+        // Use the ValidatesParameters trait method if available
+        if (method_exists($this, 'validateSchema')) {
+            return $this->validateSchema($arguments, $this->argumentsSchema['properties'] ?? []);
+        }
+
+        // Basic validation fallback
+        $required = $this->argumentsSchema['required'] ?? [];
+        foreach ($required as $field) {
+            if (!isset($arguments[$field])) {
+                throw new \JTD\LaravelMCP\Exceptions\ProtocolException(
+                    "Missing required argument: {$field}",
+                    -32602
+                );
+            }
+        }
+
+        return $arguments;
+    }
+
+    /**
+     * Additional helper methods can be added here.
+     * 
+     * Example:
+     * protected function generatePromptContent(string $topic, string $style): string
+     * {
+     *     $templates = [
+     *         'formal' => "Please provide a detailed analysis of {$topic}.",
+     *         'casual' => "Tell me about {$topic} in a friendly way.",
+     *         'technical' => "Provide technical specifications for {$topic}.",
+     *     ];
+     * 
+     *     return $templates[$style] ?? $templates['formal'];
+     * }
+     * 
+     * protected function formatMessage(string $content, string $role = 'user'): array
+     * {
+     *     return [
+     *         'role' => $role,
+     *         'content' => [
+     *             'type' => 'text',
+     *             'text' => $content,
+     *         ],
+     *     ];
+     * }
+     */
+}

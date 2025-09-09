@@ -37,7 +37,6 @@ A comprehensive Laravel package that provides seamless integration with the Mode
 {
   "php": "^8.2",
   "laravel/framework": "^11.0",
-  "modelcontextprotocol/php-sdk": "^1.0",
   "symfony/process": "^7.0"
 }
 ```
@@ -65,10 +64,12 @@ A comprehensive Laravel package that provides seamless integration with the Mode
 ### Core Components
 1. **Service Provider**: Main Laravel integration point
 2. **Transport Layer**: HTTP and Stdio communication handlers
-3. **Protocol Handler**: JSON-RPC 2.0 and MCP protocol implementation
+3. **Protocol Handler**: Custom JSON-RPC 2.0 and MCP 1.0 protocol implementation
 4. **Base Classes**: Abstract classes for Tools, Resources, and Prompts
 5. **Registry System**: Component discovery and registration
 6. **Artisan Commands**: CLI tools for development and deployment
+
+> **Note**: This package implements the MCP 1.0 protocol specification directly without external SDK dependencies, providing a lightweight and Laravel-optimized solution.
 
 ### Integration Points
 1. **Laravel Routes**: HTTP transport via Laravel's routing system

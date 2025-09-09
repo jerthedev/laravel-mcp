@@ -23,7 +23,6 @@
     "require": {
         "php": "^8.2",
         "laravel/framework": "^11.0",
-        "modelcontextprotocol/php-sdk": "^1.0",
         "symfony/process": "^7.0"
     },
     "require-dev": {
@@ -55,6 +54,12 @@
                 "Mcp": "JTD\\LaravelMCP\\Facades\\Mcp"
             }
         }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage",
+        "pint": "vendor/bin/pint",
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=2G"
     },
     "config": {
         "sort-packages": true

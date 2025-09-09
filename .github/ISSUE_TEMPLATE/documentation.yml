@@ -1,0 +1,74 @@
+name: Documentation Issue
+description: Report an issue with documentation or suggest documentation improvements
+title: "[Docs]: "
+labels: ["documentation", "needs-triage"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping us improve our documentation!
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: Please confirm the following before submitting
+      options:
+        - label: I have searched the existing issues to make sure this hasn't been reported yet
+          required: true
+        - label: I have reviewed the current documentation
+          required: true
+
+  - type: dropdown
+    id: doc-type
+    attributes:
+      label: Documentation Type
+      description: What type of documentation issue is this?
+      options:
+        - Missing documentation
+        - Incorrect/outdated information
+        - Unclear instructions
+        - Broken links
+        - Missing examples
+        - API documentation
+        - Installation guide
+        - Configuration guide
+        - Tutorial/guide improvement
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: page-url
+    attributes:
+      label: Page/Section
+      description: Which page or section of documentation is this about?
+      placeholder: "README.md, config/laravel-mcp.php, etc."
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue-description
+    attributes:
+      label: Issue Description
+      description: Describe the documentation issue clearly
+      placeholder: The documentation for configuring MCP transports is unclear because...
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggested-fix
+    attributes:
+      label: Suggested Fix
+      description: How would you improve this documentation?
+      placeholder: I suggest adding an example that shows...
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other context that might be helpful
+      placeholder: Additional information...

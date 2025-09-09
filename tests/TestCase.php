@@ -1,0 +1,424 @@
+<?php
+
+namespace JTD\LaravelMCP\Tests;
+
+use JTD\LaravelMCP\Facades\Mcp;
+use JTD\LaravelMCP\LaravelMcpServiceProvider;
+use Orchestra\Testbench\TestCase as OrchestraTestCase;
+
+/**
+ * Base test case for Laravel MCP package tests.
+ *
+ * This class provides common functionality for all tests in the package,
+ * including Laravel application setup, service provider registration,
+ * and helper methods for testing MCP functionality.
+ */
+abstract class TestCase extends OrchestraTestCase
+{
+    /**
+     * Setup the test environment.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->setUpMcpEnvironment();
+        $this->loadMcpConfiguration();
+        $this->setupTestComponents();
+    }
+
+    /**
+     * Get package providers.
+     *
+     * @param  \Illuminate\Foundation\Application  $app
+     * @return array
+     */
+    protected function getPackageProviders($app)
+    {
+        return [
+            LaravelMcpServiceProvider::class,
+        ];
+    }
+
+    /**
+     * Get package aliases.
+     *
+     * @param  \Illuminate\Foundation\Application  $app
+     * @return array
+     */
+    protected function getPackageAliases($app)
+    {
+        return [
+            'Mcp' => Mcp::class,
+        ];
+    }
+
+    /**
+     * Define environment setup.
+     *
+     * @param  \Illuminate\Foundation\Application  $app
+     * @return void
+     */
+    protected function defineEnvironment($app)
+    {
+        // Set test-specific configuration
+        $app['config']->set('laravel-mcp.debug', true);
+        $app['config']->set('laravel-mcp.discovery.enabled', true);
+        $app['config']->set('laravel-mcp.discovery.paths', [
+            app_path('Mcp'),
+        ]);
+
+        // Set up test database
+        $app['config']->set('database.default', 'testing');
+        $app['config']->set('database.connections.testing', [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => '',
+        ]);
+
+        // Set test-specific transport configuration
+        $app['config']->set('mcp-transports.http.enabled', true);
+        $app['config']->set('mcp-transports.http.host', '127.0.0.1');
+        $app['config']->set('mcp-transports.http.port', 0); // Random port for testing
+        $app['config']->set('mcp-transports.stdio.enabled', false);
+    }
+
+    /**
+     * Set up MCP-specific test environment.
+     */
+    protected function setUpMcpEnvironment(): void
+    {
+        // Create test directories if needed
+        $this->ensureTestDirectoriesExist();
+
+        // Clear any existing registrations
+        $this->clearMcpRegistrations();
+    }
+
+    /**
+     * Load MCP configuration for testing.
+     */
+    protected function loadMcpConfiguration(): void
+    {
+        // Additional test-specific configuration can be set here
+    }
+
+    /**
+     * Set up test components.
+     */
+    protected function setupTestComponents(): void
+    {
+        // Register test components if needed
+    }
+
+    /**
+     * Ensure test directories exist.
+     */
+    protected function ensureTestDirectoriesExist(): void
+    {
+        $directories = [
+            app_path('Mcp'),
+            app_path('Mcp/Tools'),
+            app_path('Mcp/Resources'),
+            app_path('Mcp/Prompts'),
+        ];
+
+        foreach ($directories as $directory) {
+            if (! is_dir($directory)) {
+                mkdir($directory, 0755, true);
+            }
+        }
+    }
+
+    /**
+     * Clear MCP component registrations.
+     */
+    protected function clearMcpRegistrations(): void
+    {
+        // Clear registrations using the facade
+        if (class_exists(Mcp::class)) {
+            try {
+                Mcp::reset();
+            } catch (\Exception $e) {
+                // Ignore errors during setup
+            }
+        }
+    }
+
+    /**
+     * Create a test MCP tool instance.
+     *
+     * @param  string  $name  Tool name
+     * @param  array  $config  Tool configuration
+     * @return \JTD\LaravelMCP\Abstracts\McpTool
+     */
+    protected function createTestTool(string $name, array $config = [])
+    {
+        return new class($name, $config) extends \JTD\LaravelMCP\Abstracts\McpTool
+        {
+            protected string $name;
+
+            protected string $description = 'Test tool';
+
+            protected array $inputSchema = [
+                'type' => 'object',
+                'properties' => [
+                    'input' => [
+                        'type' => 'string',
+                        'description' => 'Test input',
+                    ],
+                ],
+            ];
+
+            public function __construct(string $name, array $config = [])
+            {
+                $this->name = $name;
+                if (isset($config['description'])) {
+                    $this->description = $config['description'];
+                }
+                if (isset($config['inputSchema'])) {
+                    $this->inputSchema = $config['inputSchema'];
+                }
+            }
+
+            public function execute(array $arguments): array
+            {
+                return [
+                    'content' => [
+                        [
+                            'type' => 'text',
+                            'text' => 'Test result: '.($arguments['input'] ?? 'no input'),
+                        ],
+                    ],
+                ];
+            }
+        };
+    }
+
+    /**
+     * Create a test MCP resource instance.
+     *
+     * @param  string  $name  Resource name
+     * @param  array  $config  Resource configuration
+     * @return \JTD\LaravelMCP\Abstracts\McpResource
+     */
+    protected function createTestResource(string $name, array $config = [])
+    {
+        return new class($name, $config) extends \JTD\LaravelMCP\Abstracts\McpResource
+        {
+            protected string $uri;
+
+            protected string $name;
+
+            protected string $description = 'Test resource';
+
+            protected string $mimeType = 'text/plain';
+
+            public function __construct(string $name, array $config = [])
+            {
+                $this->name = $name;
+                $this->uri = $config['uri'] ?? "test://{$name}";
+                if (isset($config['description'])) {
+                    $this->description = $config['description'];
+                }
+                if (isset($config['mimeType'])) {
+                    $this->mimeType = $config['mimeType'];
+                }
+            }
+
+            public function read(array $options = []): array
+            {
+                return [
+                    'contents' => [
+                        [
+                            'uri' => $this->uri,
+                            'mimeType' => $this->mimeType,
+                            'text' => 'Test resource content',
+                        ],
+                    ],
+                ];
+            }
+        };
+    }
+
+    /**
+     * Create a test MCP prompt instance.
+     *
+     * @param  string  $name  Prompt name
+     * @param  array  $config  Prompt configuration
+     * @return \JTD\LaravelMCP\Abstracts\McpPrompt
+     */
+    protected function createTestPrompt(string $name, array $config = [])
+    {
+        return new class($name, $config) extends \JTD\LaravelMCP\Abstracts\McpPrompt
+        {
+            protected string $name;
+
+            protected string $description = 'Test prompt';
+
+            protected array $argumentsSchema = [
+                'type' => 'object',
+                'properties' => [
+                    'topic' => [
+                        'type' => 'string',
+                        'description' => 'Test topic',
+                    ],
+                ],
+            ];
+
+            public function __construct(string $name, array $config = [])
+            {
+                $this->name = $name;
+                if (isset($config['description'])) {
+                    $this->description = $config['description'];
+                }
+                if (isset($config['argumentsSchema'])) {
+                    $this->argumentsSchema = $config['argumentsSchema'];
+                }
+            }
+
+            public function getMessages(array $arguments): array
+            {
+                return [
+                    'messages' => [
+                        [
+                            'role' => 'user',
+                            'content' => [
+                                'type' => 'text',
+                                'text' => 'Test prompt for: '.($arguments['topic'] ?? 'no topic'),
+                            ],
+                        ],
+                    ],
+                ];
+            }
+        };
+    }
+
+    /**
+     * Assert that an MCP component is registered.
+     *
+     * @param  string  $type  Component type (tools, resources, prompts)
+     * @param  string  $name  Component name
+     */
+    protected function assertComponentRegistered(string $type, string $name): void
+    {
+        $method = 'has'.ucfirst(rtrim($type, 's'));
+        $this->assertTrue(Mcp::{$method}($name), "Component '{$name}' of type '{$type}' should be registered");
+    }
+
+    /**
+     * Assert that an MCP component is not registered.
+     *
+     * @param  string  $type  Component type (tools, resources, prompts)
+     * @param  string  $name  Component name
+     */
+    protected function assertComponentNotRegistered(string $type, string $name): void
+    {
+        $method = 'has'.ucfirst(rtrim($type, 's'));
+        $this->assertFalse(Mcp::{$method}($name), "Component '{$name}' of type '{$type}' should not be registered");
+    }
+
+    /**
+     * Assert MCP response structure.
+     *
+     * @param  array  $response  Response to validate
+     * @param  array  $expectedStructure  Expected structure
+     */
+    protected function assertMcpResponse(array $response, array $expectedStructure = []): void
+    {
+        // Basic MCP response structure
+        if (isset($response['error'])) {
+            $this->assertArrayHasKey('code', $response['error']);
+            $this->assertArrayHasKey('message', $response['error']);
+        } else {
+            $this->assertArrayHasKey('result', $response);
+        }
+
+        // Validate expected structure
+        foreach ($expectedStructure as $key => $value) {
+            if (is_array($value)) {
+                $this->assertArrayHasKey($key, $response);
+                $this->assertMcpResponse($response[$key], $value);
+            } else {
+                $this->assertArrayHasKey($key, $response);
+            }
+        }
+    }
+
+    /**
+     * Create a mock JSON-RPC request.
+     *
+     * @param  string  $method  Method name
+     * @param  array  $params  Method parameters
+     * @param  mixed  $id  Request ID
+     */
+    protected function createJsonRpcRequest(string $method, array $params = [], $id = 1): array
+    {
+        return [
+            'jsonrpc' => '2.0',
+            'method' => $method,
+            'params' => $params,
+            'id' => $id,
+        ];
+    }
+
+    /**
+     * Create a mock JSON-RPC notification.
+     *
+     * @param  string  $method  Method name
+     * @param  array  $params  Method parameters
+     */
+    protected function createJsonRpcNotification(string $method, array $params = []): array
+    {
+        return [
+            'jsonrpc' => '2.0',
+            'method' => $method,
+            'params' => $params,
+        ];
+    }
+
+    /**
+     * Get test fixture path.
+     *
+     * @param  string  $fixture  Fixture file name
+     */
+    protected function getFixturePath(string $fixture): string
+    {
+        return __DIR__.'/Fixtures/'.$fixture;
+    }
+
+    /**
+     * Load test fixture data.
+     *
+     * @param  string  $fixture  Fixture file name
+     * @return mixed
+     */
+    protected function loadFixture(string $fixture)
+    {
+        $path = $this->getFixturePath($fixture);
+
+        if (! file_exists($path)) {
+            throw new \InvalidArgumentException("Fixture file '{$fixture}' not found");
+        }
+
+        $extension = pathinfo($path, PATHINFO_EXTENSION);
+
+        switch ($extension) {
+            case 'json':
+                return json_decode(file_get_contents($path), true);
+            case 'php':
+                return require $path;
+            default:
+                return file_get_contents($path);
+        }
+    }
+
+    /**
+     * Cleanup after test.
+     */
+    protected function tearDown(): void
+    {
+        $this->clearMcpRegistrations();
+        parent::tearDown();
+    }
+}

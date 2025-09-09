@@ -1,0 +1,243 @@
+<?php
+
+namespace JTD\LaravelMCP\Registry;
+
+use JTD\LaravelMCP\Exceptions\RegistrationException;
+use JTD\LaravelMCP\Registry\Contracts\RegistryInterface;
+
+/**
+ * Registry for MCP tool components.
+ *
+ * This class manages the registration and retrieval of MCP tools,
+ * providing specialized functionality for tool-specific operations.
+ */
+class ToolRegistry implements RegistryInterface
+{
+    /**
+     * Registered tools storage.
+     */
+    protected array $tools = [];
+
+    /**
+     * Tool metadata storage.
+     */
+    protected array $metadata = [];
+
+    /**
+     * Registry type identifier.
+     */
+    protected string $type = 'tools';
+
+    /**
+     * Register a tool with the registry.
+     */
+    public function register(string $name, $tool, array $metadata = []): void
+    {
+        if ($this->has($name)) {
+            throw new RegistrationException("Tool '{$name}' is already registered");
+        }
+
+        $this->tools[$name] = $tool;
+        $this->metadata[$name] = array_merge([
+            'name' => $name,
+            'type' => 'tool',
+            'registered_at' => now()->toISOString(),
+            'description' => $metadata['description'] ?? '',
+            'parameters' => $metadata['parameters'] ?? [],
+            'input_schema' => $metadata['input_schema'] ?? null,
+        ], $metadata);
+    }
+
+    /**
+     * Unregister a tool from the registry.
+     */
+    public function unregister(string $name): bool
+    {
+        if (! $this->has($name)) {
+            return false;
+        }
+
+        unset($this->tools[$name], $this->metadata[$name]);
+
+        return true;
+    }
+
+    /**
+     * Check if a tool is registered.
+     */
+    public function has(string $name): bool
+    {
+        return array_key_exists($name, $this->tools);
+    }
+
+    /**
+     * Get a registered tool.
+     */
+    public function get(string $name)
+    {
+        if (! $this->has($name)) {
+            throw new RegistrationException("Tool '{$name}' is not registered");
+        }
+
+        return $this->tools[$name];
+    }
+
+    /**
+     * Get all registered tools.
+     */
+    public function all(): array
+    {
+        return $this->tools;
+    }
+
+    /**
+     * Get all registered tool names.
+     */
+    public function names(): array
+    {
+        return array_keys($this->tools);
+    }
+
+    /**
+     * Count registered tools.
+     */
+    public function count(): int
+    {
+        return count($this->tools);
+    }
+
+    /**
+     * Clear all registered tools.
+     */
+    public function clear(): void
+    {
+        $this->tools = [];
+        $this->metadata = [];
+    }
+
+    /**
+     * Get metadata for a registered tool.
+     */
+    public function getMetadata(string $name): array
+    {
+        if (! $this->has($name)) {
+            throw new RegistrationException("Tool '{$name}' is not registered");
+        }
+
+        return $this->metadata[$name];
+    }
+
+    /**
+     * Filter tools by metadata criteria.
+     */
+    public function filter(array $criteria): array
+    {
+        return array_filter($this->tools, function ($tool, $name) use ($criteria) {
+            $metadata = $this->metadata[$name];
+
+            foreach ($criteria as $key => $value) {
+                if (! isset($metadata[$key]) || $metadata[$key] !== $value) {
+                    return false;
+                }
+            }
+
+            return true;
+        }, ARRAY_FILTER_USE_BOTH);
+    }
+
+    /**
+     * Get tools matching a pattern.
+     */
+    public function search(string $pattern): array
+    {
+        return array_filter($this->tools, function ($tool, $name) use ($pattern) {
+            return fnmatch($pattern, $name);
+        }, ARRAY_FILTER_USE_BOTH);
+    }
+
+    /**
+     * Get the registry type identifier.
+     */
+    public function getType(): string
+    {
+        return $this->type;
+    }
+
+    /**
+     * Get tool definitions for MCP protocol.
+     */
+    public function getToolDefinitions(): array
+    {
+        $definitions = [];
+
+        foreach ($this->tools as $name => $tool) {
+            $metadata = $this->metadata[$name];
+
+            $definitions[] = [
+                'name' => $name,
+                'description' => $metadata['description'] ?? '',
+                'inputSchema' => $metadata['input_schema'] ?? [
+                    'type' => 'object',
+                    'properties' => [],
+                ],
+            ];
+        }
+
+        return $definitions;
+    }
+
+    /**
+     * Execute a tool with given parameters.
+     */
+    public function executeTool(string $name, array $parameters = []): array
+    {
+        $tool = $this->get($name);
+
+        if (is_string($tool) && class_exists($tool)) {
+            $tool = new $tool;
+        }
+
+        if (! is_object($tool) || ! method_exists($tool, 'execute')) {
+            throw new RegistrationException("Tool '{$name}' does not have an execute method");
+        }
+
+        return $tool->execute($parameters);
+    }
+
+    /**
+     * Validate tool parameters against schema.
+     */
+    public function validateParameters(string $name, array $parameters): bool
+    {
+        $metadata = $this->getMetadata($name);
+        $schema = $metadata['input_schema'] ?? null;
+
+        if (! $schema) {
+            return true; // No schema defined, allow any parameters
+        }
+
+        // Basic validation - in a full implementation, you'd use a JSON schema validator
+        $requiredProperties = $schema['required'] ?? [];
+
+        foreach ($requiredProperties as $property) {
+            if (! array_key_exists($property, $parameters)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Get tools that match specific capability requirements.
+     */
+    public function getToolsByCapability(array $capabilities): array
+    {
+        return array_filter($this->tools, function ($tool, $name) use ($capabilities) {
+            $metadata = $this->metadata[$name];
+            $toolCapabilities = $metadata['capabilities'] ?? [];
+
+            return ! empty(array_intersect($capabilities, $toolCapabilities));
+        }, ARRAY_FILTER_USE_BOTH);
+    }
+}

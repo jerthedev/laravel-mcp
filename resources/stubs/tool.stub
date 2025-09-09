@@ -1,0 +1,88 @@
+<?php
+
+namespace {{ namespace }};
+
+use JTD\LaravelMCP\Abstracts\McpTool;
+
+/**
+ * {{ class }} - MCP Tool Implementation
+ * 
+ * This tool provides {{ description }}.
+ * 
+ * @package {{ namespace }}
+ */
+class {{ class }} extends McpTool
+{
+    /**
+     * Tool name identifier.
+     * 
+     * @var string
+     */
+    protected string $name = '{{ name }}';
+
+    /**
+     * Tool description.
+     * 
+     * @var string
+     */
+    protected string $description = '{{ description }}';
+
+    /**
+     * Tool input schema defining expected parameters.
+     * 
+     * @var array
+     */
+    protected array $inputSchema = [
+        'type' => 'object',
+        'properties' => [
+            // Define your tool parameters here
+            // Example:
+            // 'message' => [
+            //     'type' => 'string',
+            //     'description' => 'Message to process',
+            //     'required' => true,
+            // ],
+        ],
+        'required' => [
+            // List required parameters here
+        ],
+    ];
+
+    /**
+     * Execute the tool with the provided arguments.
+     * 
+     * This method contains the main logic for your tool.
+     * It receives validated arguments and should return
+     * appropriate results.
+     * 
+     * @param array $arguments Tool arguments
+     * @return array Tool execution result
+     */
+    public function execute(array $arguments): array
+    {
+        // Implement your tool logic here
+        
+        // Example implementation:
+        // $message = $arguments['message'] ?? 'Hello, World!';
+        // $result = $this->processMessage($message);
+        
+        return [
+            'content' => [
+                [
+                    'type' => 'text',
+                    'text' => 'Tool executed successfully!',
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Additional helper methods can be added here.
+     * 
+     * Example:
+     * protected function processMessage(string $message): string
+     * {
+     *     return strtoupper($message);
+     * }
+     */
+}

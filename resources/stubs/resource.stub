@@ -1,0 +1,164 @@
+<?php
+
+namespace {{ namespace }};
+
+use JTD\LaravelMCP\Abstracts\McpResource;
+
+/**
+ * {{ class }} - MCP Resource Implementation
+ * 
+ * This resource provides {{ description }}.
+ * 
+ * @package {{ namespace }}
+ */
+class {{ class }} extends McpResource
+{
+    /**
+     * Resource URI identifier.
+     * 
+     * @var string
+     */
+    protected string $uri = '{{ uri }}';
+
+    /**
+     * Resource name.
+     * 
+     * @var string
+     */
+    protected string $name = '{{ name }}';
+
+    /**
+     * Resource description.
+     * 
+     * @var string
+     */
+    protected string $description = '{{ description }}';
+
+    /**
+     * Resource MIME type.
+     * 
+     * @var string
+     */
+    protected string $mimeType = 'text/plain';
+
+    /**
+     * Whether this resource supports subscription.
+     * 
+     * @var bool
+     */
+    protected bool $supportsSubscription = false;
+
+    /**
+     * Read the resource content.
+     * 
+     * This method should return the actual content of the resource.
+     * The content format depends on the resource type and MIME type.
+     * 
+     * @param array $options Read options (filters, format, etc.)
+     * @return array Resource content response
+     */
+    public function read(array $options = []): array
+    {
+        // Implement your resource reading logic here
+        
+        // Example implementation:
+        // $data = $this->fetchResourceData($options);
+        // $content = $this->formatContent($data, $options);
+        
+        return [
+            'contents' => [
+                [
+                    'uri' => $this->uri,
+                    'mimeType' => $this->mimeType,
+                    'text' => 'Resource content goes here',
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * List available resources of this type.
+     * 
+     * If your resource represents a collection or has
+     * multiple variants, implement this method to list them.
+     * 
+     * @param array $options List options (filters, pagination, etc.)
+     * @return array List of resources
+     */
+    public function list(array $options = []): array
+    {
+        return [
+            'resources' => [
+                [
+                    'uri' => $this->uri,
+                    'name' => $this->name,
+                    'description' => $this->description,
+                    'mimeType' => $this->mimeType,
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Subscribe to resource changes (if supported).
+     * 
+     * Implement this method if your resource supports
+     * real-time updates or change notifications.
+     * 
+     * @param array $options Subscription options
+     * @return array Subscription response
+     */
+    public function subscribe(array $options = []): array
+    {
+        if (!$this->supportsSubscription) {
+            throw new \JTD\LaravelMCP\Exceptions\McpException(
+                'This resource does not support subscriptions',
+                -32603
+            );
+        }
+
+        // Implement subscription logic here
+        
+        return [
+            'subscription' => [
+                'uri' => $this->uri,
+                'subscribed' => true,
+            ],
+        ];
+    }
+
+    /**
+     * Unsubscribe from resource changes.
+     * 
+     * @param array $options Unsubscription options
+     * @return array Unsubscription response
+     */
+    public function unsubscribe(array $options = []): array
+    {
+        // Implement unsubscription logic here
+        
+        return [
+            'subscription' => [
+                'uri' => $this->uri,
+                'subscribed' => false,
+            ],
+        ];
+    }
+
+    /**
+     * Additional helper methods can be added here.
+     * 
+     * Example:
+     * protected function fetchResourceData(array $options): array
+     * {
+     *     // Fetch data from database, API, file system, etc.
+     *     return [];
+     * }
+     * 
+     * protected function formatContent(array $data, array $options): string
+     * {
+     *     // Format data based on options or MIME type
+     *     return json_encode($data);
+     * }
+     */
+}

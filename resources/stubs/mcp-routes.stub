@@ -1,0 +1,73 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use JTD\LaravelMCP\Http\Controllers\McpController;
+
+/**
+ * MCP HTTP Routes
+ * 
+ * These routes handle MCP protocol communication over HTTP transport.
+ * The routes are automatically registered by the Laravel MCP package
+ * and can be customized by publishing this file.
+ */
+
+// MCP HTTP Transport Routes
+Route::group([
+    'prefix' => config('laravel-mcp.http.prefix', 'mcp'),
+    'middleware' => config('laravel-mcp.http.middleware', []),
+], function () {
+    
+    // Main MCP endpoint for JSON-RPC communication
+    Route::post('/', [McpController::class, 'handle'])
+        ->name('mcp.handle');
+
+    // Server information endpoint
+    Route::get('/info', [McpController::class, 'info'])
+        ->name('mcp.info');
+
+    // Health check endpoint
+    Route::get('/health', [McpController::class, 'health'])
+        ->name('mcp.health');
+
+    // WebSocket upgrade endpoint (if WebSocket transport is enabled)
+    if (config('laravel-mcp.transports.websocket.enabled', false)) {
+        Route::get('/ws', [McpController::class, 'websocket'])
+            ->name('mcp.websocket');
+    }
+
+    // Debug routes (only available in debug mode)
+    if (config('laravel-mcp.debug', false)) {
+        Route::group(['prefix' => 'debug'], function () {
+            
+            // List all registered components
+            Route::get('/components', [McpController::class, 'debugComponents'])
+                ->name('mcp.debug.components');
+
+            // Show server capabilities
+            Route::get('/capabilities', [McpController::class, 'debugCapabilities'])
+                ->name('mcp.debug.capabilities');
+
+            // Display server configuration
+            Route::get('/config', [McpController::class, 'debugConfig'])
+                ->name('mcp.debug.config');
+
+            // Test tool execution
+            Route::post('/tools/{name}', [McpController::class, 'debugTool'])
+                ->name('mcp.debug.tool');
+
+            // Test resource reading
+            Route::get('/resources/{name}', [McpController::class, 'debugResource'])
+                ->name('mcp.debug.resource');
+
+            // Test prompt generation
+            Route::post('/prompts/{name}', [McpController::class, 'debugPrompt'])
+                ->name('mcp.debug.prompt');
+        });
+    }
+});
+
+// Optional: Add custom MCP routes here
+// Example:
+// Route::post('/mcp/custom-endpoint', function () {
+//     return response()->json(['message' => 'Custom MCP endpoint']);
+// });

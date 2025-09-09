@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & Discussions
+    url: https://github.com/jerthedev/laravel-mcp/discussions
+    about: Ask questions and discuss Laravel MCP with the community
+  - name: Laravel Community
+    url: https://laravel.com/community
+    about: Get help from the broader Laravel community
+  - name: Model Context Protocol Specification
+    url: https://spec.modelcontextprotocol.io/
+    about: Learn more about the MCP specification
