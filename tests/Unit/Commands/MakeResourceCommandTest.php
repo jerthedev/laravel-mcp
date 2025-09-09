@@ -4,7 +4,7 @@ namespace JTD\LaravelMCP\Tests\Unit\Commands;
 
 use Illuminate\Filesystem\Filesystem;
 use JTD\LaravelMCP\Commands\MakeResourceCommand;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use Mockery;
 use ReflectionClass;
 use Symfony\Component\Console\Input\ArrayInput;

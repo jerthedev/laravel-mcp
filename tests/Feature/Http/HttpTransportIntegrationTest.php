@@ -4,7 +4,7 @@ namespace JTD\LaravelMCP\Tests\Feature\Http;
 
 use Illuminate\Support\Facades\Route;
 use JTD\LaravelMCP\Http\Controllers\McpController;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use JTD\LaravelMCP\Transport\TransportManager;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;

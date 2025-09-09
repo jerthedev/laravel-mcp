@@ -5,7 +5,7 @@ namespace JTD\LaravelMCP\Tests\Unit\Server\Handlers;
 use JTD\LaravelMCP\Exceptions\ProtocolException;
 use JTD\LaravelMCP\Registry\ToolRegistry;
 use JTD\LaravelMCP\Server\Handlers\ToolHandler;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use Mockery;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -117,7 +117,7 @@ class ToolHandlerTest extends TestCase
         $this->toolRegistry
             ->shouldReceive('all')
             ->once()
-            ->andReturn(['test-tool' => $mockTool]);
+            ->andReturn(['test-tool' => ['handler' => $mockTool, 'options' => []]]);
 
         $response = $this->handler->handle('tools/list', []);
 
@@ -152,8 +152,8 @@ class ToolHandlerTest extends TestCase
             ->shouldReceive('all')
             ->once()
             ->andReturn([
-                'good-tool' => $goodTool,
-                'bad-tool' => $badTool,
+                'good-tool' => ['handler' => $goodTool, 'options' => []],
+                'bad-tool' => ['handler' => $badTool, 'options' => []],
             ]);
 
         $response = $this->handler->handle('tools/list', []);
@@ -194,9 +194,9 @@ class ToolHandlerTest extends TestCase
             ->shouldReceive('all')
             ->once()
             ->andReturn([
-                'tool1' => $mockTool1,
-                'tool2' => $mockTool2,
-                'tool3' => $mockTool3,
+                'tool1' => ['handler' => $mockTool1, 'options' => []],
+                'tool2' => ['handler' => $mockTool2, 'options' => []],
+                'tool3' => ['handler' => $mockTool3, 'options' => []],
             ]);
 
         // Create cursor for pagination (skip first 1, limit 1)
@@ -214,7 +214,7 @@ class ToolHandlerTest extends TestCase
     {
         $tools = [];
         for ($i = 1; $i <= 60; $i++) {
-            $tools["tool{$i}"] = $this->createMockTool("Tool {$i}");
+            $tools["tool{$i}"] = ['handler' => $this->createMockTool("Tool {$i}"), 'options' => []];
         }
 
         $this->toolRegistry
@@ -287,7 +287,7 @@ class ToolHandlerTest extends TestCase
             ->shouldReceive('get')
             ->with('test-tool')
             ->once()
-            ->andReturn($mockTool);
+            ->andReturn(['handler' => $mockTool, 'options' => []]);
 
         $response = $this->handler->handle('tools/call', [
             'name' => 'test-tool',
@@ -328,7 +328,7 @@ class ToolHandlerTest extends TestCase
             ->shouldReceive('get')
             ->with('test-tool')
             ->once()
-            ->andReturn($mockTool);
+            ->andReturn(['handler' => $mockTool, 'options' => []]);
 
         $response = $this->handler->handle('tools/call', [
             'name' => 'test-tool',
@@ -357,7 +357,7 @@ class ToolHandlerTest extends TestCase
             ->shouldReceive('get')
             ->with('callable-tool')
             ->once()
-            ->andReturn($callableTool);
+            ->andReturn(['handler' => $callableTool, 'options' => []]);
 
         $response = $this->handler->handle('tools/call', [
             'name' => 'callable-tool',
@@ -383,7 +383,7 @@ class ToolHandlerTest extends TestCase
             ->shouldReceive('get')
             ->with('non-executable')
             ->once()
-            ->andReturn($nonExecutableTool);
+            ->andReturn(['handler' => $nonExecutableTool, 'options' => []]);
 
         $response = $this->handler->handle('tools/call', [
             'name' => 'non-executable',
@@ -413,7 +413,7 @@ class ToolHandlerTest extends TestCase
             ->shouldReceive('get')
             ->with('validating-tool')
             ->once()
-            ->andReturn($mockTool);
+            ->andReturn(['handler' => $mockTool, 'options' => []]);
 
         $this->expectException(ProtocolException::class);
         $this->expectExceptionCode(-32602);
@@ -444,7 +444,7 @@ class ToolHandlerTest extends TestCase
             ->shouldReceive('get')
             ->with('non-validating-tool')
             ->once()
-            ->andReturn($mockTool);
+            ->andReturn(['handler' => $mockTool, 'options' => []]);
 
         $response = $this->handler->handle('tools/call', [
             'name' => 'non-validating-tool',
@@ -471,7 +471,7 @@ class ToolHandlerTest extends TestCase
             ->shouldReceive('get')
             ->with('failing-tool')
             ->once()
-            ->andReturn($mockTool);
+            ->andReturn(['handler' => $mockTool, 'options' => []]);
 
         $response = $this->handler->handle('tools/call', [
             'name' => 'failing-tool',
@@ -501,7 +501,7 @@ class ToolHandlerTest extends TestCase
             ->shouldReceive('get')
             ->with('test-tool')
             ->once()
-            ->andReturn($mockTool);
+            ->andReturn(['handler' => $mockTool, 'options' => []]);
 
         $response = $this->handler->handle('tools/call', [
             'name' => 'test-tool',
@@ -518,7 +518,7 @@ class ToolHandlerTest extends TestCase
         $this->toolRegistry
             ->shouldReceive('all')
             ->once()
-            ->andReturn(['test-tool' => $tool]);
+            ->andReturn(['test-tool' => ['handler' => $tool, 'options' => []]]);
 
         $response = $this->handler->handle('tools/list', []);
 
@@ -569,7 +569,7 @@ class ToolHandlerTest extends TestCase
         $this->toolRegistry
             ->shouldReceive('all')
             ->once()
-            ->andReturn(['test-tool' => $tool]);
+            ->andReturn(['test-tool' => ['handler' => $tool, 'options' => []]]);
 
         $response = $this->handler->handle('tools/list', []);
 
@@ -638,7 +638,7 @@ class ToolHandlerTest extends TestCase
             ->shouldReceive('get')
             ->with('test-tool')
             ->once()
-            ->andReturn($mockTool);
+            ->andReturn(['handler' => $mockTool, 'options' => []]);
 
         $response = $this->handler->handle('tools/call', [
             'name' => 'test-tool',

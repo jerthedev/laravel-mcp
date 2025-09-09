@@ -3,7 +3,7 @@
 namespace Tests\Unit\Protocol\Contracts;
 
 use JTD\LaravelMCP\Protocol\Contracts\ProtocolHandlerInterface;
-use Orchestra\Testbench\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 
 /**

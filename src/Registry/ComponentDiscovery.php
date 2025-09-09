@@ -301,8 +301,80 @@ class ComponentDiscovery implements DiscoveryInterface
      */
     public function registerDiscoveredComponents(): void
     {
-        // This method is called after discovery to finalize registration
-        // Implementation can be expanded based on needs
+        $discovered = $this->discover([]);
+
+        foreach ($discovered as $component) {
+            try {
+                $this->registry->register(
+                    $component['type'],
+                    $component['name'],
+                    $component['class'],
+                    $component['metadata'] ?? []
+                );
+
+                logger()->debug('Registered discovered component', [
+                    'type' => $component['type'],
+                    'name' => $component['name'],
+                    'class' => $component['class'],
+                ]);
+            } catch (\Exception $e) {
+                logger()->warning('Failed to register discovered component', [
+                    'component' => $component,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Validate discovered components.
+     *
+     * This method validates all discovered components to ensure they
+     * properly implement their respective base classes and meet all
+     * requirements for MCP components.
+     */
+    public function validateDiscoveredComponents(): void
+    {
+        $discovered = $this->discover([]);
+
+        foreach ($discovered as $component) {
+            try {
+                // Validate the component class exists
+                if (! class_exists($component['class'])) {
+                    logger()->warning('Discovered component class does not exist', [
+                        'class' => $component['class'],
+                        'type' => $component['type'],
+                    ]);
+
+                    continue;
+                }
+
+                // Validate the component extends the correct base class
+                $reflection = new ReflectionClass($component['class']);
+                $baseClass = $this->supportedTypes[$component['type']] ?? null;
+
+                if ($baseClass && ! $reflection->isSubclassOf($baseClass)) {
+                    logger()->warning('Discovered component does not extend required base class', [
+                        'class' => $component['class'],
+                        'type' => $component['type'],
+                        'expected_base' => $baseClass,
+                    ]);
+
+                    continue;
+                }
+
+                logger()->debug('Validated discovered component', [
+                    'type' => $component['type'],
+                    'name' => $component['name'],
+                    'class' => $component['class'],
+                ]);
+            } catch (\Exception $e) {
+                logger()->warning('Failed to validate discovered component', [
+                    'component' => $component,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
     }
 
     /**
@@ -361,13 +433,38 @@ class ComponentDiscovery implements DiscoveryInterface
 
         $lines = explode("\n", $docComment);
         $description = '';
+        $startedParsing = false;
+        $emptyLineCount = 0;
 
         foreach ($lines as $line) {
-            $line = trim($line, " *\t\r\n/");
-            if (empty($line) || str_starts_with($line, '@')) {
+            // Remove leading/trailing whitespace and asterisks
+            $line = trim($line);
+            $line = trim($line, '/*');
+            $line = trim($line);
+            
+            // Skip empty lines at the beginning
+            if (!$startedParsing && empty($line)) {
+                continue;
+            }
+            
+            // Stop at @annotations
+            if (str_starts_with($line, '@')) {
                 break;
             }
-            $description .= ($description ? ' ' : '').$line;
+            
+            // If we have content, add it to description
+            if (!empty($line)) {
+                $startedParsing = true;
+                $emptyLineCount = 0;
+                $description .= ($description ? ' ' : '').$line;
+            } elseif ($startedParsing) {
+                // Count consecutive empty lines
+                $emptyLineCount++;
+                // Two consecutive empty lines indicate end of description
+                if ($emptyLineCount >= 2) {
+                    break;
+                }
+            }
         }
 
         return $description;

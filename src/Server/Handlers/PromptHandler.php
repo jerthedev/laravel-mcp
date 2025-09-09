@@ -156,8 +156,11 @@ class PromptHandler extends BaseHandler
         }
 
         try {
-            // Get the prompt instance
-            $prompt = $this->promptRegistry->get($promptName);
+            // Get the prompt data from registry
+            $promptData = $this->promptRegistry->get($promptName);
+            
+            // Extract the prompt handler from the data array
+            $prompt = $promptData['handler'] ?? $promptData;
 
             // Validate prompt arguments if the prompt supports it
             try {
@@ -216,8 +219,11 @@ class PromptHandler extends BaseHandler
         $prompts = $this->promptRegistry->all();
         $definitions = [];
 
-        foreach ($prompts as $name => $prompt) {
+        foreach ($prompts as $name => $promptData) {
             try {
+                // Extract the prompt handler from the data array
+                $prompt = $promptData['handler'] ?? $promptData;
+                
                 $definition = [
                     'name' => $name,
                     'description' => $this->getPromptDescription($prompt),

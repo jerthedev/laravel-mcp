@@ -7,7 +7,7 @@ use JTD\LaravelMCP\Server\CapabilityManager;
 use JTD\LaravelMCP\Server\Contracts\ServerInterface;
 use JTD\LaravelMCP\Server\McpServer;
 use JTD\LaravelMCP\Server\ServerInfo;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 
 class McpServerIntegrationTest extends TestCase
 {

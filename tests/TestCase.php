@@ -2,7 +2,6 @@
 
 namespace JTD\LaravelMCP\Tests;
 
-use Illuminate\Support\Facades\Route;
 use JTD\LaravelMCP\Facades\Mcp;
 use JTD\LaravelMCP\LaravelMcpServiceProvider;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;

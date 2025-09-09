@@ -2,6 +2,7 @@
 
 namespace JTD\LaravelMCP\Registry;
 
+use JTD\LaravelMCP\Abstracts\McpPrompt;
 use JTD\LaravelMCP\Exceptions\RegistrationException;
 use JTD\LaravelMCP\Registry\Contracts\RegistryInterface;
 
@@ -27,6 +28,15 @@ class PromptRegistry implements RegistryInterface
      * Registry type identifier.
      */
     protected string $type = 'prompts';
+
+    /**
+     * Initialize the prompt registry.
+     */
+    public function initialize(): void
+    {
+        // Prompt registry initialization
+        // Any initialization logic can be added here in future
+    }
 
     /**
      * Register a prompt with the registry.
@@ -72,7 +82,7 @@ class PromptRegistry implements RegistryInterface
     /**
      * Get a registered prompt.
      */
-    public function get(string $name)
+    public function get(string $name): mixed
     {
         if (! $this->has($name)) {
             throw new RegistrationException("Prompt '{$name}' is not registered");
@@ -87,6 +97,14 @@ class PromptRegistry implements RegistryInterface
     public function all(): array
     {
         return $this->prompts;
+    }
+
+    /**
+     * Get all registered prompts (alias for all()).
+     */
+    public function getAll(): array
+    {
+        return $this->all();
     }
 
     /**

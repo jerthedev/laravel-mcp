@@ -20,7 +20,7 @@ use JTD\LaravelMCP\Registry\ResourceRegistry;
 use JTD\LaravelMCP\Registry\ToolRegistry;
 use JTD\LaravelMCP\Support\ConfigGenerator;
 use JTD\LaravelMCP\Support\DocumentationGenerator;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use JTD\LaravelMCP\Transport\Contracts\TransportInterface;
 use JTD\LaravelMCP\Transport\HttpTransport;
 use JTD\LaravelMCP\Transport\StdioTransport;

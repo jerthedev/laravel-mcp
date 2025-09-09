@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\File;
 use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Support\ClientDetector;
 use JTD\LaravelMCP\Support\ConfigGenerator;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
