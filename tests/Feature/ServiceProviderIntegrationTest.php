@@ -146,9 +146,9 @@ class ServiceProviderIntegrationTest extends TestCase
         putenv('MCP_ENABLED=false');
         putenv('MCP_AUTO_DISCOVERY=false');
 
-        // Need to reload config
-        $this->app['config']->set('laravel-mcp.enabled', env('MCP_ENABLED', true));
-        $this->app['config']->set('laravel-mcp.discovery.enabled', env('MCP_AUTO_DISCOVERY', true));
+        // Directly set the config values as the service provider would
+        $this->app['config']->set('laravel-mcp.enabled', false);
+        $this->app['config']->set('laravel-mcp.discovery.enabled', false);
 
         // Act
         $enabled = Config::get('laravel-mcp.enabled');

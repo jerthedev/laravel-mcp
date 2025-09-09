@@ -1,3 +1,14 @@
+Base Command (JTD\LaravelMCP\Tests\Unit\Commands\BaseCommand)
+ [x] Successful command execution
+ [x] Command with validation failure
+ [x] Error handling without debug
+ [x] Error handling with debug mode
+ [x] Output formatting methods
+ [x] Debug output in verbose mode
+ [x] Configuration helper methods
+ [x] Mcp disabled check
+ [x] Option validation methods
+
 Base Handler (JTD\LaravelMCP\Tests\Unit\Server\Handlers\BaseHandler)
  [x] Constructor sets handler name and debug mode
  [x] Constructor defaults to non debug mode
@@ -222,6 +233,42 @@ Laravel Mcp Service Provider (JTD\LaravelMCP\Tests\Unit\LaravelMcpServiceProvide
  [x] It handles boot failure gracefully in production
  [x] It registers lazy services
  [x] It registers caching services
+
+List Command (JTD\LaravelMCP\Tests\Unit\Commands\ListCommand)
+ [x] It lists all components in table format
+ [x] It filters by tool type
+ [x] It filters by resource type
+ [x] It filters by prompt type
+ [x] It outputs in json format
+ [x] It shows detailed information
+ [x] It handles empty registries gracefully
+ [x] It validates invalid type option
+ [x] It validates invalid format option
+
+List Command Feature (JTD\LaravelMCP\Tests\Feature\Commands\ListCommandFeature)
+ [x] List command is registered in artisan
+ [x] Command can be discovered by artisan
+ [x] Command help displays correct information
+ [x] Command handles empty registries
+ [x] Command lists all component types
+ [x] Command filters by tools type
+ [x] Command filters by resources type
+ [x] Command filters by prompts type
+ [x] Command outputs json format
+ [x] Command outputs yaml format
+ [x] Command shows detailed information
+ [x] Command shows detailed resource information
+ [x] Command shows detailed prompt information
+ [x] Command runs with debug mode
+ [x] Command validates invalid type option
+ [x] Command validates invalid format option
+ [x] Command handles metadata failures gracefully
+ [x] Command lists multiple components
+ [x] Command json format with detailed flag
+ [x] Full integration with service provider
+ [x] Command integrates with mcp facade
+ [x] Command truncates long descriptions
+ [x] Command formats class names
 
 Mcp Auth Middleware (JTD\LaravelMCP\Tests\Unit\Http\Middleware\McpAuthMiddleware)
  [x] It passes through when auth disabled
@@ -505,6 +552,43 @@ Resource Handler (JTD\LaravelMCP\Tests\Unit\Server\Handlers\ResourceHandler)
  [x] Get resource metadata handles different metadata methods with data set "getMetadata method"
  [x] Get resource metadata handles different metadata methods with data set "metadata property"
  [x] Get resource metadata handles different metadata methods with data set "no metadata"
+
+Serve Command (JTD\LaravelMCP\Tests\Unit\Commands\ServeCommand)
+ [x] It has correct command signature
+ [x] It starts stdio transport successfully
+ [x] It starts http transport successfully
+ [x] It validates invalid transport type
+ [x] It validates disabled transport
+ [x] It validates unregistered transport in manager
+ [x] It validates timeout option
+ [x] It validates port option for http transport
+ [x] It enables debug mode
+ [x] It handles transport creation failure
+ [x] It handles stdio transport errors
+ [x] It builds correct transport configuration
+ [x] It handles invalid transport instance
+ [x] It handles shutdown signals with pcntl
+ [x] It configures server info correctly
+ [x] It displays transport stats in verbose mode
+ [x] It returns error when mcp is disabled
+ [x] It attempts reconnection for http transport
+
+Serve Command Feature (JTD\LaravelMCP\Tests\Feature\Commands\ServeCommandFeature)
+ [x] Serve command is registered in artisan
+ [x] Command can be discovered by artisan
+ [x] Command help displays correct information
+ [x] Command initializes with stdio transport
+ [x] Command initializes with http transport
+ [x] Command fails with invalid transport type
+ [x] Command fails when transport is disabled
+ [x] Command runs with debug mode enabled
+ [x] Command validates numeric options
+ [x] Command handles transport exceptions gracefully
+ [x] Command integrates with real transport manager
+ [x] Command merges configuration from options
+ [x] Command sets server info on message processor
+ [x] Command displays verbose output
+ [x] Full integration with service provider
 
 Server Info (JTD\LaravelMCP\Tests\Unit\Server\ServerInfo)
  [x] Can create server info instance

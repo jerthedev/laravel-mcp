@@ -51,6 +51,18 @@
         </style>
     </head>
     <body>
+        <h2>Base Command (JTD\LaravelMCP\Tests\Unit\Commands\BaseCommand)</h2>
+        <ul>
+            <li class="success">Successful command execution</li>
+            <li class="success">Command with validation failure</li>
+            <li class="success">Error handling without debug</li>
+            <li class="success">Error handling with debug mode</li>
+            <li class="success">Output formatting methods</li>
+            <li class="success">Debug output in verbose mode</li>
+            <li class="success">Configuration helper methods</li>
+            <li class="success">Mcp disabled check</li>
+            <li class="success">Option validation methods</li>
+        </ul>
         <h2>Base Handler (JTD\LaravelMCP\Tests\Unit\Server\Handlers\BaseHandler)</h2>
         <ul>
             <li class="success">Constructor sets handler name and debug mode</li>
@@ -284,6 +296,44 @@
             <li class="success">It handles boot failure gracefully in production</li>
             <li class="success">It registers lazy services</li>
             <li class="success">It registers caching services</li>
+        </ul>
+        <h2>List Command (JTD\LaravelMCP\Tests\Unit\Commands\ListCommand)</h2>
+        <ul>
+            <li class="success">It lists all components in table format</li>
+            <li class="success">It filters by tool type</li>
+            <li class="success">It filters by resource type</li>
+            <li class="success">It filters by prompt type</li>
+            <li class="success">It outputs in json format</li>
+            <li class="success">It shows detailed information</li>
+            <li class="success">It handles empty registries gracefully</li>
+            <li class="success">It validates invalid type option</li>
+            <li class="success">It validates invalid format option</li>
+        </ul>
+        <h2>List Command Feature (JTD\LaravelMCP\Tests\Feature\Commands\ListCommandFeature)</h2>
+        <ul>
+            <li class="success">List command is registered in artisan</li>
+            <li class="success">Command can be discovered by artisan</li>
+            <li class="success">Command help displays correct information</li>
+            <li class="success">Command handles empty registries</li>
+            <li class="success">Command lists all component types</li>
+            <li class="success">Command filters by tools type</li>
+            <li class="success">Command filters by resources type</li>
+            <li class="success">Command filters by prompts type</li>
+            <li class="success">Command outputs json format</li>
+            <li class="success">Command outputs yaml format</li>
+            <li class="success">Command shows detailed information</li>
+            <li class="success">Command shows detailed resource information</li>
+            <li class="success">Command shows detailed prompt information</li>
+            <li class="success">Command runs with debug mode</li>
+            <li class="success">Command validates invalid type option</li>
+            <li class="success">Command validates invalid format option</li>
+            <li class="success">Command handles metadata failures gracefully</li>
+            <li class="success">Command lists multiple components</li>
+            <li class="success">Command json format with detailed flag</li>
+            <li class="success">Full integration with service provider</li>
+            <li class="success">Command integrates with mcp facade</li>
+            <li class="success">Command truncates long descriptions</li>
+            <li class="success">Command formats class names</li>
         </ul>
         <h2>Mcp Auth Middleware (JTD\LaravelMCP\Tests\Unit\Http\Middleware\McpAuthMiddleware)</h2>
         <ul>
@@ -579,6 +629,45 @@
             <li class="success">Get resource metadata handles different metadata methods with data set "getMetadata method"</li>
             <li class="success">Get resource metadata handles different metadata methods with data set "metadata property"</li>
             <li class="success">Get resource metadata handles different metadata methods with data set "no metadata"</li>
+        </ul>
+        <h2>Serve Command (JTD\LaravelMCP\Tests\Unit\Commands\ServeCommand)</h2>
+        <ul>
+            <li class="success">It has correct command signature</li>
+            <li class="success">It starts stdio transport successfully</li>
+            <li class="success">It starts http transport successfully</li>
+            <li class="success">It validates invalid transport type</li>
+            <li class="success">It validates disabled transport</li>
+            <li class="success">It validates unregistered transport in manager</li>
+            <li class="success">It validates timeout option</li>
+            <li class="success">It validates port option for http transport</li>
+            <li class="success">It enables debug mode</li>
+            <li class="success">It handles transport creation failure</li>
+            <li class="success">It handles stdio transport errors</li>
+            <li class="success">It builds correct transport configuration</li>
+            <li class="success">It handles invalid transport instance</li>
+            <li class="success">It handles shutdown signals with pcntl</li>
+            <li class="success">It configures server info correctly</li>
+            <li class="success">It displays transport stats in verbose mode</li>
+            <li class="success">It returns error when mcp is disabled</li>
+            <li class="success">It attempts reconnection for http transport</li>
+        </ul>
+        <h2>Serve Command Feature (JTD\LaravelMCP\Tests\Feature\Commands\ServeCommandFeature)</h2>
+        <ul>
+            <li class="success">Serve command is registered in artisan</li>
+            <li class="success">Command can be discovered by artisan</li>
+            <li class="success">Command help displays correct information</li>
+            <li class="success">Command initializes with stdio transport</li>
+            <li class="success">Command initializes with http transport</li>
+            <li class="success">Command fails with invalid transport type</li>
+            <li class="success">Command fails when transport is disabled</li>
+            <li class="success">Command runs with debug mode enabled</li>
+            <li class="success">Command validates numeric options</li>
+            <li class="success">Command handles transport exceptions gracefully</li>
+            <li class="success">Command integrates with real transport manager</li>
+            <li class="success">Command merges configuration from options</li>
+            <li class="success">Command sets server info on message processor</li>
+            <li class="success">Command displays verbose output</li>
+            <li class="success">Full integration with service provider</li>
         </ul>
         <h2>Server Info (JTD\LaravelMCP\Tests\Unit\Server\ServerInfo)</h2>
         <ul>
