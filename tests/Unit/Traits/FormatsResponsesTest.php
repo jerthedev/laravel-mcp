@@ -4,7 +4,7 @@ namespace JTD\LaravelMCP\Tests\Unit\Traits;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Config;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use JTD\LaravelMCP\Traits\FormatsResponses;
 use JTD\LaravelMCP\Traits\ManagesCapabilities;
 use PHPUnit\Framework\Attributes\Group;

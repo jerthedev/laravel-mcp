@@ -39,7 +39,7 @@ namespace Tests\Feature\Commands;
 
 use Illuminate\Support\Facades\File;
 use JTD\LaravelMCP\Support\ConfigGenerator;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 

@@ -4,7 +4,7 @@ namespace JTD\LaravelMCP\Tests\Unit\Transport;
 
 use Illuminate\Container\Container;
 use JTD\LaravelMCP\Exceptions\TransportException;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use JTD\LaravelMCP\Transport\Contracts\TransportInterface;
 use JTD\LaravelMCP\Transport\HttpTransport;
 use JTD\LaravelMCP\Transport\StdioTransport;

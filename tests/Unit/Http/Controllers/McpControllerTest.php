@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use JTD\LaravelMCP\Exceptions\TransportException;
 use JTD\LaravelMCP\Http\Controllers\McpController;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use JTD\LaravelMCP\Transport\HttpTransport;
 use JTD\LaravelMCP\Transport\TransportManager;
 use Mockery;

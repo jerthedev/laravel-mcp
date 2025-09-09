@@ -6,7 +6,7 @@ use Illuminate\Filesystem\Filesystem;
 use JTD\LaravelMCP\Commands\MakePromptCommand;
 use JTD\LaravelMCP\Commands\MakeResourceCommand;
 use JTD\LaravelMCP\Commands\MakeToolCommand;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 

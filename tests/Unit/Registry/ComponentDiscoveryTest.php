@@ -8,7 +8,7 @@ use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Registry\PromptRegistry;
 use JTD\LaravelMCP\Registry\ResourceRegistry;
 use JTD\LaravelMCP\Registry\ToolRegistry;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 
 /**
@@ -90,7 +90,7 @@ class CalculatorTool extends McpTool
     protected string $name = "calculator";
     protected string $description = "Performs calculations";
 
-    public function execute(array $arguments): array
+    protected function handle(array $parameters): mixed
     {
         return ["result" => 0];
     }
@@ -111,7 +111,7 @@ class CalculatorTool extends McpTool
     protected string $name = "calculator";
     protected string $description = "Performs calculations";
 
-    public function execute(array $arguments): array
+    protected function handle(array $parameters): mixed
     {
         return ["result" => 0];
     }
@@ -240,7 +240,7 @@ use JTD\LaravelMCP\Abstracts\McpTool;
 
 class TestTool extends McpTool
 {
-    public function execute(array $arguments): array
+    protected function handle(array $parameters): mixed
     {
         return [];
     }
@@ -254,7 +254,7 @@ use JTD\LaravelMCP\Abstracts\McpTool;
 
 class TestTool extends McpTool
 {
-    public function execute(array $arguments): array
+    protected function handle(array $parameters): mixed
     {
         return [];
     }
@@ -306,7 +306,7 @@ use JTD\LaravelMCP\Abstracts\McpTool;
 
 class ValidTool extends McpTool
 {
-    public function execute(array $arguments): array
+    protected function handle(array $parameters): mixed
     {
         return [];
     }
@@ -319,7 +319,7 @@ use JTD\LaravelMCP\Abstracts\McpTool;
 
 class ValidTool extends McpTool
 {
-    public function execute(array $arguments): array
+    protected function handle(array $parameters): mixed
     {
         return [];
     }
@@ -382,7 +382,7 @@ class AdvancedCalculatorTool extends McpTool
     protected string $name = "advanced_calculator";
     protected string $description = "Performs advanced calculations";
 
-    public function execute(array $arguments): array
+    protected function handle(array $parameters): mixed
     {
         return ["result" => 0];
     }
@@ -417,7 +417,7 @@ class AdvancedCalculatorTool extends McpTool
     protected string $name = "advanced_calculator";
     protected string $description = "Performs advanced calculations";
 
-    public function execute(array $arguments): array
+    protected function handle(array $parameters): mixed
     {
         return ["result" => 0];
     }
@@ -522,7 +522,7 @@ use JTD\LaravelMCP\Abstracts\McpTool;
 
 class ValidTestTool extends McpTool
 {
-    public function execute(array $arguments): array
+    protected function handle(array $parameters): mixed
     {
         return [];
     }
@@ -535,7 +535,7 @@ use JTD\LaravelMCP\Abstracts\McpTool;
 
 class ValidTestTool extends McpTool
 {
-    public function execute(array $arguments): array
+    protected function handle(array $parameters): mixed
     {
         return [];
     }
@@ -618,7 +618,7 @@ class TestDiscoveryTool extends McpTool
 {
     protected string $name = "test_discovery";
 
-    public function execute(array $arguments): array
+    protected function handle(array $parameters): mixed
     {
         return [];
     }
@@ -633,7 +633,7 @@ class TestDiscoveryTool extends McpTool
 {
     protected string $name = "test_discovery";
 
-    public function execute(array $arguments): array
+    protected function handle(array $parameters): mixed
     {
         return [];
     }
@@ -776,7 +776,7 @@ use JTD\LaravelMCP\Abstracts\McpTool;
  */
 class MultilineDescriptionTool extends McpTool
 {
-    public function execute(array $arguments): array
+    protected function handle(array $parameters): mixed
     {
         return [];
     }
@@ -798,7 +798,7 @@ use JTD\LaravelMCP\Abstracts\McpTool;
  */
 class MultilineDescriptionTool extends McpTool
 {
-    public function execute(array $arguments): array
+    protected function handle(array $parameters): mixed
     {
         return [];
     }

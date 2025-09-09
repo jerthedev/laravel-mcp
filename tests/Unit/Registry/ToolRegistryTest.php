@@ -4,7 +4,7 @@ namespace JTD\LaravelMCP\Tests\Unit\Registry;
 
 use JTD\LaravelMCP\Exceptions\RegistrationException;
 use JTD\LaravelMCP\Registry\ToolRegistry;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 
 /**
  * Test suite for ToolRegistry functionality.

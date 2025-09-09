@@ -8,7 +8,7 @@ use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Registry\PromptRegistry;
 use JTD\LaravelMCP\Registry\ResourceRegistry;
 use JTD\LaravelMCP\Registry\ToolRegistry;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 
 /**
  * Feature tests for the MCP ListCommand.

@@ -16,7 +16,7 @@ namespace JTD\LaravelMCP\Tests\Unit\Abstracts;
 
 use Illuminate\Container\Container;
 use JTD\LaravelMCP\Abstracts\McpResource;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use Mockery;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;

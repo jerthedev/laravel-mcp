@@ -3,7 +3,7 @@
 namespace JTD\LaravelMCP\Tests\Unit\Traits;
 
 use JTD\LaravelMCP\Exceptions\McpException;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use JTD\LaravelMCP\Traits\HandlesMcpRequests;
 
 /**

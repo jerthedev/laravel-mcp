@@ -4,7 +4,7 @@ namespace JTD\LaravelMCP\Tests\Unit\Registry;
 
 use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Registry\RouteRegistrar;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 
 /**
