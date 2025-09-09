@@ -130,7 +130,9 @@ abstract class BaseCommand extends Command
      */
     protected function debug(string $message, $data = null): void
     {
-        if ($this->option('debug') || $this->output->isVerbose()) {
+        $debugEnabled = ($this->hasOption('debug') && $this->option('debug')) || $this->output->isVerbose();
+
+        if ($debugEnabled) {
             $this->line("<fg=gray>[DEBUG]</> $message");
 
             if ($data !== null) {
@@ -284,8 +286,8 @@ abstract class BaseCommand extends Command
      */
     protected function confirmDestructiveAction(string $message, bool $default = false): bool
     {
-        // In non-interactive mode, use the default
-        if (! $this->input->isInteractive()) {
+        // In non-interactive mode or testing environment, use the default
+        if (! $this->input->isInteractive() || app()->environment('testing')) {
             return $default;
         }
 

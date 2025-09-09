@@ -2,7 +2,7 @@
 
 namespace JTD\LaravelMCP\Tests\Unit\Traits;
 
-use JTD\LaravelMCP\Exceptions\ProtocolException;
+use JTD\LaravelMCP\Exceptions\McpException;
 use JTD\LaravelMCP\Tests\TestCase;
 use JTD\LaravelMCP\Traits\ValidatesParameters;
 
@@ -81,7 +81,7 @@ class ValidatesParametersTest extends TestCase
             'email' => ['required' => true],
         ];
 
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage('Missing required parameter: email');
 
         $this->callProtectedMethod('validateSchema', [$params, $schema]);
@@ -119,7 +119,7 @@ class ValidatesParametersTest extends TestCase
         $this->assertTrue(true);
 
         // Invalid string
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage("Field 'testField' must be a string");
         $this->callProtectedMethod('validateFieldType', [123, 'string', 'testField']);
     }
@@ -138,7 +138,7 @@ class ValidatesParametersTest extends TestCase
         $this->assertTrue(true);
 
         // Invalid integer
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage("Field 'testField' must be an integer");
         $this->callProtectedMethod('validateFieldType', ['123', 'integer', 'testField']);
     }
@@ -155,7 +155,7 @@ class ValidatesParametersTest extends TestCase
         $this->assertTrue(true);
 
         // Invalid number
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage("Field 'testField' must be a number");
         $this->callProtectedMethod('validateFieldType', ['abc', 'number', 'testField']);
     }
@@ -171,7 +171,7 @@ class ValidatesParametersTest extends TestCase
         $this->assertTrue(true);
 
         // Invalid boolean
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage("Field 'testField' must be a boolean");
         $this->callProtectedMethod('validateFieldType', [1, 'boolean', 'testField']);
     }
@@ -186,7 +186,7 @@ class ValidatesParametersTest extends TestCase
         $this->assertTrue(true);
 
         // Invalid array
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage("Field 'testField' must be an array");
         $this->callProtectedMethod('validateFieldType', ['test', 'array', 'testField']);
     }
@@ -204,7 +204,7 @@ class ValidatesParametersTest extends TestCase
         $this->assertTrue(true);
 
         // Invalid object
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage("Field 'testField' must be an object");
         $this->callProtectedMethod('validateFieldType', ['test', 'object', 'testField']);
     }
@@ -219,7 +219,7 @@ class ValidatesParametersTest extends TestCase
         $this->assertTrue(true);
 
         // Invalid null
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage("Field 'testField' must be null");
         $this->callProtectedMethod('validateFieldType', ['', 'null', 'testField']);
     }
@@ -234,7 +234,7 @@ class ValidatesParametersTest extends TestCase
         $this->assertEquals('test@example.com', $result);
 
         // Invalid email
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage("Field 'emailField' must be a valid email address");
         $this->callProtectedMethod('validateFieldFormat', ['invalid-email', 'email', 'emailField']);
     }
@@ -249,7 +249,7 @@ class ValidatesParametersTest extends TestCase
         $this->assertEquals('https://example.com', $result);
 
         // Invalid URL
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage("Field 'urlField' must be a valid URL");
         $this->callProtectedMethod('validateFieldFormat', ['not-a-url', 'url', 'urlField']);
     }
@@ -267,7 +267,7 @@ class ValidatesParametersTest extends TestCase
         $this->assertEquals('http://example.com', $result);
 
         // Invalid URI
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage("Field 'uriField' must be a valid URI");
         $this->callProtectedMethod('validateFieldFormat', ['invalid uri', 'uri', 'uriField']);
     }
@@ -282,7 +282,7 @@ class ValidatesParametersTest extends TestCase
         $this->assertStringContainsString('2024-01-01', $result);
 
         // Invalid date-time
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage("Field 'dateField' must be a valid ISO 8601 date-time");
         $this->callProtectedMethod('validateFieldFormat', ['invalid-date', 'date-time', 'dateField']);
     }
@@ -298,7 +298,7 @@ class ValidatesParametersTest extends TestCase
         $this->assertEquals($uuid, $result);
 
         // Invalid UUID
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage("Field 'uuidField' must be a valid UUID");
         $this->callProtectedMethod('validateFieldFormat', ['not-a-uuid', 'uuid', 'uuidField']);
     }
@@ -315,7 +315,7 @@ class ValidatesParametersTest extends TestCase
         $this->assertTrue(true);
 
         // Too short
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage("Field 'field' must be at least 3 characters/items long");
         $this->callProtectedMethod('validateFieldLength', ['ab', $rules, 'field']);
     }
@@ -332,7 +332,7 @@ class ValidatesParametersTest extends TestCase
         $this->assertTrue(true);
 
         // Too long
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage("Field 'field' must be at most 5 characters/items long");
         $this->callProtectedMethod('validateFieldLength', [['a', 'b', 'c', 'd', 'e', 'f'], $rules, 'field']);
     }
@@ -349,7 +349,7 @@ class ValidatesParametersTest extends TestCase
         $this->assertTrue(true);
 
         // Below minimum
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage("Field 'field' must be at least 10");
         $this->callProtectedMethod('validateFieldRange', [5, $rules, 'field']);
     }
@@ -366,7 +366,7 @@ class ValidatesParametersTest extends TestCase
         $this->assertTrue(true);
 
         // Invalid enum value
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage("Field 'color' must be one of: red, green, blue");
         $this->callProtectedMethod('validateFieldEnum', ['yellow', $enum, 'color']);
     }
@@ -383,7 +383,7 @@ class ValidatesParametersTest extends TestCase
         $this->assertTrue(true);
 
         // Invalid pattern match
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage("Field 'field' does not match the required pattern");
         $this->callProtectedMethod('validateFieldPattern', ['test', $pattern, 'field']);
     }
@@ -410,7 +410,7 @@ class ValidatesParametersTest extends TestCase
         $strictRules = [
             'validator' => function ($value, $fieldName) {
                 if ($value < 0) {
-                    throw new ProtocolException("Field '{$fieldName}' must be positive", -32602);
+                    throw new McpException("Field '{$fieldName}' must be positive", -32602);
                 }
 
                 return $value;
@@ -420,7 +420,7 @@ class ValidatesParametersTest extends TestCase
         $result = $this->callProtectedMethod('validateField', [5, $strictRules, 'number']);
         $this->assertEquals(5, $result);
 
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage("Field 'number' must be positive");
         $this->callProtectedMethod('validateField', [-5, $strictRules, 'number']);
     }

@@ -99,10 +99,10 @@ class ServeCommandFeatureTest extends TestCase
             ->method('setMessageHandler')
             ->with($this->isInstanceOf(MessageProcessor::class));
         $mockTransport->expects($this->once())
-            ->method('listen')
+            ->method('start')
             ->willThrowException(new \RuntimeException('Test mode - stopping immediately'));
         $mockTransport->expects($this->once())
-            ->method('close');
+            ->method('stop');
 
         // Replace transport manager with mock
         $transportManager = $this->createMock(TransportManager::class);
@@ -150,7 +150,7 @@ class ServeCommandFeatureTest extends TestCase
             ->method('getBaseUrl')
             ->willReturn('http://127.0.0.1:8080/mcp');
         $mockTransport->expects($this->once())
-            ->method('listen');
+            ->method('start');
 
         // Mock isConnected to throw an exception immediately, breaking the while loop
         $mockTransport->expects($this->once())
@@ -158,7 +158,7 @@ class ServeCommandFeatureTest extends TestCase
             ->willThrowException(new \RuntimeException('Test mode - exit immediately'));
 
         $mockTransport->expects($this->any())
-            ->method('close');
+            ->method('stop');
 
         // Replace transport manager with mock
         $transportManager = $this->createMock(TransportManager::class);
@@ -258,9 +258,9 @@ class ServeCommandFeatureTest extends TestCase
         // Create a mock transport
         $mockTransport = $this->createMock(StdioTransport::class);
         $mockTransport->method('setMessageHandler');
-        $mockTransport->method('listen')
+        $mockTransport->method('start')
             ->willThrowException(new \RuntimeException('Test mode'));
-        $mockTransport->method('close');
+        $mockTransport->method('stop');
 
         $transportManager = $this->createMock(TransportManager::class);
         $transportManager->method('hasDriver')->willReturn(true);
@@ -322,9 +322,9 @@ class ServeCommandFeatureTest extends TestCase
 
         $mockTransport = $this->createMock(StdioTransport::class);
         $mockTransport->method('setMessageHandler');
-        $mockTransport->method('listen')
+        $mockTransport->method('start')
             ->willThrowException(new \JTD\LaravelMCP\Exceptions\TransportException('Connection failed'));
-        $mockTransport->method('close');
+        $mockTransport->method('stop');
 
         $transportManager = $this->createMock(TransportManager::class);
         $transportManager->method('hasDriver')->willReturn(true);
@@ -386,12 +386,12 @@ class ServeCommandFeatureTest extends TestCase
         $mockTransport->method('setMessageHandler');
         $mockTransport->method('getBaseUrl')->willReturn('http://localhost:9000/mcp');
         $mockTransport->expects($this->once())
-            ->method('listen');
+            ->method('start');
         // Make isConnected throw an exception to break the loop
         $mockTransport->expects($this->once())
             ->method('isConnected')
             ->willThrowException(new \RuntimeException('Test mode - exit'));
-        $mockTransport->method('close');
+        $mockTransport->method('stop');
 
         $transportManager = $this->createMock(TransportManager::class);
         $transportManager->method('hasDriver')->willReturn(true);
@@ -443,9 +443,9 @@ class ServeCommandFeatureTest extends TestCase
 
         $mockTransport = $this->createMock(StdioTransport::class);
         $mockTransport->method('setMessageHandler');
-        $mockTransport->method('listen')
+        $mockTransport->method('start')
             ->willThrowException(new \RuntimeException('Test mode'));
-        $mockTransport->method('close');
+        $mockTransport->method('stop');
 
         $transportManager = $this->createMock(TransportManager::class);
         $transportManager->method('hasDriver')->willReturn(true);
@@ -469,9 +469,9 @@ class ServeCommandFeatureTest extends TestCase
 
         $mockTransport = $this->createMock(StdioTransport::class);
         $mockTransport->method('setMessageHandler');
-        $mockTransport->method('listen')
+        $mockTransport->method('start')
             ->willThrowException(new \RuntimeException('Test mode'));
-        $mockTransport->method('close');
+        $mockTransport->method('stop');
         $mockTransport->method('getStats')
             ->willReturn(['messages_received' => 10, 'messages_sent' => 8]);
 

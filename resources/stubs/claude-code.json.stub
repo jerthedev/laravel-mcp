@@ -1,0 +1,12 @@
+{
+    "mcp": {
+        "servers": {
+            "{{ server_name }}": {
+                "command": "{{ command }}",
+                "args": {{ args }},
+                "env": {{ env }},
+                "description": "{{ description }}"
+            }
+        }
+    }
+}

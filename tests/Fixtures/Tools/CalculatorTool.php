@@ -17,37 +17,35 @@ class CalculatorTool extends McpTool
 
     protected string $description = 'Performs basic mathematical operations';
 
-    protected array $inputSchema = [
-        'type' => 'object',
-        'properties' => [
-            'operation' => [
-                'type' => 'string',
-                'description' => 'Mathematical operation to perform',
-                'enum' => ['add', 'subtract', 'multiply', 'divide', 'power'],
-            ],
-            'operands' => [
-                'type' => 'array',
-                'description' => 'Numbers to operate on',
-                'items' => [
-                    'type' => 'number',
-                ],
-                'minItems' => 2,
-                'maxItems' => 10,
-            ],
+    protected array $parameterSchema = [
+        'operation' => [
+            'type' => 'string',
+            'description' => 'Mathematical operation to perform',
+            'enum' => ['add', 'subtract', 'multiply', 'divide', 'power'],
+            'required' => true,
         ],
-        'required' => ['operation', 'operands'],
+        'operands' => [
+            'type' => 'array',
+            'description' => 'Numbers to operate on',
+            'items' => [
+                'type' => 'number',
+            ],
+            'minItems' => 2,
+            'maxItems' => 10,
+            'required' => true,
+        ],
     ];
 
     /**
-     * Execute the calculator tool.
+     * Handle the calculator tool execution.
      *
-     * @param  array  $arguments  Tool arguments
+     * @param  array  $parameters  Tool parameters
      * @return array Tool execution result
      */
-    public function execute(array $arguments): array
+    protected function handle(array $parameters): array
     {
-        $operation = $arguments['operation'];
-        $operands = $arguments['operands'];
+        $operation = $parameters['operation'];
+        $operands = $parameters['operands'];
 
         try {
             $result = $this->performOperation($operation, $operands);

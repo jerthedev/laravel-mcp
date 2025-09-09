@@ -4,8 +4,7 @@ namespace JTD\LaravelMCP\Transport;
 
 use Illuminate\Support\Facades\Log;
 use JTD\LaravelMCP\Exceptions\TransportException;
-use JTD\LaravelMCP\Transport\Contracts\MessageHandlerInterface;
-use JTD\LaravelMCP\Transport\Contracts\TransportInterface;
+use Symfony\Component\Process\Process;
 
 /**
  * Stdio transport implementation for MCP.
@@ -13,298 +12,459 @@ use JTD\LaravelMCP\Transport\Contracts\TransportInterface;
  * This class implements the MCP transport protocol over standard input/output,
  * handling JSON-RPC messages via stdin and stdout streams.
  */
-class StdioTransport implements TransportInterface
+class StdioTransport extends BaseTransport
 {
     /**
-     * Transport configuration.
+     * Stream handler for input.
      */
-    protected array $config = [];
+    protected ?StreamHandler $inputHandler = null;
 
     /**
-     * Message handler instance.
+     * Stream handler for output.
      */
-    protected ?MessageHandlerInterface $messageHandler = null;
+    protected ?StreamHandler $outputHandler = null;
 
     /**
-     * Connection status.
+     * Message framer for JSON-RPC protocol.
      */
-    protected bool $connected = false;
+    protected ?MessageFramer $messageFramer = null;
 
     /**
-     * Input stream resource.
+     * Process instance for Symfony Process integration.
      */
-    protected $inputStream = null;
+    protected ?Process $process = null;
 
     /**
-     * Output stream resource.
+     * Signal handlers registered.
      */
-    protected $outputStream = null;
+    protected bool $signalHandlersRegistered = false;
 
     /**
-     * Default configuration.
+     * Get transport type identifier.
+     *
+     * @return string Transport type
      */
-    protected array $defaultConfig = [
-        'timeout' => 30,
-        'buffer_size' => 8192,
-        'line_delimiter' => "\n",
-        'debug' => false,
-    ];
-
-    /**
-     * Message buffer for partial messages.
-     */
-    protected string $messageBuffer = '';
-
-    /**
-     * Initialize the transport layer.
-     */
-    public function initialize(array $config = []): void
+    protected function getTransportType(): string
     {
-        $this->config = array_merge($this->defaultConfig, $config);
-        $this->connected = false;
-        $this->messageBuffer = '';
+        return 'stdio';
     }
 
     /**
-     * Start listening for incoming messages.
+     * Get default configuration for this transport type.
+     *
+     * @return array Default configuration
+     */
+    protected function getTransportDefaults(): array
+    {
+        return [
+            'buffer_size' => 8192,
+            'line_delimiter' => "\n",
+            'max_message_size' => 1048576, // 1MB
+            'blocking_mode' => false,
+            'read_timeout' => 0.1, // 100ms for non-blocking reads
+            'write_timeout' => 5, // 5 seconds for writes
+            'use_content_length' => false, // Use Content-Length headers
+            'enable_keepalive' => true, // Send periodic keepalive messages
+            'keepalive_interval' => 30, // Keepalive every 30 seconds
+            'process_timeout' => null, // No timeout for process execution
+        ];
+    }
+
+    /**
+     * Perform transport-specific start operations.
+     *
+     * @throws \Throwable If start fails
+     */
+    protected function doStart(): void
+    {
+        $this->initializeHandlers();
+        $this->openStreams();
+        $this->registerSignalHandlers();
+
+        // Register shutdown handler
+        register_shutdown_function([$this, 'handleShutdown']);
+
+        Log::info('Stdio transport started', [
+            'config' => $this->getSafeConfigForLogging(),
+        ]);
+    }
+
+    /**
+     * Perform transport-specific stop operations.
+     *
+     * @throws \Throwable If stop fails
+     */
+    protected function doStop(): void
+    {
+        $this->closeStreams();
+        $this->cleanupHandlers();
+        $this->unregisterSignalHandlers();
+
+        if ($this->process && $this->process->isRunning()) {
+            $this->process->stop(5); // 5 second timeout
+        }
+
+        Log::info('Stdio transport stopped');
+    }
+
+    /**
+     * Perform transport-specific send operations.
+     *
+     * @param  string  $message  The message to send
+     *
+     * @throws \Throwable If send fails
+     */
+    protected function doSend(string $message): void
+    {
+        if (! $this->outputHandler || ! $this->outputHandler->isOpen()) {
+            throw new TransportException('Output stream not available');
+        }
+
+        try {
+            // Parse message to ensure it's valid JSON-RPC
+            $messageData = json_decode($message, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new TransportException('Invalid JSON message: '.json_last_error_msg());
+            }
+
+            // Frame the message using MessageFramer
+            $framedMessage = $this->messageFramer->frame($messageData);
+
+            // Write with timeout handling
+            if (! $this->outputHandler->waitForWritable($this->config['write_timeout'])) {
+                throw new TransportException('Output stream write timeout');
+            }
+
+            $written = $this->outputHandler->write($framedMessage);
+
+            if ($written < strlen($framedMessage)) {
+                throw new TransportException('Incomplete message write to stdout');
+            }
+
+            Log::debug('Message sent via stdio', [
+                'message_length' => strlen($framedMessage),
+                'method' => $messageData['method'] ?? null,
+                'id' => $messageData['id'] ?? null,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to send message via stdio', [
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Perform transport-specific receive operations.
+     *
+     * @return string|null The received message, or null if none available
+     *
+     * @throws \Throwable If receive fails
+     */
+    protected function doReceive(): ?string
+    {
+        if (! $this->inputHandler || ! $this->inputHandler->isOpen()) {
+            return null;
+        }
+
+        try {
+            // Read data with timeout
+            $data = $this->inputHandler->read($this->config['buffer_size']);
+
+            if ($data === null) {
+                // Check if stream is still open
+                if ($this->inputHandler->isEof()) {
+                    $this->connected = false;
+                    Log::debug('Input stream reached EOF');
+                }
+
+                return null;
+            }
+
+            // Parse messages using MessageFramer
+            $messages = $this->messageFramer->parse($data);
+
+            if (empty($messages)) {
+                // No complete messages yet
+                return null;
+            }
+
+            // Return the first complete message as JSON
+            $firstMessage = array_shift($messages);
+            $messageJson = json_encode($firstMessage, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new TransportException('Failed to encode received message: '.json_last_error_msg());
+            }
+
+            Log::debug('Message received via stdio', [
+                'message_length' => strlen($messageJson),
+                'method' => $firstMessage['method'] ?? null,
+                'id' => $firstMessage['id'] ?? null,
+                'buffered_messages' => count($messages),
+            ]);
+
+            return $messageJson;
+        } catch (\Throwable $e) {
+            Log::error('Failed to receive message via stdio', [
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Initialize handlers.
+     */
+    protected function initializeHandlers(): void
+    {
+        // Initialize message framer
+        $this->messageFramer = new MessageFramer([
+            'max_message_size' => $this->config['max_message_size'],
+            'use_content_length' => $this->config['use_content_length'],
+            'line_delimiter' => $this->config['line_delimiter'],
+        ]);
+    }
+
+    /**
+     * Open input and output streams.
+     *
+     * @throws TransportException If streams cannot be opened
+     */
+    protected function openStreams(): void
+    {
+        // Create input stream handler
+        $this->inputHandler = new StreamHandler('php://stdin', 'r', [
+            'timeout' => $this->config['timeout'],
+            'buffer_size' => $this->config['buffer_size'],
+            'max_buffer_size' => $this->config['max_message_size'],
+            'blocking' => $this->config['blocking_mode'],
+            'read_timeout' => $this->config['read_timeout'],
+        ]);
+
+        // Create output stream handler
+        $this->outputHandler = new StreamHandler('php://stdout', 'w', [
+            'timeout' => $this->config['write_timeout'],
+            'buffer_size' => $this->config['buffer_size'],
+            'blocking' => true, // Output should be blocking
+        ]);
+
+        try {
+            $this->inputHandler->open();
+            $this->outputHandler->open();
+        } catch (\Throwable $e) {
+            $this->closeStreams();
+            throw new TransportException('Failed to open stdio streams: '.$e->getMessage(), 0, $e);
+        }
+    }
+
+    /**
+     * Close input and output streams.
+     */
+    protected function closeStreams(): void
+    {
+        if ($this->inputHandler) {
+            $this->inputHandler->close();
+            $this->inputHandler = null;
+        }
+
+        if ($this->outputHandler) {
+            $this->outputHandler->close();
+            $this->outputHandler = null;
+        }
+    }
+
+    /**
+     * Cleanup handlers.
+     */
+    protected function cleanupHandlers(): void
+    {
+        if ($this->messageFramer) {
+            $this->messageFramer->clearBuffer();
+            $this->messageFramer = null;
+        }
+    }
+
+    /**
+     * Register signal handlers.
+     */
+    protected function registerSignalHandlers(): void
+    {
+        if ($this->signalHandlersRegistered) {
+            return;
+        }
+
+        if (function_exists('pcntl_signal')) {
+            pcntl_signal(SIGTERM, [$this, 'handleSignal']);
+            pcntl_signal(SIGINT, [$this, 'handleSignal']);
+            pcntl_signal(SIGHUP, [$this, 'handleSignal']);
+            $this->signalHandlersRegistered = true;
+
+            Log::debug('Signal handlers registered for stdio transport');
+        }
+    }
+
+    /**
+     * Unregister signal handlers.
+     */
+    protected function unregisterSignalHandlers(): void
+    {
+        if (! $this->signalHandlersRegistered) {
+            return;
+        }
+
+        if (function_exists('pcntl_signal')) {
+            pcntl_signal(SIGTERM, SIG_DFL);
+            pcntl_signal(SIGINT, SIG_DFL);
+            pcntl_signal(SIGHUP, SIG_DFL);
+            $this->signalHandlersRegistered = false;
+
+            Log::debug('Signal handlers unregistered for stdio transport');
+        }
+    }
+
+    /**
+     * Handle system signals for graceful shutdown.
+     *
+     * @param  int  $signal  The signal received
+     */
+    public function handleSignal(int $signal): void
+    {
+        Log::info('Signal received', ['signal' => $signal]);
+
+        match ($signal) {
+            SIGTERM, SIGINT => $this->handleTerminationSignal(),
+            SIGHUP => $this->handleReloadSignal(),
+            default => Log::debug('Unhandled signal', ['signal' => $signal]),
+        };
+    }
+
+    /**
+     * Handle termination signals.
+     */
+    protected function handleTerminationSignal(): void
+    {
+        Log::info('Initiating graceful shutdown');
+        $this->stop();
+        exit(0);
+    }
+
+    /**
+     * Handle reload signal.
+     */
+    protected function handleReloadSignal(): void
+    {
+        Log::info('Reloading configuration');
+        // Could implement configuration reload here
+    }
+
+    /**
+     * Handle shutdown.
+     */
+    public function handleShutdown(): void
+    {
+        if ($this->isConnected()) {
+            Log::info('Shutdown handler triggered, stopping transport');
+            $this->stop();
+        }
+    }
+
+    /**
+     * Process messages in a loop (for console applications).
      */
     public function listen(): void
     {
+        if (! $this->isConnected()) {
+            $this->start();
+        }
+
+        $lastKeepalive = time();
+
         try {
-            $this->openStreams();
-            $this->connected = true;
-
-            if ($this->config['debug']) {
-                Log::info('Stdio MCP transport listening');
-            }
-
-            // Main message loop
-            while ($this->connected && ! feof($this->inputStream)) {
+            while ($this->isConnected() && $this->inputHandler && ! $this->inputHandler->isEof()) {
+                // Check for incoming messages
                 $message = $this->receive();
 
                 if ($message && $this->messageHandler) {
                     try {
-                        $response = $this->messageHandler->handle($message, $this);
+                        // Parse JSON message
+                        $messageData = json_decode($message, true);
+                        if (json_last_error() !== JSON_ERROR_NONE) {
+                            throw new TransportException('Invalid JSON message: '.json_last_error_msg());
+                        }
+
+                        $response = $this->messageHandler->handle($messageData, $this);
 
                         if ($response) {
-                            $this->send($response);
+                            $responseJson = json_encode($response, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                            if (json_last_error() !== JSON_ERROR_NONE) {
+                                throw new TransportException('Failed to encode response: '.json_last_error_msg());
+                            }
+                            $this->send($responseJson);
                         }
                     } catch (\Throwable $e) {
                         if ($this->messageHandler) {
                             $this->messageHandler->handleError($e, $this);
                         }
-
-                        $this->sendError($e, $message['id'] ?? null);
+                        $this->sendErrorResponse($e, $messageData['id'] ?? null);
                     }
                 }
-            }
 
+                // Send keepalive if enabled
+                if ($this->config['enable_keepalive']) {
+                    $now = time();
+                    if ($now - $lastKeepalive >= $this->config['keepalive_interval']) {
+                        $this->sendKeepalive();
+                        $lastKeepalive = $now;
+                    }
+                }
+
+                // Handle signals if available
+                if (function_exists('pcntl_signal_dispatch')) {
+                    pcntl_signal_dispatch();
+                }
+
+                // Prevent busy waiting
+                usleep(10000); // 10ms
+            }
         } catch (\Throwable $e) {
-            Log::error('Stdio transport error', [
+            Log::error('Stdio transport listen error', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-
-            if ($this->messageHandler) {
-                $this->messageHandler->handleError($e, $this);
-            }
+            throw $e;
         } finally {
-            $this->close();
+            $this->stop();
         }
     }
 
     /**
-     * Send a message to the client.
+     * Send a keepalive notification.
      */
-    public function send(array $message): void
+    protected function sendKeepalive(): void
     {
-        if (! $this->connected || ! $this->outputStream) {
-            throw new TransportException('Transport is not connected');
-        }
-
         try {
-            $json = json_encode($message, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            $keepalive = $this->messageFramer->createRequest(
+                'keepalive',
+                ['timestamp' => time()]
+            );
 
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new TransportException('Failed to encode message as JSON: '.json_last_error_msg());
-            }
+            $keepaliveJson = json_encode($keepalive, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            $this->send($keepaliveJson);
 
-            $output = $json.$this->config['line_delimiter'];
-
-            $bytesWritten = fwrite($this->outputStream, $output);
-
-            if ($bytesWritten === false) {
-                throw new TransportException('Failed to write message to output stream');
-            }
-
-            fflush($this->outputStream);
-
-            if ($this->config['debug']) {
-                Log::debug('Stdio message sent', ['message' => $message]);
-            }
-
+            Log::debug('Keepalive sent');
         } catch (\Throwable $e) {
-            Log::error('Failed to send stdio message', [
-                'error' => $e->getMessage(),
-                'message' => $message,
-            ]);
-
-            throw new TransportException('Failed to send message: '.$e->getMessage(), 0, $e);
-        }
-    }
-
-    /**
-     * Receive a message from the client.
-     */
-    public function receive(): ?array
-    {
-        if (! $this->connected || ! $this->inputStream) {
-            return null;
-        }
-
-        try {
-            // Read data from input stream
-            $data = fread($this->inputStream, $this->config['buffer_size']);
-
-            if ($data === false) {
-                return null;
-            }
-
-            if (empty($data)) {
-                // Check if stream is still open
-                if (feof($this->inputStream)) {
-                    $this->connected = false;
-                }
-
-                return null;
-            }
-
-            // Add to buffer
-            $this->messageBuffer .= $data;
-
-            // Look for complete messages (delimited by line delimiter)
-            $delimiter = $this->config['line_delimiter'];
-            $delimiterPos = strpos($this->messageBuffer, $delimiter);
-
-            if ($delimiterPos === false) {
-                // No complete message yet
-                return null;
-            }
-
-            // Extract the complete message
-            $messageJson = substr($this->messageBuffer, 0, $delimiterPos);
-            $this->messageBuffer = substr($this->messageBuffer, $delimiterPos + strlen($delimiter));
-
-            // Parse JSON
-            $message = json_decode($messageJson, true);
-
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                Log::error('Invalid JSON received', [
-                    'json' => $messageJson,
-                    'error' => json_last_error_msg(),
-                ]);
-
-                return null;
-            }
-
-            if ($this->config['debug']) {
-                Log::debug('Stdio message received', ['message' => $message]);
-            }
-
-            return is_array($message) ? $message : null;
-
-        } catch (\Throwable $e) {
-            Log::error('Error receiving stdio message', [
-                'error' => $e->getMessage(),
-                'buffer' => $this->messageBuffer,
-            ]);
-
-            return null;
-        }
-    }
-
-    /**
-     * Close the transport connection.
-     */
-    public function close(): void
-    {
-        $this->connected = false;
-
-        if ($this->inputStream && is_resource($this->inputStream)) {
-            fclose($this->inputStream);
-            $this->inputStream = null;
-        }
-
-        if ($this->outputStream && is_resource($this->outputStream)) {
-            fclose($this->outputStream);
-            $this->outputStream = null;
-        }
-
-        $this->messageBuffer = '';
-
-        if ($this->config['debug']) {
-            Log::info('Stdio MCP transport closed');
-        }
-    }
-
-    /**
-     * Check if the transport is currently connected/active.
-     */
-    public function isConnected(): bool
-    {
-        return $this->connected &&
-               $this->inputStream && is_resource($this->inputStream) &&
-               $this->outputStream && is_resource($this->outputStream);
-    }
-
-    /**
-     * Get transport-specific configuration.
-     */
-    public function getConfig(): array
-    {
-        return $this->config;
-    }
-
-    /**
-     * Set the message handler for processing received messages.
-     */
-    public function setMessageHandler(MessageHandlerInterface $handler): void
-    {
-        $this->messageHandler = $handler;
-    }
-
-    /**
-     * Open input and output streams.
-     */
-    protected function openStreams(): void
-    {
-        // Open stdin for reading
-        $this->inputStream = fopen('php://stdin', 'r');
-        if (! $this->inputStream) {
-            throw new TransportException('Failed to open stdin for reading');
-        }
-
-        // Open stdout for writing
-        $this->outputStream = fopen('php://stdout', 'w');
-        if (! $this->outputStream) {
-            throw new TransportException('Failed to open stdout for writing');
-        }
-
-        // Set streams to non-blocking mode if supported
-        if (function_exists('stream_set_blocking')) {
-            stream_set_blocking($this->inputStream, false);
-        }
-
-        // Notify handler of connection
-        if ($this->messageHandler) {
-            $this->messageHandler->onConnect($this);
+            Log::warning('Failed to send keepalive', ['error' => $e->getMessage()]);
         }
     }
 
     /**
      * Send an error response.
+     *
+     * @param  \Throwable  $error  The error to send
+     * @param  mixed  $id  The request ID if available
      */
-    protected function sendError(\Throwable $error, $id = null): void
+    protected function sendErrorResponse(\Throwable $error, $id = null): void
     {
         $errorResponse = [
             'jsonrpc' => '2.0',
@@ -316,7 +476,8 @@ class StdioTransport implements TransportInterface
         ];
 
         try {
-            $this->send($errorResponse);
+            $responseJson = json_encode($errorResponse);
+            $this->send($responseJson);
         } catch (\Throwable $e) {
             Log::error('Failed to send error response', [
                 'original_error' => $error->getMessage(),
@@ -327,6 +488,8 @@ class StdioTransport implements TransportInterface
 
     /**
      * Run the stdio transport as a console command.
+     *
+     * @return int Exit code
      */
     public function runAsCommand(): int
     {
@@ -351,33 +514,129 @@ class StdioTransport implements TransportInterface
     }
 
     /**
-     * Get transport statistics.
-     */
-    public function getStats(): array
-    {
-        return [
-            'transport' => 'stdio',
-            'connected' => $this->connected,
-            'has_input_stream' => $this->inputStream !== null,
-            'has_output_stream' => $this->outputStream !== null,
-            'buffer_size' => strlen($this->messageBuffer),
-            'has_message_handler' => $this->messageHandler !== null,
-        ];
-    }
-
-    /**
      * Clear the message buffer.
      */
     public function clearBuffer(): void
     {
-        $this->messageBuffer = '';
+        if ($this->messageFramer) {
+            $this->messageFramer->clearBuffer();
+        }
     }
 
     /**
      * Get current buffer content (for debugging).
+     *
+     * @return string Current buffer content
      */
     public function getBuffer(): string
     {
-        return $this->messageBuffer;
+        return $this->messageFramer ? $this->messageFramer->getBuffer() : '';
+    }
+
+    /**
+     * Set process for Symfony Process integration.
+     *
+     * @param  Process  $process  Symfony Process instance
+     */
+    public function setProcess(Process $process): void
+    {
+        $this->process = $process;
+    }
+
+    /**
+     * Get process instance.
+     *
+     * @return Process|null Process instance or null
+     */
+    public function getProcess(): ?Process
+    {
+        return $this->process;
+    }
+
+    /**
+     * Perform transport-specific health checks.
+     *
+     * @return array Transport-specific health check results
+     */
+    protected function performTransportSpecificHealthChecks(): array
+    {
+        $checks = [];
+        $errors = [];
+
+        // Check stream handlers
+        $checks['input_handler_available'] = $this->inputHandler !== null;
+        $checks['output_handler_available'] = $this->outputHandler !== null;
+
+        if (! $checks['input_handler_available']) {
+            $errors[] = 'Input handler is not available';
+        } else {
+            $inputHealth = $this->inputHandler->healthCheck();
+            $checks['stdin_healthy'] = $inputHealth['healthy'];
+            $checks['stdin_readable'] = $inputHealth['readable'];
+            $checks['stdin_eof'] = $inputHealth['eof'];
+
+            if (! $inputHealth['healthy']) {
+                $errors[] = 'Input stream is not healthy';
+            }
+        }
+
+        if (! $checks['output_handler_available']) {
+            $errors[] = 'Output handler is not available';
+        } else {
+            $outputHealth = $this->outputHandler->healthCheck();
+            $checks['stdout_healthy'] = $outputHealth['healthy'];
+            $checks['stdout_writable'] = $outputHealth['writable'];
+
+            if (! $outputHealth['healthy']) {
+                $errors[] = 'Output stream is not healthy';
+            }
+        }
+
+        // Check message framer
+        if ($this->messageFramer) {
+            $framerStats = $this->messageFramer->getStats();
+            $bufferSize = $framerStats['buffer_size'];
+            $maxSize = $this->config['max_message_size'];
+            $checks['buffer_healthy'] = $bufferSize < ($maxSize * 0.9); // Warn at 90% capacity
+
+            if (! $checks['buffer_healthy']) {
+                $errors[] = "Message buffer is {$bufferSize} bytes (approaching limit of {$maxSize})";
+            }
+
+            $checks['framer_stats'] = $framerStats;
+        }
+
+        // Check process if available
+        if ($this->process) {
+            $checks['process_running'] = $this->process->isRunning();
+            $checks['process_successful'] = $this->process->isSuccessful();
+        }
+
+        return [
+            'checks' => $checks,
+            'errors' => $errors,
+        ];
+    }
+
+    /**
+     * Get connection information specific to stdio transport.
+     *
+     * @return array Extended connection information
+     */
+    public function getConnectionInfo(): array
+    {
+        $info = parent::getConnectionInfo();
+
+        $info['stdio_specific'] = [
+            'has_input_handler' => $this->inputHandler !== null,
+            'has_output_handler' => $this->outputHandler !== null,
+            'input_stats' => $this->inputHandler ? $this->inputHandler->getStats() : null,
+            'output_stats' => $this->outputHandler ? $this->outputHandler->getStats() : null,
+            'framer_stats' => $this->messageFramer ? $this->messageFramer->getStats() : null,
+            'signal_handlers_registered' => $this->signalHandlersRegistered,
+            'process_running' => $this->process ? $this->process->isRunning() : null,
+        ];
+
+        return $info;
     }
 }

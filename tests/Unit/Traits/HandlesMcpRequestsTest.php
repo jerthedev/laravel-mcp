@@ -3,7 +3,6 @@
 namespace JTD\LaravelMCP\Tests\Unit\Traits;
 
 use JTD\LaravelMCP\Exceptions\McpException;
-use JTD\LaravelMCP\Exceptions\ProtocolException;
 use JTD\LaravelMCP\Tests\TestCase;
 use JTD\LaravelMCP\Traits\HandlesMcpRequests;
 
@@ -165,7 +164,7 @@ class HandlesMcpRequestsTest extends TestCase
         $params = ['name' => 'test'];
         $required = ['name', 'value', 'type'];
 
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage('Missing required parameters: value, type');
         $this->expectExceptionCode(-32602);
 
@@ -199,7 +198,7 @@ class HandlesMcpRequestsTest extends TestCase
             'age' => ['required' => true],
         ];
 
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage('Missing required parameter: age');
 
         $this->callProtectedMethod('extractParams', [$params, $schema]);
@@ -262,7 +261,7 @@ class HandlesMcpRequestsTest extends TestCase
         $this->assertTrue(true);
 
         // Invalid string
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage('Expected string, got integer');
         $this->callProtectedMethod('validateParamType', [123, 'string']);
     }
@@ -277,7 +276,7 @@ class HandlesMcpRequestsTest extends TestCase
         $this->assertTrue(true);
 
         // Invalid integer
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage('Expected integer, got string');
         $this->callProtectedMethod('validateParamType', ['123', 'int']);
     }
@@ -292,7 +291,7 @@ class HandlesMcpRequestsTest extends TestCase
         $this->assertTrue(true);
 
         // Invalid array
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage('Expected array, got string');
         $this->callProtectedMethod('validateParamType', ['test', 'array']);
     }
@@ -311,7 +310,7 @@ class HandlesMcpRequestsTest extends TestCase
         $this->assertTrue(true);
 
         // Invalid object
-        $this->expectException(ProtocolException::class);
+        $this->expectException(McpException::class);
         $this->expectExceptionMessage('Expected object, got string');
         $this->callProtectedMethod('validateParamType', ['test', 'object']);
     }

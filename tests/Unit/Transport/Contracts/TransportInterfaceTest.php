@@ -62,15 +62,27 @@ class TransportInterfaceTest extends TestCase
     }
 
     /**
-     * Test listen method starts listening for messages.
+     * Test start method starts the transport.
      */
-    public function test_listen_starts_listening(): void
+    public function test_start_transport(): void
     {
         $this->transport
             ->expects($this->once())
-            ->method('listen');
+            ->method('start');
 
-        $this->transport->listen();
+        $this->transport->start();
+    }
+
+    /**
+     * Test stop method stops the transport.
+     */
+    public function test_stop_transport(): void
+    {
+        $this->transport
+            ->expects($this->once())
+            ->method('stop');
+
+        $this->transport->stop();
     }
 
     /**
@@ -78,12 +90,12 @@ class TransportInterfaceTest extends TestCase
      */
     public function test_send_message(): void
     {
-        $message = [
+        $message = json_encode([
             'jsonrpc' => '2.0',
             'method' => 'tools/list',
             'params' => [],
             'id' => 1,
-        ];
+        ]);
 
         $this->transport
             ->expects($this->once())
@@ -98,7 +110,7 @@ class TransportInterfaceTest extends TestCase
      */
     public function test_send_complex_message(): void
     {
-        $message = [
+        $message = json_encode([
             'jsonrpc' => '2.0',
             'result' => [
                 'tools' => [
@@ -107,7 +119,7 @@ class TransportInterfaceTest extends TestCase
                 ],
             ],
             'id' => 'abc-123',
-        ];
+        ]);
 
         $this->transport
             ->expects($this->once())
@@ -122,11 +134,11 @@ class TransportInterfaceTest extends TestCase
      */
     public function test_receive_returns_message(): void
     {
-        $expectedMessage = [
+        $expectedMessage = json_encode([
             'jsonrpc' => '2.0',
             'method' => 'ping',
             'id' => 1,
-        ];
+        ]);
 
         $this->transport
             ->expects($this->once())
@@ -154,15 +166,25 @@ class TransportInterfaceTest extends TestCase
     }
 
     /**
-     * Test close method closes connection.
+     * Test getConnectionInfo returns connection information.
      */
-    public function test_close_connection(): void
+    public function test_get_connection_info(): void
     {
+        $expectedInfo = [
+            'type' => 'http',
+            'host' => 'localhost',
+            'port' => 8080,
+            'connected' => true,
+        ];
+
         $this->transport
             ->expects($this->once())
-            ->method('close');
+            ->method('getConnectionInfo')
+            ->willReturn($expectedInfo);
 
-        $this->transport->close();
+        $info = $this->transport->getConnectionInfo();
+
+        $this->assertSame($expectedInfo, $info);
     }
 
     /**
@@ -192,39 +214,18 @@ class TransportInterfaceTest extends TestCase
     }
 
     /**
-     * Test getConfig returns configuration.
+     * Test getConnectionInfo returns empty array when no connection.
      */
-    public function test_get_config(): void
-    {
-        $expectedConfig = [
-            'host' => 'localhost',
-            'port' => 3000,
-            'ssl' => false,
-        ];
-
-        $this->transport
-            ->expects($this->once())
-            ->method('getConfig')
-            ->willReturn($expectedConfig);
-
-        $config = $this->transport->getConfig();
-
-        $this->assertSame($expectedConfig, $config);
-    }
-
-    /**
-     * Test getConfig returns empty array when no config.
-     */
-    public function test_get_config_returns_empty_array(): void
+    public function test_get_connection_info_returns_empty_array(): void
     {
         $this->transport
             ->expects($this->once())
-            ->method('getConfig')
+            ->method('getConnectionInfo')
             ->willReturn([]);
 
-        $config = $this->transport->getConfig();
+        $info = $this->transport->getConnectionInfo();
 
-        $this->assertSame([], $config);
+        $this->assertSame([], $info);
     }
 
     /**
@@ -241,13 +242,13 @@ class TransportInterfaceTest extends TestCase
     }
 
     /**
-     * Test lifecycle: initialize, connect, send/receive, close.
+     * Test lifecycle: initialize, start, send/receive, stop.
      */
     public function test_transport_lifecycle(): void
     {
         $config = ['host' => 'localhost'];
-        $sendMessage = ['method' => 'ping'];
-        $receiveMessage = ['result' => 'pong'];
+        $sendMessage = json_encode(['method' => 'ping']);
+        $receiveMessage = json_encode(['result' => 'pong']);
 
         // Set up expectations in order
         $this->transport
@@ -262,7 +263,7 @@ class TransportInterfaceTest extends TestCase
 
         $this->transport
             ->expects($this->once())
-            ->method('listen');
+            ->method('start');
 
         $this->transport
             ->expects($this->once())
@@ -276,13 +277,13 @@ class TransportInterfaceTest extends TestCase
 
         $this->transport
             ->expects($this->once())
-            ->method('close');
+            ->method('stop');
 
         // Execute lifecycle
         $this->assertFalse($this->transport->isConnected());
 
         $this->transport->initialize($config);
-        $this->transport->listen();
+        $this->transport->start();
 
         $this->assertTrue($this->transport->isConnected());
 
@@ -292,7 +293,7 @@ class TransportInterfaceTest extends TestCase
 
         $this->assertTrue($this->transport->isConnected());
 
-        $this->transport->close();
+        $this->transport->stop();
 
         $this->assertFalse($this->transport->isConnected());
     }
@@ -303,15 +304,15 @@ class TransportInterfaceTest extends TestCase
     public function test_multiple_message_operations(): void
     {
         $messages = [
-            ['id' => 1, 'method' => 'tools/list'],
-            ['id' => 2, 'method' => 'resources/list'],
-            ['id' => 3, 'method' => 'prompts/list'],
+            json_encode(['id' => 1, 'method' => 'tools/list']),
+            json_encode(['id' => 2, 'method' => 'resources/list']),
+            json_encode(['id' => 3, 'method' => 'prompts/list']),
         ];
 
         $responses = [
-            ['id' => 1, 'result' => ['tools' => []]],
-            ['id' => 2, 'result' => ['resources' => []]],
-            ['id' => 3, 'result' => ['prompts' => []]],
+            json_encode(['id' => 1, 'result' => ['tools' => []]]),
+            json_encode(['id' => 2, 'result' => ['resources' => []]]),
+            json_encode(['id' => 3, 'result' => ['prompts' => []]]),
         ];
 
         // Set up send expectations
@@ -345,15 +346,23 @@ class TransportInterfaceTest extends TestCase
     }
 
     /**
-     * Test configuration persistence after initialization.
+     * Test connection information after initialization.
      */
-    public function test_configuration_persistence(): void
+    public function test_connection_info_after_initialization(): void
     {
         $config = [
             'host' => '192.168.1.100',
             'port' => 9000,
             'ssl' => true,
             'cert' => '/path/to/cert.pem',
+        ];
+
+        $expectedInfo = [
+            'type' => 'http',
+            'host' => '192.168.1.100',
+            'port' => 9000,
+            'ssl' => true,
+            'connected' => false,
         ];
 
         $this->transport
@@ -363,13 +372,13 @@ class TransportInterfaceTest extends TestCase
 
         $this->transport
             ->expects($this->once())
-            ->method('getConfig')
-            ->willReturn($config);
+            ->method('getConnectionInfo')
+            ->willReturn($expectedInfo);
 
         $this->transport->initialize($config);
-        $retrievedConfig = $this->transport->getConfig();
+        $connectionInfo = $this->transport->getConnectionInfo();
 
-        $this->assertSame($config, $retrievedConfig);
+        $this->assertSame($expectedInfo, $connectionInfo);
     }
 
     /**

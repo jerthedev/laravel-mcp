@@ -1,23 +1,11 @@
 <?php
 
-namespace JTD\LaravelMCP\Tests;
+namespace Tests;
 
-use JTD\LaravelMCP\Facades\Mcp;
-use JTD\LaravelMCP\LaravelMcpServiceProvider;
-use Orchestra\Testbench\TestCase as OrchestraTestCase;
+use PHPUnit\Framework\TestCase as PHPUnitTestCase;
 
-/**
- * Base test case for Laravel MCP package tests.
- *
- * This class provides common functionality for all tests in the package,
- * including Laravel application setup, service provider registration,
- * and helper methods for testing MCP functionality.
- */
-abstract class TestCase extends OrchestraTestCase
+abstract class TestCase extends PHPUnitTestCase
 {
-    /**
-     * Setup the test environment.
-     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -61,12 +49,18 @@ abstract class TestCase extends OrchestraTestCase
      */
     protected function defineEnvironment($app)
     {
+        // Set MCP_ENABLED environment variable - critical for commands
+        putenv('MCP_ENABLED=true');
+        $_ENV['MCP_ENABLED'] = 'true';
+
         // Set test-specific configuration
+        $app['config']->set('laravel-mcp.enabled', true);
         $app['config']->set('laravel-mcp.debug', true);
-        $app['config']->set('laravel-mcp.discovery.enabled', true);
-        $app['config']->set('laravel-mcp.discovery.paths', [
-            app_path('Mcp'),
-        ]);
+        $app['config']->set('laravel-mcp.discovery.enabled', false); // Disable discovery in tests
+        $app['config']->set('laravel-mcp.discovery.paths', []);
+
+        // Enable debug mode for commands
+        $app['config']->set('app.debug', true);
 
         // Set up test database
         $app['config']->set('database.default', 'testing');
@@ -160,13 +154,10 @@ abstract class TestCase extends OrchestraTestCase
 
             protected string $description = 'Test tool';
 
-            protected array $inputSchema = [
-                'type' => 'object',
-                'properties' => [
-                    'input' => [
-                        'type' => 'string',
-                        'description' => 'Test input',
-                    ],
+            protected array $parameterSchema = [
+                'input' => [
+                    'type' => 'string',
+                    'description' => 'Test input',
                 ],
             ];
 
@@ -176,18 +167,20 @@ abstract class TestCase extends OrchestraTestCase
                 if (isset($config['description'])) {
                     $this->description = $config['description'];
                 }
-                if (isset($config['inputSchema'])) {
-                    $this->inputSchema = $config['inputSchema'];
+                if (isset($config['parameterSchema'])) {
+                    $this->parameterSchema = $config['parameterSchema'];
                 }
+
+                parent::__construct();
             }
 
-            public function execute(array $arguments): array
+            protected function handle(array $parameters): mixed
             {
                 return [
                     'content' => [
                         [
                             'type' => 'text',
-                            'text' => 'Test result: '.($arguments['input'] ?? 'no input'),
+                            'text' => 'Test result: '.($parameters['input'] ?? 'no input'),
                         ],
                     ],
                 ];

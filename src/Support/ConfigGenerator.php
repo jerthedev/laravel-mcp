@@ -3,7 +3,12 @@
 namespace JTD\LaravelMCP\Support;
 
 use Illuminate\Support\Facades\File;
+use JTD\LaravelMCP\Exceptions\ConfigurationException;
 use JTD\LaravelMCP\Registry\McpRegistry;
+use JTD\LaravelMCP\Support\Contracts\ClientGeneratorInterface;
+use JTD\LaravelMCP\Support\Generators\ChatGptGenerator;
+use JTD\LaravelMCP\Support\Generators\ClaudeCodeGenerator;
+use JTD\LaravelMCP\Support\Generators\ClaudeDesktopGenerator;
 
 /**
  * Configuration generator for MCP server.
@@ -19,6 +24,16 @@ class ConfigGenerator
     protected McpRegistry $registry;
 
     /**
+     * Client detector instance.
+     */
+    protected ClientDetector $clientDetector;
+
+    /**
+     * Client-specific generators.
+     */
+    protected array $clientGenerators = [];
+
+    /**
      * Default configuration templates.
      */
     protected array $configTemplates = [];
@@ -26,10 +41,12 @@ class ConfigGenerator
     /**
      * Create a new config generator instance.
      */
-    public function __construct(McpRegistry $registry)
+    public function __construct(McpRegistry $registry, ?ClientDetector $clientDetector = null)
     {
         $this->registry = $registry;
+        $this->clientDetector = $clientDetector ?? new ClientDetector;
         $this->initializeTemplates();
+        $this->initializeClientGenerators();
     }
 
     /**
@@ -153,20 +170,94 @@ class ConfigGenerator
      */
     public function generateClaudeDesktopConfig(array $options = []): array
     {
-        $serverName = $options['server_name'] ?? 'laravel-mcp';
-        $command = $options['command'] ?? ['php', 'artisan', 'mcp:serve'];
-        $args = $options['args'] ?? [];
-        $env = $options['env'] ?? [];
+        if (! isset($this->clientGenerators['claude-desktop'])) {
+            throw new ConfigurationException('Claude Desktop generator not available');
+        }
 
-        return [
-            'mcpServers' => [
-                $serverName => [
-                    'command' => $command[0],
-                    'args' => array_merge(array_slice($command, 1), $args),
-                    'env' => $env,
-                ],
-            ],
-        ];
+        return $this->clientGenerators['claude-desktop']->generate($options);
+    }
+
+    /**
+     * Generate Claude Code configuration.
+     */
+    public function generateClaudeCodeConfig(array $options = []): array
+    {
+        if (! isset($this->clientGenerators['claude-code'])) {
+            throw new ConfigurationException('Claude Code generator not available');
+        }
+
+        return $this->clientGenerators['claude-code']->generate($options);
+    }
+
+    /**
+     * Generate ChatGPT Desktop configuration.
+     */
+    public function generateChatGptDesktopConfig(array $options = []): array
+    {
+        if (! isset($this->clientGenerators['chatgpt'])) {
+            throw new ConfigurationException('ChatGPT Desktop generator not available');
+        }
+
+        return $this->clientGenerators['chatgpt']->generate($options);
+    }
+
+    /**
+     * Get client configuration file path based on OS.
+     */
+    public function getClientConfigPath(string $client): ?string
+    {
+        return $this->clientDetector->getDefaultConfigPath($client);
+    }
+
+    /**
+     * Validate client configuration.
+     */
+    public function validateClientConfig(string $client, array $config): array
+    {
+        if (! isset($this->clientGenerators[$client])) {
+            return ["Unknown client type: $client"];
+        }
+
+        return $this->clientGenerators[$client]->validateConfig($config);
+    }
+
+    /**
+     * Save client configuration to file.
+     */
+    public function saveClientConfig(array $config, string $path, bool $force = false): bool
+    {
+        try {
+            // Check if file exists and force is not enabled
+            if (! $force && File::exists($path)) {
+                return false;
+            }
+
+            // Ensure directory exists
+            $directory = dirname($path);
+            if (! File::exists($directory)) {
+                File::makeDirectory($directory, 0755, true);
+            }
+
+            // Save as JSON
+            $content = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+            File::put($path, $content);
+
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Merge client configuration with existing config.
+     */
+    public function mergeClientConfig(string $client, array $newConfig, array $existingConfig = []): array
+    {
+        if (! isset($this->clientGenerators[$client])) {
+            return $newConfig;
+        }
+
+        return $this->clientGenerators[$client]->mergeConfig($newConfig, $existingConfig);
     }
 
     /**
@@ -341,6 +432,50 @@ class ConfigGenerator
                 'prompts' => ['listChanged' => false],
             ],
         ];
+    }
+
+    /**
+     * Initialize client-specific generators.
+     */
+    protected function initializeClientGenerators(): void
+    {
+        $this->clientGenerators = [
+            'claude-desktop' => new ClaudeDesktopGenerator($this->registry),
+            'claude-code' => new ClaudeCodeGenerator($this->registry),
+            'chatgpt' => new ChatGptGenerator($this->registry),
+        ];
+    }
+
+    /**
+     * Get client generator for a specific client.
+     *
+     * @param  string  $client  Client identifier
+     * @return ClientGeneratorInterface|null Generator instance or null if not found
+     */
+    public function getClientGenerator(string $client): ?ClientGeneratorInterface
+    {
+        return $this->clientGenerators[$client] ?? null;
+    }
+
+    /**
+     * Check if a client is supported.
+     *
+     * @param  string  $client  Client identifier
+     * @return bool True if client is supported
+     */
+    public function isClientSupported(string $client): bool
+    {
+        return isset($this->clientGenerators[$client]);
+    }
+
+    /**
+     * Get list of supported clients.
+     *
+     * @return array Array of supported client identifiers
+     */
+    public function getSupportedClients(): array
+    {
+        return array_keys($this->clientGenerators);
     }
 
     /**
