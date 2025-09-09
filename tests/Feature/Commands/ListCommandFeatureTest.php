@@ -703,14 +703,15 @@ class ListCommandFeatureTest extends TestCase
 
             protected string $description = 'Named tool';
 
-            protected array $inputSchema = [];
+            protected array $parameterSchema = [];
 
             public function __construct(string $name)
             {
                 $this->name = $name;
+                parent::__construct();
             }
 
-            public function execute(array $arguments): array
+            protected function handle(array $parameters): array
             {
                 return ['content' => []];
             }

@@ -3,305 +3,264 @@
 namespace JTD\LaravelMCP\Traits;
 
 /**
- * Trait for managing MCP server capabilities.
+ * Trait for managing MCP component capabilities.
  *
- * This trait provides functionality for managing and negotiating MCP server
- * capabilities with clients. It handles capability discovery, validation,
- * and configuration for tools, resources, prompts, and other MCP features.
+ * This trait provides functionality for managing capabilities specific to
+ * MCP components (tools, resources, prompts), including capability discovery,
+ * configuration, and integration with MCP protocol requirements.
  */
 trait ManagesCapabilities
 {
     /**
-     * Default server capabilities.
-     */
-    protected array $defaultCapabilities = [
-        'tools' => [],
-        'resources' => [],
-        'prompts' => [],
-        'logging' => [],
-        'experimental' => [],
-    ];
-
-    /**
-     * Current server capabilities.
+     * Component capabilities.
      */
     protected array $capabilities = [];
 
     /**
-     * Initialize capabilities with defaults.
-     */
-    protected function initializeCapabilities(): void
-    {
-        $this->capabilities = array_merge($this->defaultCapabilities, $this->capabilities);
-    }
-
-    /**
-     * Get all server capabilities.
+     * Get all component capabilities.
      */
     public function getCapabilities(): array
     {
-        if (empty($this->capabilities)) {
-            $this->initializeCapabilities();
+        return array_merge($this->getDefaultCapabilities(), $this->capabilities);
+    }
+
+    /**
+     * Check if component has a specific capability.
+     */
+    public function hasCapability(string $capability): bool
+    {
+        return in_array($capability, $this->getCapabilities());
+    }
+
+    /**
+     * Add a capability to the component.
+     */
+    public function addCapability(string $capability): self
+    {
+        if (! in_array($capability, $this->capabilities)) {
+            $this->capabilities[] = $capability;
         }
 
-        return $this->capabilities;
+        return $this;
     }
 
     /**
-     * Set server capabilities.
-     *
-     * @param  array  $capabilities  Capabilities configuration
+     * Remove a capability from the component.
      */
-    public function setCapabilities(array $capabilities): void
+    public function removeCapability(string $capability): self
     {
-        $this->capabilities = array_merge($this->defaultCapabilities, $capabilities);
+        $this->capabilities = array_filter($this->capabilities, fn ($c) => $c !== $capability);
+
+        return $this;
     }
 
     /**
-     * Add a capability.
-     *
-     * @param  string  $category  Capability category (tools, resources, prompts, etc.)
-     * @param  string  $name  Capability name
-     * @param  array  $config  Capability configuration
+     * Get default capabilities based on component type.
      */
-    public function addCapability(string $category, string $name, array $config = []): void
+    protected function getDefaultCapabilities(): array
     {
-        if (! isset($this->capabilities[$category])) {
-            $this->capabilities[$category] = [];
+        $className = class_basename(static::class);
+
+        // For specific base classes
+        if (str_contains($className, 'Tool')) {
+            return ['execute'];
         }
 
-        $this->capabilities[$category][$name] = $config;
-    }
-
-    /**
-     * Remove a capability.
-     *
-     * @param  string  $category  Capability category
-     * @param  string  $name  Capability name
-     * @return bool True if capability was removed
-     */
-    public function removeCapability(string $category, string $name): bool
-    {
-        if (isset($this->capabilities[$category][$name])) {
-            unset($this->capabilities[$category][$name]);
-
-            return true;
+        if (str_contains($className, 'Resource')) {
+            return ['read', 'list'];
         }
 
-        return false;
-    }
+        if (str_contains($className, 'Prompt')) {
+            return ['get'];
+        }
 
-    /**
-     * Check if a capability is supported.
-     *
-     * @param  string  $category  Capability category
-     * @param  string  $name  Capability name
-     */
-    public function hasCapability(string $category, string $name): bool
-    {
-        return isset($this->capabilities[$category][$name]);
-    }
+        // For classes extending our abstract base classes
+        $parentClass = get_parent_class(static::class);
+        if ($parentClass) {
+            $parentClassName = class_basename($parentClass);
 
-    /**
-     * Get capabilities for a specific category.
-     *
-     * @param  string  $category  Capability category
-     */
-    public function getCapabilitiesForCategory(string $category): array
-    {
-        return $this->capabilities[$category] ?? [];
-    }
-
-    /**
-     * Configure tools capabilities.
-     *
-     * @param  array  $toolsConfig  Tools configuration
-     */
-    public function configureToolsCapabilities(array $toolsConfig = []): void
-    {
-        $defaultToolsConfig = [
-            'listChanged' => true,
-        ];
-
-        $this->capabilities['tools'] = array_merge($defaultToolsConfig, $toolsConfig);
-    }
-
-    /**
-     * Configure resources capabilities.
-     *
-     * @param  array  $resourcesConfig  Resources configuration
-     */
-    public function configureResourcesCapabilities(array $resourcesConfig = []): void
-    {
-        $defaultResourcesConfig = [
-            'subscribe' => true,
-            'listChanged' => true,
-        ];
-
-        $this->capabilities['resources'] = array_merge($defaultResourcesConfig, $resourcesConfig);
-    }
-
-    /**
-     * Configure prompts capabilities.
-     *
-     * @param  array  $promptsConfig  Prompts configuration
-     */
-    public function configurePromptsCapabilities(array $promptsConfig = []): void
-    {
-        $defaultPromptsConfig = [
-            'listChanged' => true,
-        ];
-
-        $this->capabilities['prompts'] = array_merge($defaultPromptsConfig, $promptsConfig);
-    }
-
-    /**
-     * Configure logging capabilities.
-     *
-     * @param  array  $loggingConfig  Logging configuration
-     */
-    public function configureLoggingCapabilities(array $loggingConfig = []): void
-    {
-        $defaultLoggingConfig = [];
-
-        $this->capabilities['logging'] = array_merge($defaultLoggingConfig, $loggingConfig);
-    }
-
-    /**
-     * Configure experimental capabilities.
-     *
-     * @param  array  $experimentalConfig  Experimental configuration
-     */
-    public function configureExperimentalCapabilities(array $experimentalConfig = []): void
-    {
-        $this->capabilities['experimental'] = $experimentalConfig;
-    }
-
-    /**
-     * Negotiate capabilities with client.
-     *
-     * @param  array  $clientCapabilities  Client capabilities
-     * @return array Negotiated capabilities
-     */
-    public function negotiateCapabilities(array $clientCapabilities): array
-    {
-        $serverCapabilities = $this->getCapabilities();
-        $negotiated = [];
-
-        // Find common capabilities
-        foreach ($serverCapabilities as $category => $capabilities) {
-            if (! isset($clientCapabilities[$category])) {
-                continue;
+            if (str_contains($parentClassName, 'McpTool')) {
+                return ['execute'];
             }
 
-            $negotiated[$category] = $this->negotiateCategoryCapabilities(
-                $capabilities,
-                $clientCapabilities[$category]
-            );
-        }
+            if (str_contains($parentClassName, 'McpResource')) {
+                return ['read', 'list'];
+            }
 
-        return $negotiated;
-    }
-
-    /**
-     * Negotiate capabilities for a specific category.
-     *
-     * @param  array  $serverCapabilities  Server capabilities for category
-     * @param  array  $clientCapabilities  Client capabilities for category
-     * @return array Negotiated capabilities
-     */
-    protected function negotiateCategoryCapabilities(array $serverCapabilities, array $clientCapabilities): array
-    {
-        $negotiated = [];
-
-        foreach ($serverCapabilities as $capability => $config) {
-            if (isset($clientCapabilities[$capability])) {
-                $negotiated[$capability] = $this->mergeCapabilityConfig($config, $clientCapabilities[$capability]);
+            if (str_contains($parentClassName, 'McpPrompt')) {
+                return ['get'];
             }
         }
 
-        return $negotiated;
+        return [];
     }
 
     /**
-     * Merge capability configuration between server and client.
-     *
-     * @param  mixed  $serverConfig  Server capability configuration
-     * @param  mixed  $clientConfig  Client capability configuration
-     * @return mixed Merged configuration
+     * Set all capabilities, replacing existing ones.
      */
-    protected function mergeCapabilityConfig($serverConfig, $clientConfig)
+    public function setCapabilities(array $capabilities): self
     {
-        // If both are booleans, use logical AND (both must support)
-        if (is_bool($serverConfig) && is_bool($clientConfig)) {
-            return $serverConfig && $clientConfig;
+        $this->capabilities = $capabilities;
+
+        return $this;
+    }
+
+    /**
+     * Get capabilities as a formatted array for MCP.
+     */
+    public function getCapabilitiesArray(): array
+    {
+        return [
+            'capabilities' => $this->getCapabilities(),
+            'supports' => $this->getSupportedOperations(),
+        ];
+    }
+
+    /**
+     * Get supported operations based on capabilities and component type.
+     */
+    protected function getSupportedOperations(): array
+    {
+        $operations = [];
+        $capabilities = $this->getCapabilities();
+
+        // Tool operations
+        if (in_array('execute', $capabilities)) {
+            $operations[] = 'execute';
         }
 
-        // If both are arrays, merge them
-        if (is_array($serverConfig) && is_array($clientConfig)) {
-            return array_merge($serverConfig, $clientConfig);
+        // Resource operations
+        if (in_array('read', $capabilities)) {
+            $operations[] = 'read';
         }
 
-        // Default to server config
-        return $serverConfig;
-    }
-
-    /**
-     * Get capability configuration.
-     *
-     * @param  string  $category  Capability category
-     * @param  string  $name  Capability name
-     * @return mixed Capability configuration or null if not found
-     */
-    public function getCapabilityConfig(string $category, string $name)
-    {
-        return $this->capabilities[$category][$name] ?? null;
-    }
-
-    /**
-     * Update capability configuration.
-     *
-     * @param  string  $category  Capability category
-     * @param  string  $name  Capability name
-     * @param  mixed  $config  New configuration
-     */
-    public function updateCapabilityConfig(string $category, string $name, $config): void
-    {
-        if (! isset($this->capabilities[$category])) {
-            $this->capabilities[$category] = [];
+        if (in_array('list', $capabilities)) {
+            $operations[] = 'list';
         }
 
-        $this->capabilities[$category][$name] = $config;
+        if (in_array('subscribe', $capabilities)) {
+            $operations[] = 'subscribe';
+        }
+
+        // Prompt operations
+        if (in_array('get', $capabilities)) {
+            $operations[] = 'get';
+        }
+
+        return $operations;
     }
 
     /**
-     * Get supported capability categories.
+     * Check if component supports a specific operation.
      */
-    public function getSupportedCategories(): array
+    public function supportsOperation(string $operation): bool
     {
-        return array_keys($this->capabilities);
+        return in_array($operation, $this->getSupportedOperations());
     }
 
     /**
-     * Validate capability configuration.
-     *
-     * @param  array  $capabilities  Capabilities to validate
-     * @return array Validation errors (empty if valid)
+     * Enable subscription capability for resources.
      */
-    public function validateCapabilities(array $capabilities): array
+    public function enableSubscription(): self
+    {
+        return $this->addCapability('subscribe');
+    }
+
+    /**
+     * Disable subscription capability for resources.
+     */
+    public function disableSubscription(): self
+    {
+        return $this->removeCapability('subscribe');
+    }
+
+    /**
+     * Check if component supports subscriptions.
+     */
+    public function supportsSubscription(): bool
+    {
+        return $this->hasCapability('subscribe');
+    }
+
+    /**
+     * Get capability metadata for introspection.
+     */
+    public function getCapabilityMetadata(): array
+    {
+        return [
+            'type' => $this->getComponentType(),
+            'capabilities' => $this->getCapabilities(),
+            'operations' => $this->getSupportedOperations(),
+            'default_capabilities' => $this->getDefaultCapabilities(),
+            'custom_capabilities' => array_diff($this->capabilities, $this->getDefaultCapabilities()),
+        ];
+    }
+
+    /**
+     * Get component type based on class hierarchy.
+     */
+    protected function getComponentType(): string
+    {
+        $className = class_basename(static::class);
+
+        if (str_contains($className, 'Tool')) {
+            return 'tool';
+        }
+
+        if (str_contains($className, 'Resource')) {
+            return 'resource';
+        }
+
+        if (str_contains($className, 'Prompt')) {
+            return 'prompt';
+        }
+
+        // Check parent class
+        $parentClass = get_parent_class(static::class);
+        if ($parentClass) {
+            $parentClassName = class_basename($parentClass);
+
+            if (str_contains($parentClassName, 'McpTool')) {
+                return 'tool';
+            }
+
+            if (str_contains($parentClassName, 'McpResource')) {
+                return 'resource';
+            }
+
+            if (str_contains($parentClassName, 'McpPrompt')) {
+                return 'prompt';
+            }
+        }
+
+        return 'unknown';
+    }
+
+    /**
+     * Validate that capabilities are appropriate for component type.
+     */
+    public function validateCapabilities(): array
     {
         $errors = [];
-        $supportedCategories = ['tools', 'resources', 'prompts', 'logging', 'experimental'];
+        $type = $this->getComponentType();
+        $capabilities = $this->getCapabilities();
 
-        foreach ($capabilities as $category => $config) {
-            if (! in_array($category, $supportedCategories)) {
-                $errors[] = "Unsupported capability category: {$category}";
+        // Define valid capabilities per component type
+        $validCapabilities = [
+            'tool' => ['execute'],
+            'resource' => ['read', 'list', 'subscribe'],
+            'prompt' => ['get'],
+        ];
 
-                continue;
-            }
+        if (! isset($validCapabilities[$type])) {
+            $errors[] = "Unknown component type: {$type}";
 
-            if (! is_array($config)) {
-                $errors[] = "Capability category '{$category}' must be an array";
+            return $errors;
+        }
+
+        foreach ($capabilities as $capability) {
+            if (! in_array($capability, $validCapabilities[$type])) {
+                $errors[] = "Invalid capability '{$capability}' for {$type} component";
             }
         }
 

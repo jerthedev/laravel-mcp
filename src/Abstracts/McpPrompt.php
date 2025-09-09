@@ -2,6 +2,14 @@
 
 namespace JTD\LaravelMCP\Abstracts;
 
+use Illuminate\Container\Container;
+use Illuminate\Contracts\Validation\Factory as ValidationFactory;
+use Illuminate\Support\Str;
+use Illuminate\View\Factory as ViewFactory;
+use JTD\LaravelMCP\Traits\HandlesMcpRequests;
+use JTD\LaravelMCP\Traits\ValidatesParameters;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
+
 /**
  * Abstract base class for MCP Prompts.
  *
@@ -11,6 +19,23 @@ namespace JTD\LaravelMCP\Abstracts;
  */
 abstract class McpPrompt
 {
+    use HandlesMcpRequests, ValidatesParameters;
+
+    /**
+     * Laravel container instance.
+     */
+    protected Container $container;
+
+    /**
+     * Laravel validation factory.
+     */
+    protected ValidationFactory $validator;
+
+    /**
+     * Laravel view factory.
+     */
+    protected ViewFactory $view;
+
     /**
      * The name of the prompt.
      */
@@ -22,24 +47,50 @@ abstract class McpPrompt
     protected string $description;
 
     /**
-     * The JSON Schema for the prompt's arguments.
+     * The argument definitions for this prompt.
      */
-    protected array $argumentsSchema = [];
+    protected array $arguments = [];
 
     /**
-     * Get the messages for this prompt with the given arguments.
-     *
-     * @param  array  $arguments  The prompt arguments
-     * @return array The generated messages
+     * Optional template for this prompt.
      */
-    abstract public function getMessages(array $arguments): array;
+    protected ?string $template = null;
+
+    /**
+     * Middleware to apply to this prompt.
+     */
+    protected array $middleware = [];
+
+    /**
+     * Whether this prompt requires authentication.
+     */
+    protected bool $requiresAuth = false;
+
+    /**
+     * Create a new prompt instance.
+     */
+    public function __construct()
+    {
+        $this->container = Container::getInstance();
+        $this->validator = $this->container->make(ValidationFactory::class);
+        $this->view = $this->container->make(ViewFactory::class);
+        $this->boot();
+    }
+
+    /**
+     * Boot the prompt. Override in child classes for initialization.
+     */
+    protected function boot(): void
+    {
+        // Override in child classes
+    }
 
     /**
      * Get the prompt name.
      */
     public function getName(): string
     {
-        return $this->name;
+        return $this->name ?? $this->generateNameFromClass();
     }
 
     /**
@@ -47,15 +98,188 @@ abstract class McpPrompt
      */
     public function getDescription(): string
     {
-        return $this->description;
+        return $this->description ?? 'MCP Prompt';
     }
 
     /**
-     * Get the prompt's arguments schema.
+     * Get the prompt arguments definition.
      */
-    public function getArgumentsSchema(): array
+    public function getArguments(): array
     {
-        return $this->argumentsSchema;
+        return $this->arguments;
+    }
+
+    /**
+     * Get the messages for this prompt with the given arguments.
+     *
+     * @param  array  $arguments  The prompt arguments
+     * @return array The generated messages
+     */
+    public function get(array $arguments = []): array
+    {
+        if (! $this->authorize($arguments)) {
+            throw new UnauthorizedHttpException('', 'Unauthorized prompt access');
+        }
+
+        $validatedArgs = $this->validateArguments($arguments);
+
+        return $this->handleGet($validatedArgs);
+    }
+
+    /**
+     * Handle prompt generation.
+     */
+    protected function handleGet(array $arguments): array
+    {
+        $content = $this->generateContent($arguments);
+
+        return [
+            'description' => $this->getDescription(),
+            'messages' => [
+                [
+                    'role' => 'user',
+                    'content' => [
+                        'type' => 'text',
+                        'text' => $content,
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Generate content for the prompt.
+     */
+    protected function generateContent(array $arguments): string
+    {
+        if ($this->template) {
+            return $this->renderTemplate($arguments);
+        }
+
+        return $this->customContent($arguments);
+    }
+
+    /**
+     * Render template with arguments.
+     */
+    protected function renderTemplate(array $arguments): string
+    {
+        if (str_contains($this->template, '.blade.php') || $this->view->exists($this->template)) {
+            return $this->view->make($this->template, $arguments)->render();
+        }
+
+        // Simple string template - support both {{key}} and {key} formats
+        $content = $this->template;
+        foreach ($arguments as $key => $value) {
+            $content = str_replace("{{{$key}}}", $value, $content);
+            $content = str_replace("{{$key}}", $value, $content);
+        }
+
+        return $content;
+    }
+
+    /**
+     * Generate custom content. Override in child classes.
+     */
+    protected function customContent(array $arguments): string
+    {
+        throw new \BadMethodCallException('Custom content method not implemented');
+    }
+
+    /**
+     * Validate prompt arguments.
+     */
+    protected function validateArguments(array $arguments): array
+    {
+        if (empty($this->arguments)) {
+            return $arguments;
+        }
+
+        $rules = $this->buildValidationRules();
+
+        return $this->validator->make($arguments, $rules)->validated();
+    }
+
+    /**
+     * Build Laravel validation rules from argument definitions.
+     */
+    private function buildValidationRules(): array
+    {
+        $rules = [];
+
+        foreach ($this->arguments as $name => $config) {
+            $rules[$name] = $this->buildArgumentRule($config);
+        }
+
+        return $rules;
+    }
+
+    /**
+     * Build validation rule for a single argument.
+     */
+    private function buildArgumentRule(array $config): string
+    {
+        $rules = [];
+
+        if ($config['required'] ?? false) {
+            $rules[] = 'required';
+        } else {
+            $rules[] = 'nullable';
+        }
+
+        switch ($config['type'] ?? 'string') {
+            case 'string':
+                $rules[] = 'string';
+                if (isset($config['max_length'])) {
+                    $rules[] = "max:{$config['max_length']}";
+                }
+                break;
+            case 'integer':
+                $rules[] = 'integer';
+                break;
+            case 'number':
+                $rules[] = 'numeric';
+                break;
+            case 'boolean':
+                $rules[] = 'boolean';
+                break;
+            case 'array':
+                $rules[] = 'array';
+                break;
+        }
+
+        return implode('|', $rules);
+    }
+
+    /**
+     * Authorize prompt access.
+     */
+    protected function authorize(array $arguments): bool
+    {
+        if (! $this->requiresAuth) {
+            return true;
+        }
+
+        // Default authorization logic - can be overridden in child classes
+        return true;
+    }
+
+    /**
+     * Generate prompt name from class name.
+     */
+    private function generateNameFromClass(): string
+    {
+        $className = class_basename($this);
+
+        return Str::snake(str_replace('Prompt', '', $className));
+    }
+
+    /**
+     * Resolve a dependency from the Laravel container.
+     */
+    protected function make(string $abstract, array $parameters = [])
+    {
+        return $this->container->make($abstract, $parameters);
     }
 
     /**
@@ -66,113 +290,12 @@ abstract class McpPrompt
         return [
             'name' => $this->getName(),
             'description' => $this->getDescription(),
-            'arguments' => $this->getArgumentsSchema(),
+            'arguments' => $this->getArguments(),
         ];
     }
 
     /**
-     * Validate the provided arguments against the arguments schema.
-     *
-     * @param  array  $arguments  The arguments to validate
-     * @return bool True if valid, throws exception otherwise
-     *
-     * @throws \InvalidArgumentException
-     */
-    public function validateArguments(array $arguments): bool
-    {
-        // Basic validation - check required fields
-        if (isset($this->argumentsSchema['required'])) {
-            foreach ($this->argumentsSchema['required'] as $requiredField) {
-                if (! isset($arguments[$requiredField])) {
-                    throw new \InvalidArgumentException(
-                        "Required field '{$requiredField}' is missing"
-                    );
-                }
-            }
-        }
-
-        // Type validation for each property
-        if (isset($this->argumentsSchema['properties'])) {
-            foreach ($arguments as $key => $value) {
-                if (isset($this->argumentsSchema['properties'][$key])) {
-                    $this->validatePropertyType(
-                        $key,
-                        $value,
-                        $this->argumentsSchema['properties'][$key]
-                    );
-                }
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Validate a property type.
-     *
-     * @param  string  $key  The property key
-     * @param  mixed  $value  The property value
-     * @param  array  $schema  The property schema
-     *
-     * @throws \InvalidArgumentException
-     */
-    protected function validatePropertyType(string $key, mixed $value, array $schema): void
-    {
-        $type = $schema['type'] ?? null;
-
-        if (! $type) {
-            return;
-        }
-
-        $isValid = match ($type) {
-            'string' => is_string($value),
-            'number' => is_numeric($value),
-            'integer' => is_int($value),
-            'boolean' => is_bool($value),
-            'array' => is_array($value),
-            'object' => is_array($value) || is_object($value),
-            default => true,
-        };
-
-        if (! $isValid) {
-            throw new \InvalidArgumentException(
-                "Property '{$key}' must be of type '{$type}'"
-            );
-        }
-
-        // Additional validations
-        if ($type === 'integer' || $type === 'number') {
-            if (isset($schema['minimum']) && $value < $schema['minimum']) {
-                throw new \InvalidArgumentException(
-                    "Property '{$key}' must be at least {$schema['minimum']}"
-                );
-            }
-            if (isset($schema['maximum']) && $value > $schema['maximum']) {
-                throw new \InvalidArgumentException(
-                    "Property '{$key}' must be at most {$schema['maximum']}"
-                );
-            }
-        }
-
-        if ($type === 'string') {
-            if (isset($schema['minLength']) && strlen($value) < $schema['minLength']) {
-                throw new \InvalidArgumentException(
-                    "Property '{$key}' must be at least {$schema['minLength']} characters long"
-                );
-            }
-            if (isset($schema['maxLength']) && strlen($value) > $schema['maxLength']) {
-                throw new \InvalidArgumentException(
-                    "Property '{$key}' must be at most {$schema['maxLength']} characters long"
-                );
-            }
-        }
-    }
-
-    /**
      * Create a message structure for MCP.
-     *
-     * @param  string  $role  The message role (user, assistant, system)
-     * @param  string  $content  The message content
      */
     protected function createMessage(string $role, string $content): array
     {
@@ -187,8 +310,6 @@ abstract class McpPrompt
 
     /**
      * Format messages for MCP response.
-     *
-     * @param  array  $messages  The messages to format
      */
     protected function formatMessages(array $messages): array
     {
@@ -199,9 +320,6 @@ abstract class McpPrompt
 
     /**
      * Apply template variables to a string.
-     *
-     * @param  string  $template  The template string
-     * @param  array  $variables  The variables to apply
      */
     protected function applyTemplate(string $template, array $variables): string
     {
