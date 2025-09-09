@@ -9,6 +9,9 @@ use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Registry\PromptRegistry;
 use JTD\LaravelMCP\Registry\ResourceRegistry;
 use JTD\LaravelMCP\Registry\ToolRegistry;
+use JTD\LaravelMCP\Server\Handlers\PromptHandler;
+use JTD\LaravelMCP\Server\Handlers\ResourceHandler;
+use JTD\LaravelMCP\Server\Handlers\ToolHandler;
 use JTD\LaravelMCP\Transport\Contracts\MessageHandlerInterface;
 use JTD\LaravelMCP\Transport\Contracts\TransportInterface;
 
@@ -43,6 +46,15 @@ class MessageProcessor implements MessageHandlerInterface
      * Capability negotiator.
      */
     protected CapabilityNegotiator $capabilityNegotiator;
+
+    /**
+     * Message handlers.
+     */
+    protected ToolHandler $toolHandler;
+
+    protected ResourceHandler $resourceHandler;
+
+    protected PromptHandler $promptHandler;
 
     /**
      * Server information.
@@ -84,6 +96,11 @@ class MessageProcessor implements MessageHandlerInterface
         $this->resourceRegistry = $resourceRegistry;
         $this->promptRegistry = $promptRegistry;
         $this->capabilityNegotiator = $capabilityNegotiator;
+
+        // Initialize message handlers
+        $this->toolHandler = new ToolHandler($toolRegistry, app()->environment('local'));
+        $this->resourceHandler = new ResourceHandler($resourceRegistry, app()->environment('local'));
+        $this->promptHandler = new PromptHandler($promptRegistry, app()->environment('local'));
 
         $this->setupHandlers();
         $this->setupServerCapabilities();
@@ -214,21 +231,21 @@ class MessageProcessor implements MessageHandlerInterface
         });
 
         // Tool methods
-        $this->jsonRpcHandler->onRequest('tools/list', function (array $params) {
-            return $this->handleToolsList($params);
+        $this->jsonRpcHandler->onRequest('tools/list', function (array $params, array $request = []) {
+            return $this->handleToolsList($params, $request);
         });
 
-        $this->jsonRpcHandler->onRequest('tools/call', function (array $params) {
-            return $this->handleToolsCall($params);
+        $this->jsonRpcHandler->onRequest('tools/call', function (array $params, array $request = []) {
+            return $this->handleToolsCall($params, $request);
         });
 
         // Resource methods
-        $this->jsonRpcHandler->onRequest('resources/list', function (array $params) {
-            return $this->handleResourcesList($params);
+        $this->jsonRpcHandler->onRequest('resources/list', function (array $params, array $request = []) {
+            return $this->handleResourcesList($params, $request);
         });
 
-        $this->jsonRpcHandler->onRequest('resources/read', function (array $params) {
-            return $this->handleResourcesRead($params);
+        $this->jsonRpcHandler->onRequest('resources/read', function (array $params, array $request = []) {
+            return $this->handleResourcesRead($params, $request);
         });
 
         $this->jsonRpcHandler->onRequest('resources/templates/list', function (array $params) {
@@ -236,12 +253,12 @@ class MessageProcessor implements MessageHandlerInterface
         });
 
         // Prompt methods
-        $this->jsonRpcHandler->onRequest('prompts/list', function (array $params) {
-            return $this->handlePromptsList($params);
+        $this->jsonRpcHandler->onRequest('prompts/list', function (array $params, array $request = []) {
+            return $this->handlePromptsList($params, $request);
         });
 
-        $this->jsonRpcHandler->onRequest('prompts/get', function (array $params) {
-            return $this->handlePromptsGet($params);
+        $this->jsonRpcHandler->onRequest('prompts/get', function (array $params, array $request = []) {
+            return $this->handlePromptsGet($params, $request);
         });
     }
 
@@ -314,97 +331,57 @@ class MessageProcessor implements MessageHandlerInterface
     /**
      * Handle tools/list request.
      */
-    protected function handleToolsList(array $params): array
+    protected function handleToolsList(array $params, array $request = []): array
     {
         $this->checkInitialized();
 
-        return [
-            'tools' => $this->toolRegistry->getToolDefinitions(),
+        $context = [
+            'request_id' => $request['id'] ?? null,
         ];
+
+        return $this->toolHandler->handle('tools/list', $params, $context);
     }
 
     /**
      * Handle tools/call request.
      */
-    protected function handleToolsCall(array $params): array
+    protected function handleToolsCall(array $params, array $request = []): array
     {
         $this->checkInitialized();
 
-        $name = $params['name'] ?? '';
-        $arguments = $params['arguments'] ?? [];
+        $context = [
+            'request_id' => $request['id'] ?? null,
+        ];
 
-        if (! $this->toolRegistry->has($name)) {
-            throw new ProtocolException("Tool '{$name}' not found", -32601);
-        }
-
-        if (! $this->toolRegistry->validateParameters($name, $arguments)) {
-            throw new ProtocolException("Invalid parameters for tool '{$name}'", -32602);
-        }
-
-        try {
-            $result = $this->toolRegistry->executeTool($name, $arguments);
-
-            return [
-                'content' => [
-                    [
-                        'type' => 'text',
-                        'text' => is_string($result) ? $result : json_encode($result),
-                    ],
-                ],
-            ];
-        } catch (\Throwable $e) {
-            Log::error("Tool execution error: {$name}", [
-                'error' => $e->getMessage(),
-                'arguments' => $arguments,
-            ]);
-
-            throw new ProtocolException("Tool execution failed: {$e->getMessage()}", -32603);
-        }
+        return $this->toolHandler->handle('tools/call', $params, $context);
     }
 
     /**
      * Handle resources/list request.
      */
-    protected function handleResourcesList(array $params): array
+    protected function handleResourcesList(array $params, array $request = []): array
     {
         $this->checkInitialized();
 
-        $cursor = $params['cursor'] ?? null;
+        $context = [
+            'request_id' => $request['id'] ?? null,
+        ];
 
-        return $this->resourceRegistry->listResources($cursor);
+        return $this->resourceHandler->handle('resources/list', $params, $context);
     }
 
     /**
      * Handle resources/read request.
      */
-    protected function handleResourcesRead(array $params): array
+    protected function handleResourcesRead(array $params, array $request = []): array
     {
         $this->checkInitialized();
 
-        $uri = $params['uri'] ?? '';
+        $context = [
+            'request_id' => $request['id'] ?? null,
+        ];
 
-        if (! $uri) {
-            throw new ProtocolException('Resource URI is required', -32602);
-        }
-
-        // Find resource by URI
-        $resources = $this->resourceRegistry->getResourcesByUri($uri);
-
-        if (empty($resources)) {
-            throw new ProtocolException("Resource not found: {$uri}", -32601);
-        }
-
-        $resourceName = array_key_first($resources);
-
-        try {
-            return $this->resourceRegistry->getResourceContent($resourceName, $params);
-        } catch (\Throwable $e) {
-            Log::error("Resource read error: {$uri}", [
-                'error' => $e->getMessage(),
-            ]);
-
-            throw new ProtocolException("Resource read failed: {$e->getMessage()}", -32603);
-        }
+        return $this->resourceHandler->handle('resources/read', $params, $context);
     }
 
     /**
@@ -422,43 +399,29 @@ class MessageProcessor implements MessageHandlerInterface
     /**
      * Handle prompts/list request.
      */
-    protected function handlePromptsList(array $params): array
+    protected function handlePromptsList(array $params, array $request = []): array
     {
         $this->checkInitialized();
 
-        $cursor = $params['cursor'] ?? null;
+        $context = [
+            'request_id' => $request['id'] ?? null,
+        ];
 
-        return $this->promptRegistry->listPrompts($cursor);
+        return $this->promptHandler->handle('prompts/list', $params, $context);
     }
 
     /**
      * Handle prompts/get request.
      */
-    protected function handlePromptsGet(array $params): array
+    protected function handlePromptsGet(array $params, array $request = []): array
     {
         $this->checkInitialized();
 
-        $name = $params['name'] ?? '';
-        $arguments = $params['arguments'] ?? [];
+        $context = [
+            'request_id' => $request['id'] ?? null,
+        ];
 
-        if (! $this->promptRegistry->has($name)) {
-            throw new ProtocolException("Prompt '{$name}' not found", -32601);
-        }
-
-        if (! $this->promptRegistry->validateArguments($name, $arguments)) {
-            throw new ProtocolException("Invalid arguments for prompt '{$name}'", -32602);
-        }
-
-        try {
-            return $this->promptRegistry->getPrompt($name, $arguments);
-        } catch (\Throwable $e) {
-            Log::error("Prompt processing error: {$name}", [
-                'error' => $e->getMessage(),
-                'arguments' => $arguments,
-            ]);
-
-            throw new ProtocolException("Prompt processing failed: {$e->getMessage()}", -32603);
-        }
+        return $this->promptHandler->handle('prompts/get', $params, $context);
     }
 
     /**

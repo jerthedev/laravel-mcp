@@ -483,4 +483,41 @@ class McpRegistry implements RegistryInterface
         // Implementation will be added in future tickets
         return false;
     }
+
+    /**
+     * Initialize the registry.
+     */
+    public function initialize(): void
+    {
+        // Initialize type-specific registries
+        foreach ($this->typeRegistries as $registry) {
+            if (method_exists($registry, 'initialize')) {
+                $registry->initialize();
+            }
+        }
+    }
+
+    /**
+     * Get all tools.
+     */
+    public function getTools(): array
+    {
+        return $this->toolRegistry->all();
+    }
+
+    /**
+     * Get all resources.
+     */
+    public function getResources(): array
+    {
+        return $this->resourceRegistry->all();
+    }
+
+    /**
+     * Get all prompts.
+     */
+    public function getPrompts(): array
+    {
+        return $this->promptRegistry->all();
+    }
 }
