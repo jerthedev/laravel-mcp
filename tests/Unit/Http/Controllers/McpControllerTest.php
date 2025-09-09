@@ -9,13 +9,13 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use JTD\LaravelMCP\Exceptions\TransportException;
 use JTD\LaravelMCP\Http\Controllers\McpController;
-use Tests\TestCase;
 use JTD\LaravelMCP\Transport\HttpTransport;
 use JTD\LaravelMCP\Transport\TransportManager;
 use Mockery;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Tests\TestCase;
 
 #[CoversClass(McpController::class)]
 class McpControllerTest extends TestCase

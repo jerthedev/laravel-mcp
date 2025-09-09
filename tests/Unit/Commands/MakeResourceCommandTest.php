@@ -4,11 +4,11 @@ namespace JTD\LaravelMCP\Tests\Unit\Commands;
 
 use Illuminate\Filesystem\Filesystem;
 use JTD\LaravelMCP\Commands\MakeResourceCommand;
-use Tests\TestCase;
 use Mockery;
 use ReflectionClass;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
+use Tests\TestCase;
 
 /**
  * Unit tests for MakeResourceCommand.

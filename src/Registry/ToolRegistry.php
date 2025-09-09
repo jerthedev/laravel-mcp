@@ -2,7 +2,6 @@
 
 namespace JTD\LaravelMCP\Registry;
 
-use JTD\LaravelMCP\Abstracts\McpTool;
 use JTD\LaravelMCP\Exceptions\RegistrationException;
 use JTD\LaravelMCP\Registry\Contracts\RegistryInterface;
 
@@ -216,17 +215,17 @@ class ToolRegistry implements RegistryInterface
             try {
                 $reflection = new \ReflectionClass($tool);
                 $constructor = $reflection->getConstructor();
-                
+
                 if ($constructor && $constructor->getNumberOfRequiredParameters() > 0) {
                     // If constructor requires parameters, try passing the name
                     $tool = new $tool($name);
                 } else {
                     // No required parameters, instantiate without arguments
-                    $tool = new $tool();
+                    $tool = new $tool;
                 }
             } catch (\Exception $e) {
                 // Fall back to no arguments
-                $tool = new $tool();
+                $tool = new $tool;
             }
         }
 

@@ -87,12 +87,12 @@ class McpRegistry
             $internalCount = count($this->registered['tool'] ?? []) +
                            count($this->registered['resource'] ?? []) +
                            count($this->registered['prompt'] ?? []);
-            
+
             // If we have items in internal registry, use that count
             if ($internalCount > 0) {
                 return $internalCount;
             }
-            
+
             // Otherwise fall back to type-specific registries
             return $this->toolRegistry->count() +
                    $this->resourceRegistry->count() +
@@ -106,7 +106,7 @@ class McpRegistry
                 return $count;
             }
         }
-        
+
         return match ($type) {
             'tool' => $this->toolRegistry->count(),
             'resource' => $this->resourceRegistry->count(),
@@ -122,17 +122,17 @@ class McpRegistry
 
     public function getMetadata(string $type, string $name): array
     {
-        if (!isset($this->registered[$type][$name])) {
+        if (! isset($this->registered[$type][$name])) {
             return [];
         }
-        
+
         $metadata = $this->registered[$type][$name]['options'] ?? [];
-        
+
         // Include registered_at timestamp if available
         if (isset($this->registered[$type][$name]['registered_at'])) {
             $metadata['registered_at'] = $this->registered[$type][$name]['registered_at'];
         }
-        
+
         return $metadata;
     }
 
@@ -142,7 +142,7 @@ class McpRegistry
         if (isset($this->registered[$type][$name])) {
             return true;
         }
-        
+
         // Then check type-specific registries
         return match ($type) {
             'tool' => $this->toolRegistry->has($name),
@@ -344,53 +344,53 @@ class McpRegistry
     public function getTool(string $name): ?McpTool
     {
         $tool = $this->toolRegistry->get($name);
-        
+
         if (is_string($tool) && class_exists($tool)) {
             return $this->instantiate($tool, $name);
         }
-        
+
         return $tool instanceof McpTool ? $tool : null;
     }
 
     public function getResource(string $name): ?McpResource
     {
         $resource = $this->resourceRegistry->get($name);
-        
+
         if (is_string($resource) && class_exists($resource)) {
             return $this->instantiate($resource, $name);
         }
-        
+
         return $resource instanceof McpResource ? $resource : null;
     }
 
     public function getPrompt(string $name): ?McpPrompt
     {
         $prompt = $this->promptRegistry->get($name);
-        
+
         if (is_string($prompt) && class_exists($prompt)) {
             return $this->instantiate($prompt, $name);
         }
-        
+
         return $prompt instanceof McpPrompt ? $prompt : null;
     }
 
     /**
      * Instantiate a class with optional name parameter.
      */
-    private function instantiate(string $className, string $name = null): mixed
+    private function instantiate(string $className, ?string $name = null): mixed
     {
         try {
             $reflection = new \ReflectionClass($className);
             $constructor = $reflection->getConstructor();
-            
+
             if ($constructor && $constructor->getNumberOfRequiredParameters() > 0 && $name) {
                 return new $className($name);
             } else {
-                return new $className();
+                return new $className;
             }
         } catch (\Exception $e) {
             try {
-                return new $className();
+                return new $className;
             } catch (\Exception $fallbackException) {
                 throw new RegistrationException("Unable to instantiate {$className}: {$fallbackException->getMessage()}");
             }

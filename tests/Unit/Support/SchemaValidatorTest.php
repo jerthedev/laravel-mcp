@@ -16,9 +16,9 @@ namespace JTD\LaravelMCP\Tests\Unit\Support;
 
 use JTD\LaravelMCP\Exceptions\McpException;
 use JTD\LaravelMCP\Support\SchemaValidator;
-use Tests\TestCase;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 #[Group('base-classes')]
 #[Group('schema-validator')]

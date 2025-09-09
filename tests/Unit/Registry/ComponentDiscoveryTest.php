@@ -7,9 +7,10 @@ use JTD\LaravelMCP\Registry\ComponentDiscovery;
 use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Registry\PromptRegistry;
 use JTD\LaravelMCP\Registry\ResourceRegistry;
+use JTD\LaravelMCP\Registry\RoutingPatterns;
 use JTD\LaravelMCP\Registry\ToolRegistry;
-use Tests\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
+use Tests\TestCase;
 
 /**
  * Test suite for ComponentDiscovery functionality.
@@ -29,6 +30,8 @@ class ComponentDiscoveryTest extends TestCase
 
     private MockObject|PromptRegistry $mockPromptRegistry;
 
+    private MockObject|RoutingPatterns $mockRoutingPatterns;
+
     private string $tempDir;
 
     protected function setUp(): void
@@ -39,12 +42,14 @@ class ComponentDiscoveryTest extends TestCase
         $this->mockToolRegistry = $this->createMock(ToolRegistry::class);
         $this->mockResourceRegistry = $this->createMock(ResourceRegistry::class);
         $this->mockPromptRegistry = $this->createMock(PromptRegistry::class);
+        $this->mockRoutingPatterns = $this->createMock(RoutingPatterns::class);
 
         $this->discovery = new ComponentDiscovery(
             $this->mockRegistry,
             $this->mockToolRegistry,
             $this->mockResourceRegistry,
-            $this->mockPromptRegistry
+            $this->mockPromptRegistry,
+            $this->mockRoutingPatterns
         );
 
         // Create temporary directory for test files
@@ -77,7 +82,7 @@ class ComponentDiscoveryTest extends TestCase
         mkdir($promptsDir, 0755, true);
 
         // Define test classes dynamically using eval to ensure they exist
-        if (!class_exists('App\Mcp\Tools\CalculatorTool')) {
+        if (! class_exists('App\Mcp\Tools\CalculatorTool')) {
             eval('
 namespace App\Mcp\Tools;
 use JTD\LaravelMCP\Abstracts\McpTool;
@@ -97,7 +102,7 @@ class CalculatorTool extends McpTool
 }
 ');
         }
-        
+
         // Create tool file
         $toolContent = '<?php
 namespace App\Mcp\Tools;
@@ -119,7 +124,7 @@ class CalculatorTool extends McpTool
         file_put_contents($toolsDir.'/CalculatorTool.php', $toolContent);
 
         // Define resource class dynamically
-        if (!class_exists('App\Mcp\Resources\UserProfileResource')) {
+        if (! class_exists('App\Mcp\Resources\UserProfileResource')) {
             eval('
 namespace App\Mcp\Resources;
 use JTD\LaravelMCP\Abstracts\McpResource;
@@ -138,7 +143,7 @@ class UserProfileResource extends McpResource
 }
 ');
         }
-        
+
         // Create resource file
         $resourceContent = '<?php
 namespace App\Mcp\Resources;
@@ -159,7 +164,7 @@ class UserProfileResource extends McpResource
         file_put_contents($resourcesDir.'/UserProfileResource.php', $resourceContent);
 
         // Define prompt class dynamically
-        if (!class_exists('App\Mcp\Prompts\EmailTemplatePrompt')) {
+        if (! class_exists('App\Mcp\Prompts\EmailTemplatePrompt')) {
             eval('
 namespace App\Mcp\Prompts;
 use JTD\LaravelMCP\Abstracts\McpPrompt;
@@ -178,7 +183,7 @@ class EmailTemplatePrompt extends McpPrompt
 }
 ');
         }
-        
+
         // Create prompt file
         $promptContent = '<?php
 namespace App\Mcp\Prompts;
@@ -233,7 +238,7 @@ class EmailTemplatePrompt extends McpPrompt
         mkdir($toolsDir, 0755, true);
 
         // Define test class dynamically
-        if (!class_exists('App\Mcp\Tools\TestTool')) {
+        if (! class_exists('App\Mcp\Tools\TestTool')) {
             eval('
 namespace App\Mcp\Tools;
 use JTD\LaravelMCP\Abstracts\McpTool;
@@ -312,7 +317,7 @@ class ValidTool extends McpTool
     }
 }';
         // Define valid tool class dynamically
-        if (!class_exists('App\Mcp\Tools\ValidTool')) {
+        if (! class_exists('App\Mcp\Tools\ValidTool')) {
             eval('
 namespace App\Mcp\Tools;
 use JTD\LaravelMCP\Abstracts\McpTool;
@@ -326,7 +331,7 @@ class ValidTool extends McpTool
 }
 ');
         }
-        
+
         $validToolFile = $toolsDir.'/ValidTool.php';
         file_put_contents($validToolFile, $validToolContent);
 
@@ -338,7 +343,7 @@ class InvalidTool
     // Does not extend McpTool
 }';
         // Define invalid tool class dynamically
-        if (!class_exists('App\Mcp\Tools\InvalidTool')) {
+        if (! class_exists('App\Mcp\Tools\InvalidTool')) {
             eval('
 namespace App\Mcp\Tools;
 
@@ -348,7 +353,7 @@ class InvalidTool
 }
 ');
         }
-        
+
         $invalidToolFile = $toolsDir.'/InvalidTool.php';
         file_put_contents($invalidToolFile, $invalidToolContent);
 
@@ -398,7 +403,7 @@ class AdvancedCalculatorTool extends McpTool
     }
 }';
         // Define class dynamically
-        if (!class_exists('App\Mcp\Tools\AdvancedCalculatorTool')) {
+        if (! class_exists('App\Mcp\Tools\AdvancedCalculatorTool')) {
             eval('
 namespace App\Mcp\Tools;
 use JTD\LaravelMCP\Abstracts\McpTool;
@@ -434,7 +439,7 @@ class AdvancedCalculatorTool extends McpTool
 }
 ');
         }
-        
+
         $toolFile = $toolsDir.'/AdvancedCalculatorTool.php';
         file_put_contents($toolFile, $toolContent);
 
@@ -528,7 +533,7 @@ class ValidTestTool extends McpTool
     }
 }';
         // Define valid test tool class dynamically
-        if (!class_exists('App\Mcp\Tools\ValidTestTool')) {
+        if (! class_exists('App\Mcp\Tools\ValidTestTool')) {
             eval('
 namespace App\Mcp\Tools;
 use JTD\LaravelMCP\Abstracts\McpTool;
@@ -542,7 +547,7 @@ class ValidTestTool extends McpTool
 }
 ');
         }
-        
+
         file_put_contents($toolsDir.'/ValidTestTool.php', $validToolContent);
 
         $this->assertTrue($this->discovery->isValidComponentClass('App\Mcp\Tools\ValidTestTool', 'tools'));
@@ -624,7 +629,7 @@ class TestDiscoveryTool extends McpTool
     }
 }';
         // Define class dynamically
-        if (!class_exists('App\Mcp\Tools\TestDiscoveryTool')) {
+        if (! class_exists('App\Mcp\Tools\TestDiscoveryTool')) {
             eval('
 namespace App\Mcp\Tools;
 use JTD\LaravelMCP\Abstracts\McpTool;
@@ -640,7 +645,7 @@ class TestDiscoveryTool extends McpTool
 }
 ');
         }
-        
+
         file_put_contents($toolsDir.'/TestDiscoveryTool.php', $toolContent);
 
         // Set up expectations for registry registrations
@@ -782,7 +787,7 @@ class MultilineDescriptionTool extends McpTool
     }
 }';
         // Define class dynamically
-        if (!class_exists('App\Mcp\Tools\MultilineDescriptionTool')) {
+        if (! class_exists('App\Mcp\Tools\MultilineDescriptionTool')) {
             eval('
 namespace App\Mcp\Tools;
 use JTD\LaravelMCP\Abstracts\McpTool;
@@ -805,12 +810,12 @@ class MultilineDescriptionTool extends McpTool
 }
 ');
         }
-        
+
         $toolFile = $toolsDir.'/MultilineDescriptionTool.php';
         file_put_contents($toolFile, $toolContent);
 
         $metadata = $this->discovery->extractMetadata($toolFile);
-        
+
         // Ensure metadata was extracted
         $this->assertNotEmpty($metadata, 'Metadata should not be empty');
         $this->assertArrayHasKey('description', $metadata, 'Metadata should have description key');

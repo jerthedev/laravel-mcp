@@ -14,10 +14,10 @@ use Illuminate\Support\Facades\File;
 use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Support\ClientDetector;
 use JTD\LaravelMCP\Support\ConfigGenerator;
-use Tests\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 #[Group('feature')]
 #[Group('commands')]

@@ -200,7 +200,7 @@ class ResourceHandler extends BaseHandler
             try {
                 // Extract the resource handler from the data array
                 $resource = $resourceData['handler'] ?? $resourceData;
-                
+
                 $definition = [
                     'uri' => $this->getResourceUri($name, $resource),
                     'name' => $name,

@@ -3,8 +3,8 @@
 namespace JTD\LaravelMCP\Tests\Unit\Registry\Contracts;
 
 use JTD\LaravelMCP\Registry\Contracts\DiscoveryInterface;
-use Tests\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
+use Tests\TestCase;
 
 /**
  * Unit tests for DiscoveryInterface contract.

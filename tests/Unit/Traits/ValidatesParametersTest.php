@@ -3,8 +3,8 @@
 namespace JTD\LaravelMCP\Tests\Unit\Traits;
 
 use JTD\LaravelMCP\Exceptions\McpException;
-use Tests\TestCase;
 use JTD\LaravelMCP\Traits\ValidatesParameters;
+use Tests\TestCase;
 
 /**
  * Unit tests for ValidatesParameters trait.
