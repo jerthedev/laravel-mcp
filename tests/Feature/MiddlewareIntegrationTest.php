@@ -33,10 +33,19 @@ class MiddlewareIntegrationTest extends TestCase
     {
         parent::setUp();
 
+        // Register middleware aliases for tests
+        $router = $this->app['router'];
+        $router->aliasMiddleware('mcp.auth', McpAuthMiddleware::class);
+        $router->aliasMiddleware('mcp.cors', McpCorsMiddleware::class);
+
         // Set up test routes with middleware
         Route::group(['prefix' => 'test-mcp'], function () {
             Route::get('/cors-test', function () {
                 return response()->json(['message' => 'CORS test success']);
+            })->middleware(McpCorsMiddleware::class);
+
+            Route::options('/cors-test', function () {
+                return response('');
             })->middleware(McpCorsMiddleware::class);
 
             Route::get('/auth-test', function () {
@@ -200,14 +209,10 @@ class MiddlewareIntegrationTest extends TestCase
         Config::set('laravel-mcp.cors.allowed_origins', ['http://trusted.com']);
 
         // Act
-        $response = $this->post('/test-mcp/api-endpoint',
-            ['data' => 'test'],
-            [
-                'Origin' => 'http://trusted.com',
-                'X-MCP-API-Key' => 'valid-key',
-                'Content-Type' => 'application/json',
-            ]
-        );
+        $response = $this->withHeaders([
+            'Origin' => 'http://trusted.com',
+            'X-MCP-API-Key' => 'valid-key',
+        ])->postJson('/test-mcp/api-endpoint', ['data' => 'test']);
 
         // Assert
         $response->assertSuccessful();

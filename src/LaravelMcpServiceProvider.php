@@ -104,8 +104,9 @@ class LaravelMcpServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->validateDependencies();
+
         try {
-            $this->validateDependencies();
             $this->registerEventHooks();
 
             $this->bootPublishing();
@@ -238,7 +239,7 @@ class LaravelMcpServiceProvider extends ServiceProvider
         }
 
         // Disable MCP features gracefully
-        config(['laravel-mcp.enabled' => false]);
+        $this->app['config']->set('laravel-mcp.enabled', false);
 
         // Don't break the application in production
         if (! $this->app->environment('production')) {
@@ -394,8 +395,8 @@ class LaravelMcpServiceProvider extends ServiceProvider
 
     private function registerLazyServices(): void
     {
-        // Register services that are only created when needed
-        $this->app->bindIf(DocumentationGenerator::class, function ($app) {
+        // Register services that are only created when needed (as singletons)
+        $this->app->singleton(DocumentationGenerator::class, function ($app) {
             return new DocumentationGenerator(
                 $app->make(McpRegistry::class),
                 $app->make(ToolRegistry::class),
@@ -404,7 +405,7 @@ class LaravelMcpServiceProvider extends ServiceProvider
             );
         });
 
-        $this->app->bindIf(ConfigGenerator::class, function ($app) {
+        $this->app->singleton(ConfigGenerator::class, function ($app) {
             return new ConfigGenerator(
                 $app->make(McpRegistry::class)
             );
