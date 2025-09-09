@@ -245,13 +245,13 @@ class McpPromptTest extends TestCase
     public function test_it_provides_container_helpers()
     {
         $prompt = $this->createCustomTestPrompt();
-        
+
         // Test that the container is properly initialized
         $reflection = new \ReflectionObject($prompt);
         $property = $reflection->getProperty('container');
         $property->setAccessible(true);
         $container = $property->getValue($prompt);
-        
+
         $this->assertInstanceOf(Container::class, $container);
     }
 
