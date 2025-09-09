@@ -2,7 +2,7 @@
 
 namespace JTD\LaravelMCP\Tests\Feature;
 
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 
 /**
  * Feature tests for directory structure validation.

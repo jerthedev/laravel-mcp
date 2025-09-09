@@ -16,7 +16,7 @@ namespace JTD\LaravelMCP\Tests\Unit\Support;
 
 use JTD\LaravelMCP\Exceptions\McpException;
 use JTD\LaravelMCP\Support\SchemaValidator;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 

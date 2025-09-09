@@ -22,6 +22,7 @@ use JTD\LaravelMCP\Registry\Contracts\RegistryInterface;
 use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Registry\PromptRegistry;
 use JTD\LaravelMCP\Registry\ResourceRegistry;
+use JTD\LaravelMCP\Registry\RouteRegistrar;
 use JTD\LaravelMCP\Registry\ToolRegistry;
 use JTD\LaravelMCP\Server\CapabilityManager;
 use JTD\LaravelMCP\Server\Contracts\ServerInterface;
@@ -85,6 +86,9 @@ class LaravelMcpServiceProvider extends ServiceProvider
         $this->app->singleton(ResourceRegistry::class);
         $this->app->singleton(PromptRegistry::class);
 
+        // Register route registrar for fluent API
+        $this->app->singleton(RouteRegistrar::class);
+
         // Register discovery service
         $this->app->singleton(ComponentDiscovery::class);
 
@@ -99,7 +103,7 @@ class LaravelMcpServiceProvider extends ServiceProvider
 
         // Support services will be registered lazily in registerLazyServices()
 
-        // Register facade accessor
+        // Register facade accessor - should point to McpRegistry for main functionality
         $this->app->singleton('laravel-mcp', function ($app) {
             return $app->make(McpRegistry::class);
         });
@@ -260,10 +264,13 @@ class LaravelMcpServiceProvider extends ServiceProvider
 
     private function handleBootFailure(\Throwable $e): void
     {
-        // Log the error
+        // Log the error with appropriate severity
         if ($this->app->bound('log')) {
-            $this->app['log']->error('MCP Service Provider boot failed', [
+            $this->app['log']->critical('MCP Service Provider boot failed', [
                 'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
             ]);
         }
@@ -271,8 +278,19 @@ class LaravelMcpServiceProvider extends ServiceProvider
         // Disable MCP features gracefully
         $this->app['config']->set('laravel-mcp.enabled', false);
 
-        // Don't break the application in production
-        if (! $this->app->environment('production')) {
+        // Report to error tracking service if available
+        if ($this->app->bound('sentry') || $this->app->bound('bugsnag')) {
+            report($e);
+        }
+
+        // In production, log critical errors but continue; in other environments, fail fast
+        if ($this->app->environment('production')) {
+            // Send alert to monitoring service if configured
+            if ($this->app->bound('events')) {
+                $this->app['events']->dispatch('mcp.boot.failed', [$e]);
+            }
+        } else {
+            // In non-production environments, throw the exception for debugging
             throw $e;
         }
     }
@@ -283,19 +301,39 @@ class LaravelMcpServiceProvider extends ServiceProvider
             return;
         }
 
-        $discovery = $this->app->make(ComponentDiscovery::class);
+        try {
+            $discovery = $this->app->make(ComponentDiscovery::class);
 
-        // Discover components in application directories
-        $discovery->discoverComponents(
-            config('laravel-mcp.discovery.paths', [
+            // Discover components in application directories
+            $paths = config('laravel-mcp.discovery.paths', [
                 app_path('Mcp/Tools'),
                 app_path('Mcp/Resources'),
                 app_path('Mcp/Prompts'),
-            ])
-        );
+            ]);
 
-        // Register discovered components
-        $discovery->registerDiscoveredComponents();
+            // Ensure paths is an array
+            if (!is_array($paths)) {
+                $paths = [$paths];
+            }
+
+            $discovery->discoverComponents($paths);
+
+            // Register discovered components
+            $discovery->registerDiscoveredComponents();
+        } catch (\Throwable $e) {
+            // Log discovery errors but don't fail the boot process
+            if ($this->app->bound('log')) {
+                $this->app['log']->warning('MCP component discovery failed', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
+
+            // In non-production, we want to know about discovery issues
+            if (!$this->app->environment('production')) {
+                throw $e;
+            }
+        }
     }
 
     private function bootPublishing(): void
@@ -391,10 +429,24 @@ class LaravelMcpServiceProvider extends ServiceProvider
 
     private function loadMcpRoutes(): void
     {
+        $routeFile = base_path('routes/mcp.php');
+        
+        // Only load routes if the file exists
+        if (!file_exists($routeFile)) {
+            return;
+        }
+        
+        $middleware = config('laravel-mcp.routes.middleware', ['api']);
+        
+        // Ensure middleware is an array
+        if (!is_array($middleware)) {
+            $middleware = [$middleware];
+        }
+        
         $this->app['router']->group([
-            'middleware' => config('laravel-mcp.routes.middleware', ['api']),
-        ], function () {
-            require base_path('routes/mcp.php');
+            'middleware' => $middleware,
+        ], function () use ($routeFile) {
+            require $routeFile;
         });
     }
 

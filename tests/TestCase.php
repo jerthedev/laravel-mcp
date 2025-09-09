@@ -2,9 +2,11 @@
 
 namespace JTD\LaravelMCP\Tests;
 
-use PHPUnit\Framework\TestCase as PHPUnitTestCase;
+use JTD\LaravelMCP\Facades\Mcp;
+use JTD\LaravelMCP\LaravelMcpServiceProvider;
+use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
-abstract class TestCase extends PHPUnitTestCase
+abstract class TestCase extends OrchestraTestCase
 {
     protected function setUp(): void
     {

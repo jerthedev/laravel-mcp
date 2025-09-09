@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use JTD\LaravelMCP\LaravelMcpServiceProvider;
 use JTD\LaravelMCP\Registry\ComponentDiscovery;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use JTD\LaravelMCP\Transport\TransportManager;
 use Mockery;
 use PHPUnit\Framework\Attributes\Group;

@@ -3,7 +3,7 @@
 namespace JTD\LaravelMCP\Tests\Unit\Commands;
 
 use JTD\LaravelMCP\Commands\BaseCommand;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 

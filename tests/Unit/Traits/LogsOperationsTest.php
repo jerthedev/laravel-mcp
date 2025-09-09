@@ -4,7 +4,7 @@ namespace JTD\LaravelMCP\Tests\Unit\Traits;
 
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use JTD\LaravelMCP\Traits\LogsOperations;
 use JTD\LaravelMCP\Traits\ManagesCapabilities;
 use PHPUnit\Framework\Attributes\Group;

@@ -5,7 +5,7 @@ namespace JTD\LaravelMCP\Tests\Unit\Commands;
 use JTD\LaravelMCP\Commands\ServeCommand;
 use JTD\LaravelMCP\Exceptions\TransportException;
 use JTD\LaravelMCP\Protocol\MessageProcessor;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use JTD\LaravelMCP\Transport\HttpTransport;
 use JTD\LaravelMCP\Transport\StdioTransport;
 use JTD\LaravelMCP\Transport\TransportManager;

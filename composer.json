@@ -43,7 +43,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "JTD\\LaravelMCP\\Tests\\": "tests/"
+            "Tests\\": "tests/"
         }
     },
     "extra": {

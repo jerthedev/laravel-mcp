@@ -12,7 +12,7 @@ use JTD\LaravelMCP\Registry\ToolRegistry;
 use JTD\LaravelMCP\Server\Handlers\PromptHandler;
 use JTD\LaravelMCP\Server\Handlers\ResourceHandler;
 use JTD\LaravelMCP\Server\Handlers\ToolHandler;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Test;
 
