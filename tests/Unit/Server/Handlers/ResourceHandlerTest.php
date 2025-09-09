@@ -140,8 +140,11 @@ class ResourceHandlerTest extends TestCase
         $goodResource->shouldReceive('getMimeType')->andReturn('text/plain');
         $goodResource->shouldReceive('getMetadata')->andReturn([]);
 
-        $badResource = Mockery::mock();
-        $badResource->shouldReceive('getUri')->andThrow(new \RuntimeException('Bad resource'));
+        $badResource = new class {
+            public function getUri() {
+                throw new \RuntimeException('Bad resource');
+            }
+        };
 
         $this->resourceRegistry
             ->shouldReceive('all')
@@ -154,8 +157,21 @@ class ResourceHandlerTest extends TestCase
         $response = $this->handler->handle('resources/list', []);
 
         $this->assertArrayHasKey('resources', $response);
-        $this->assertCount(1, $response['resources']); // Only the good resource
-        $this->assertSame('good-resource', $response['resources'][0]['name']);
+        $this->assertCount(2, $response['resources']); // Both resources included, bad resource with fallback values
+        
+        // Check good resource
+        $goodResourceDef = $response['resources'][0];
+        $this->assertSame('good-resource', $goodResourceDef['name']);
+        $this->assertSame('test://good', $goodResourceDef['uri']);
+        $this->assertSame('Good resource', $goodResourceDef['description']);
+        $this->assertSame('text/plain', $goodResourceDef['mimeType']);
+        
+        // Check bad resource with fallback values
+        $badResourceDef = $response['resources'][1];
+        $this->assertSame('bad-resource', $badResourceDef['name']);
+        $this->assertSame('resource://bad-resource', $badResourceDef['uri']); // Fallback URI
+        $this->assertStringContainsString('Resource: class@anonymous', $badResourceDef['description']); // Fallback description
+        $this->assertSame('text/plain', $badResourceDef['mimeType']); // Default mime type
     }
 
     #[Test]
@@ -255,7 +271,9 @@ class ResourceHandlerTest extends TestCase
     public function handle_resources_read_reads_resource_with_read_method(): void
     {
         $mockResource = Mockery::mock();
-        $mockResource->shouldReceive('getUri')->andReturn('test://resource');
+        $mockResource->shouldReceive('getUri')
+            ->times(1)  // Ensure getUri is called when finding the resource
+            ->andReturn('test://resource');
         $mockResource->shouldReceive('read')
             ->with(['extra' => 'param'])
             ->once()
@@ -309,12 +327,15 @@ class ResourceHandlerTest extends TestCase
     #[Test]
     public function handle_resources_read_reads_resource_with_invoke_method(): void
     {
-        $mockResource = Mockery::mock();
-        $mockResource->shouldReceive('getUri')->andReturn('test://resource');
-        $mockResource->shouldReceive('__invoke')
-            ->with([])
-            ->once()
-            ->andReturn('Invoked result');
+        $mockResource = new class {
+            public function getUri() {
+                return 'test://resource';
+            }
+            
+            public function __invoke(array $params) {
+                return 'Invoked result';
+            }
+        };
 
         $this->resourceRegistry
             ->shouldReceive('all')
@@ -392,13 +413,14 @@ class ResourceHandlerTest extends TestCase
             ->once()
             ->andReturn(['non-readable' => $nonReadableResource]);
 
-        $this->expectException(ProtocolException::class);
-        $this->expectExceptionCode(-32603);
-        $this->expectExceptionMessage('Failed to read resource: Resource is not readable');
-
-        $this->handler->handle('resources/read', [
+        $response = $this->handler->handle('resources/read', [
             'uri' => 'test://non-readable',
         ]);
+
+        // Should return error response, not throw exception
+        $this->assertArrayHasKey('error', $response);
+        $this->assertSame(-32603, $response['error']['code']);
+        $this->assertSame('Resource is not readable', $response['error']['message']);
     }
 
     #[Test]
@@ -466,13 +488,14 @@ class ResourceHandlerTest extends TestCase
             ->once()
             ->andReturn(['test-resource' => $mockResource]);
 
-        $this->expectException(ProtocolException::class);
-        $this->expectExceptionCode(-32603);
-        $this->expectExceptionMessage('Failed to read resource: Read failed');
-
-        $this->handler->handle('resources/read', [
+        $response = $this->handler->handle('resources/read', [
             'uri' => 'test://resource',
         ]);
+
+        // Should return error response, not throw exception
+        $this->assertArrayHasKey('error', $response);
+        $this->assertSame(-32603, $response['error']['code']);
+        $this->assertSame('Failed to read resource: Read failed', $response['error']['message']);
     }
 
     #[Test]
@@ -676,9 +699,15 @@ class ResourceHandlerTest extends TestCase
         $resourceDef = $response['resources'][0];
 
         // Check that extra metadata keys are present
-        foreach ($expectedExtraKeys as $key => $value) {
-            $this->assertArrayHasKey($key, $resourceDef);
-            $this->assertSame($value, $resourceDef[$key]);
+        if (empty($expectedExtraKeys)) {
+            // When no extra metadata is expected, ensure basic keys are still present
+            $this->assertArrayHasKey('uri', $resourceDef);
+            $this->assertArrayHasKey('name', $resourceDef);
+        } else {
+            foreach ($expectedExtraKeys as $key => $value) {
+                $this->assertArrayHasKey($key, $resourceDef);
+                $this->assertSame($value, $resourceDef[$key]);
+            }
         }
     }
 

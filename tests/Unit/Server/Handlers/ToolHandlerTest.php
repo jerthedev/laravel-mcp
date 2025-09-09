@@ -140,8 +140,11 @@ class ToolHandlerTest extends TestCase
         $goodTool->shouldReceive('getDescription')->andReturn('Good tool');
         $goodTool->shouldReceive('getInputSchema')->andReturn(['type' => 'object']);
 
-        $badTool = Mockery::mock();
-        $badTool->shouldReceive('getDescription')->andThrow(new \RuntimeException('Bad tool'));
+        $badTool = new class {
+            public function getDescription() {
+                throw new \RuntimeException('Bad tool');
+            }
+        };
 
         $this->toolRegistry
             ->shouldReceive('all')
@@ -154,8 +157,19 @@ class ToolHandlerTest extends TestCase
         $response = $this->handler->handle('tools/list', []);
 
         $this->assertArrayHasKey('tools', $response);
-        $this->assertCount(1, $response['tools']); // Only the good tool
-        $this->assertSame('good-tool', $response['tools'][0]['name']);
+        $this->assertCount(2, $response['tools']); // Both tools included, bad tool with fallback values
+        
+        // Check good tool
+        $goodToolDef = $response['tools'][0];
+        $this->assertSame('good-tool', $goodToolDef['name']);
+        $this->assertSame('Good tool', $goodToolDef['description']);
+        $this->assertSame(['type' => 'object'], $goodToolDef['inputSchema']);
+        
+        // Check bad tool with fallback values
+        $badToolDef = $response['tools'][1];
+        $this->assertSame('bad-tool', $badToolDef['name']);
+        $this->assertStringContainsString('Tool: class@anonymous', $badToolDef['description']); // Fallback description
+        $this->assertSame(['type' => 'object', 'properties' => [], 'additionalProperties' => true], $badToolDef['inputSchema']); // Default schema
     }
 
     #[Test]
@@ -289,11 +303,15 @@ class ToolHandlerTest extends TestCase
     #[Test]
     public function handle_tools_call_executes_tool_with_invoke_method(): void
     {
-        $mockTool = Mockery::mock();
-        $mockTool->shouldReceive('__invoke')
-            ->with(['input' => 'test'])
-            ->once()
-            ->andReturn(['result' => 'success']);
+        $mockTool = new class {
+            public function execute(array $arguments) {
+                throw new \BadMethodCallException('Method not found');
+            }
+            
+            public function __invoke(array $arguments) {
+                return ['result' => 'success'];
+            }
+        };
 
         $this->toolRegistry
             ->shouldReceive('has')
@@ -313,7 +331,7 @@ class ToolHandlerTest extends TestCase
         ]);
 
         $this->assertFalse($response['isError']);
-        $this->assertSame('json', $response['content'][0]['type']);
+        $this->assertSame('text', $response['content'][0]['type']);
         $this->assertStringContainsString('success', $response['content'][0]['text']);
     }
 

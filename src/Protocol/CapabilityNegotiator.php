@@ -138,6 +138,12 @@ class CapabilityNegotiator
             return $serverValue;
         }
 
+        // Validate client value for boolean features - if invalid, use safe default
+        if (is_bool($serverValue) && !is_bool($clientValue)) {
+            // For invalid client values, use conservative safe defaults instead of server config
+            return $this->getSafeDefaultForFeature($capability, $feature);
+        }
+
         // Both support it - enable if both want it enabled
         if (is_bool($serverValue) && is_bool($clientValue)) {
             return $serverValue && $clientValue;
@@ -158,6 +164,15 @@ class CapabilityNegotiator
 
         // Default to enabling the feature
         return true;
+    }
+
+    /**
+     * Get safe default value for a capability feature when client value is invalid.
+     */
+    protected function getSafeDefaultForFeature(string $capability, string $feature)
+    {
+        // Use the built-in default server capabilities as safe defaults
+        return $this->defaultServerCapabilities[$capability][$feature] ?? false;
     }
 
     /**

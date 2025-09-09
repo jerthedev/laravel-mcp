@@ -424,9 +424,16 @@ class HandlerIntegrationTest extends TestCase
                 return ['type' => 'object'];
             }
 
-            public function execute(array $arguments): string
+            public function execute(array $arguments): array
             {
-                return 'string result';
+                return [
+                    'content' => [
+                        [
+                            'type' => 'text',
+                            'text' => 'string result',
+                        ],
+                    ],
+                ];
             }
         };
 
@@ -506,9 +513,17 @@ class HandlerIntegrationTest extends TestCase
                 return 'text/plain';
             }
 
-            public function read(array $options = []): string
+            public function read(array $options = []): array
             {
-                return 'Plain text content';
+                return [
+                    'contents' => [
+                        [
+                            'uri' => $this->getUri(),
+                            'mimeType' => $this->getMimeType(),
+                            'text' => 'Plain text content',
+                        ],
+                    ],
+                ];
             }
         };
 

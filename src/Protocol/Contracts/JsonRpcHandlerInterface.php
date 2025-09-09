@@ -87,4 +87,78 @@ interface JsonRpcHandlerInterface
      * @param  array  $message  The message to check
      */
     public function isResponse(array $message): bool;
+
+    /**
+     * Register a request handler.
+     *
+     * @param  string  $method  The method name
+     * @param  callable  $handler  The handler function
+     */
+    public function onRequest(string $method, callable $handler): void;
+
+    /**
+     * Register a notification handler.
+     *
+     * @param  string  $method  The method name
+     * @param  callable  $handler  The handler function
+     */
+    public function onNotification(string $method, callable $handler): void;
+
+    /**
+     * Register a response handler.
+     *
+     * @param  string|int  $id  The request ID
+     * @param  callable  $handler  The handler function
+     */
+    public function onResponse($id, callable $handler): void;
+
+    /**
+     * Remove a request handler.
+     *
+     * @param  string  $method  The method name
+     */
+    public function removeRequestHandler(string $method): void;
+
+    /**
+     * Remove a notification handler.
+     *
+     * @param  string  $method  The method name
+     */
+    public function removeNotificationHandler(string $method): void;
+
+    /**
+     * Get all registered request methods.
+     */
+    public function getRequestMethods(): array;
+
+    /**
+     * Get all registered notification methods.
+     */
+    public function getNotificationMethods(): array;
+
+    /**
+     * Check if a request handler is registered.
+     *
+     * @param  string  $method  The method name
+     */
+    public function hasRequestHandler(string $method): bool;
+
+    /**
+     * Check if a notification handler is registered.
+     *
+     * @param  string  $method  The method name
+     */
+    public function hasNotificationHandler(string $method): bool;
+
+    /**
+     * Set debug mode.
+     *
+     * @param  bool  $debug  Debug mode flag
+     */
+    public function setDebug(bool $debug): void;
+
+    /**
+     * Check if debug mode is enabled.
+     */
+    public function isDebug(): bool;
 }

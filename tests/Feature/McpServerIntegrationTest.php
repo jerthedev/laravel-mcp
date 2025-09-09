@@ -144,6 +144,31 @@ class McpServerIntegrationTest extends TestCase
         Config::set('laravel-mcp.capabilities.resources.subscriptions', false);
         Config::set('laravel-mcp.capabilities.logging.level', 'debug');
 
+        // Add test components to the registries so capabilities can be negotiated
+        $registry = $this->app->make(\JTD\LaravelMCP\Registry\McpRegistry::class);
+        $toolRegistry = $this->app->make(\JTD\LaravelMCP\Registry\ToolRegistry::class);
+        $resourceRegistry = $this->app->make(\JTD\LaravelMCP\Registry\ResourceRegistry::class);
+        $promptRegistry = $this->app->make(\JTD\LaravelMCP\Registry\PromptRegistry::class);
+
+        // Register test components
+        $toolRegistry->register('test-tool', new class {
+            public function execute($params) { return 'test'; }
+            public function getDescription() { return 'Test tool'; }
+            public function getInputSchema() { return ['type' => 'object']; }
+        });
+        
+        $resourceRegistry->register('test-resource', new class {
+            public function getUri() { return 'test://resource'; }
+            public function getDescription() { return 'Test resource'; }
+            public function getMimeType() { return 'text/plain'; }
+            public function read($params) { return 'test content'; }
+        });
+
+        $promptRegistry->register('test-prompt', new class {
+            public function getDescription() { return 'Test prompt'; }
+            public function process($params) { return 'test prompt'; }
+        });
+
         $server = $this->app->make(ServerInterface::class);
 
         $clientCapabilities = [

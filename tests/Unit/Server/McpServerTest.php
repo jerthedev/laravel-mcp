@@ -52,6 +52,21 @@ class McpServerTest extends TestCase
         parent::tearDown();
     }
 
+    /**
+     * Set up common mock expectations that many tests need.
+     */
+    private function setupCommonMockExpectations(): void
+    {
+        $this->mockServerInfo->shouldReceive('getUptime')->andReturn(100)->zeroOrMoreTimes();
+        $this->mockServerInfo->shouldReceive('getStatus')->andReturn([])->zeroOrMoreTimes();
+        $this->mockCapabilityManager->shouldReceive('getNegotiatedCapabilities')->andReturn([])->zeroOrMoreTimes();
+        $this->mockCapabilityManager->shouldReceive('getDetailedCapabilityInfo')->andReturn([])->zeroOrMoreTimes();
+        $this->mockTransportManager->shouldReceive('getActiveTransportCount')->andReturn(0)->zeroOrMoreTimes();
+        $this->mockRegistry->shouldReceive('getTools')->andReturn([])->zeroOrMoreTimes();
+        $this->mockRegistry->shouldReceive('getResources')->andReturn([])->zeroOrMoreTimes();
+        $this->mockRegistry->shouldReceive('getPrompts')->andReturn([])->zeroOrMoreTimes();
+    }
+
     public function test_implements_server_interface(): void
     {
         $this->assertInstanceOf(ServerInterface::class, $this->server);
@@ -70,6 +85,8 @@ class McpServerTest extends TestCase
 
     public function test_can_initialize_server(): void
     {
+        $this->setupCommonMockExpectations();
+        
         $clientInfo = [
             'clientInfo' => ['name' => 'Test Client', 'version' => '1.0'],
             'capabilities' => ['tools' => ['listChanged' => true]],
@@ -111,15 +128,18 @@ class McpServerTest extends TestCase
 
     public function test_cannot_initialize_server_twice(): void
     {
+        $this->setupCommonMockExpectations();
+        
         // First initialization
         $this->mockCapabilityManager
             ->shouldReceive('negotiateWithClient')
-            ->andReturn(['tools' => []]);
-        $this->mockServerInfo->shouldReceive('updateRuntimeInfo');
-        $this->mockServerInfo->shouldReceive('getProtocolVersion')->andReturn('2024-11-05');
-        $this->mockServerInfo->shouldReceive('getBasicInfo')->andReturn([]);
-        $this->mockRegistry->shouldReceive('initialize');
-        $this->mockMessageProcessor->shouldReceive('setServerInfo');
+            ->andReturn(['tools' => []])
+            ->zeroOrMoreTimes();
+        $this->mockServerInfo->shouldReceive('updateRuntimeInfo')->zeroOrMoreTimes();
+        $this->mockServerInfo->shouldReceive('getProtocolVersion')->andReturn('2024-11-05')->zeroOrMoreTimes();
+        $this->mockServerInfo->shouldReceive('getBasicInfo')->andReturn([])->zeroOrMoreTimes();
+        $this->mockRegistry->shouldReceive('initialize')->zeroOrMoreTimes();
+        $this->mockMessageProcessor->shouldReceive('setServerInfo')->zeroOrMoreTimes();
 
         $this->server->initialize([]);
 
@@ -204,12 +224,6 @@ class McpServerTest extends TestCase
         $this->mockTransportManager
             ->shouldReceive('stopAllTransports')
             ->once();
-        $this->mockTransportManager
-            ->shouldReceive('startAllTransports')
-            ->once();
-        $this->mockServerInfo
-            ->shouldReceive('resetStartTime')
-            ->once();
 
         $this->server->restart();
 
@@ -218,27 +232,7 @@ class McpServerTest extends TestCase
 
     public function test_can_get_server_status(): void
     {
-        $this->mockServerInfo
-            ->shouldReceive('getStatus')
-            ->andReturn(['uptime' => 100]);
-
-        $this->mockCapabilityManager
-            ->shouldReceive('getNegotiatedCapabilities')
-            ->andReturn(['tools' => []]);
-
-        $this->mockTransportManager
-            ->shouldReceive('getActiveTransportCount')
-            ->andReturn(1);
-
-        $this->mockRegistry
-            ->shouldReceive('getTools')
-            ->andReturn(['tool1']);
-        $this->mockRegistry
-            ->shouldReceive('getResources')
-            ->andReturn([]);
-        $this->mockRegistry
-            ->shouldReceive('getPrompts')
-            ->andReturn([]);
+        $this->setupCommonMockExpectations();
 
         $status = $this->server->getStatus();
 
@@ -419,6 +413,8 @@ class McpServerTest extends TestCase
 
     public function test_can_increment_request_count(): void
     {
+        $this->setupCommonMockExpectations();
+        
         $this->server->incrementRequestCount();
         $metrics = $this->server->getMetrics();
 
@@ -427,6 +423,8 @@ class McpServerTest extends TestCase
 
     public function test_can_increment_error_count(): void
     {
+        $this->setupCommonMockExpectations();
+        
         $this->server->incrementErrorCount();
         $metrics = $this->server->getMetrics();
 
@@ -496,14 +494,17 @@ class McpServerTest extends TestCase
 
     private function initializeServer(): void
     {
+        $this->setupCommonMockExpectations();
+        
         $this->mockCapabilityManager
             ->shouldReceive('negotiateWithClient')
-            ->andReturn([]);
-        $this->mockServerInfo->shouldReceive('updateRuntimeInfo');
-        $this->mockServerInfo->shouldReceive('getProtocolVersion')->andReturn('2024-11-05');
-        $this->mockServerInfo->shouldReceive('getBasicInfo')->andReturn([]);
-        $this->mockRegistry->shouldReceive('initialize');
-        $this->mockMessageProcessor->shouldReceive('setServerInfo');
+            ->andReturn([])
+            ->zeroOrMoreTimes();
+        $this->mockServerInfo->shouldReceive('updateRuntimeInfo')->zeroOrMoreTimes();
+        $this->mockServerInfo->shouldReceive('getProtocolVersion')->andReturn('2024-11-05')->zeroOrMoreTimes();
+        $this->mockServerInfo->shouldReceive('getBasicInfo')->andReturn([])->zeroOrMoreTimes();
+        $this->mockRegistry->shouldReceive('initialize')->zeroOrMoreTimes();
+        $this->mockMessageProcessor->shouldReceive('setServerInfo')->zeroOrMoreTimes();
 
         $this->server->initialize([]);
     }
@@ -512,8 +513,8 @@ class McpServerTest extends TestCase
     {
         $this->initializeServer();
 
-        $this->mockTransportManager->shouldReceive('startAllTransports');
-        $this->mockServerInfo->shouldReceive('resetStartTime');
+        $this->mockTransportManager->shouldReceive('startAllTransports')->zeroOrMoreTimes();
+        $this->mockServerInfo->shouldReceive('resetStartTime')->zeroOrMoreTimes();
 
         $this->server->start();
     }

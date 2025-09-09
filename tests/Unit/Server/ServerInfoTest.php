@@ -272,6 +272,6 @@ class ServerInfoTest extends TestCase
         $this->assertArrayHasKey('repository', $implementation);
 
         $this->assertEquals('Laravel MCP', $implementation['name']);
-        $this->assertStringContains('github.com', $implementation['repository']);
+        $this->assertStringContainsString('github.com', $implementation['repository']);
     }
 }

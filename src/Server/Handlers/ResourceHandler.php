@@ -54,6 +54,13 @@ class ResourceHandler extends BaseHandler
                 'resources/read' => $this->handleResourcesRead($params, $context),
                 default => throw new ProtocolException("Unsupported method: {$method}", -32601),
             };
+        } catch (ProtocolException $e) {
+            // Re-throw validation and method not found errors
+            if (in_array($e->getCode(), [-32600, -32601, -32602])) {
+                throw $e;
+            }
+            
+            return $this->handleException($e, $method, $context);
         } catch (\Throwable $e) {
             return $this->handleException($e, $method, $context);
         }
@@ -151,8 +158,10 @@ class ResourceHandler extends BaseHandler
 
             $this->logInfo("Reading resource: {$uri}");
 
-            // Read resource content
-            $content = $this->readResourceContent($resource, $params);
+            // Read resource content (exclude URI from params)
+            $readParams = $params;
+            unset($readParams['uri']);
+            $content = $this->readResourceContent($resource, $readParams);
 
             // Format the response according to MCP spec
             $response = [
@@ -250,24 +259,84 @@ class ResourceHandler extends BaseHandler
     {
         $content = null;
 
-        if (method_exists($resource, 'read')) {
-            $content = $resource->read($params);
-        } elseif (method_exists($resource, 'getContent')) {
-            $content = $resource->getContent($params);
-        } elseif (method_exists($resource, '__invoke')) {
-            $content = $resource($params);
-        } elseif (is_callable($resource)) {
-            $content = call_user_func($resource, $params);
-        } else {
-            throw new ProtocolException('Resource is not readable', -32603);
+        // Try each method in order, catching exceptions for methods that don't exist
+        try {
+            if (is_callable([$resource, 'read'])) {
+                $content = $resource->read($params);
+            } else {
+                throw new \BadMethodCallException('read method not available');
+            }
+        } catch (\BadMethodCallException|\Error|\Mockery\Exception\BadMethodCallException $e) {
+            try {
+                if (is_callable([$resource, 'getContent'])) {
+                    $content = $resource->getContent($params);
+                } else {
+                    throw new \BadMethodCallException('getContent method not available');
+                }
+            } catch (\BadMethodCallException|\Error|\Mockery\Exception\BadMethodCallException $e) {
+                try {
+                    if (is_callable([$resource, '__invoke'])) {
+                        $content = $resource($params);
+                    } else {
+                        throw new \BadMethodCallException('__invoke method not available');
+                    }
+                } catch (\BadMethodCallException|\Error|\Mockery\Exception\BadMethodCallException $e) {
+                    try {
+                        if (is_callable($resource)) {
+                            $content = call_user_func($resource, $params);
+                        } else {
+                            throw new ProtocolException('Resource is not readable', -32603);
+                        }
+                    } catch (\BadMethodCallException|\Error|\Mockery\Exception\BadMethodCallException $e) {
+                        throw new ProtocolException('Resource is not readable', -32603);
+                    }
+                }
+            }
+        }
+
+        // Check if content is already properly formatted with 'contents' key
+        if (is_array($content) && isset($content['contents']) && is_array($content['contents'])) {
+            // Validate and format each content item if needed
+            $formattedContents = [];
+            foreach ($content['contents'] as $item) {
+                if (is_array($item) && isset($item['type'])) {
+                    // Already properly formatted
+                    $formattedContents[] = $item;
+                } else {
+                    // Needs formatting
+                    $formattedContents[] = $this->formatResourceContent($item);
+                }
+            }
+            return $formattedContents;
         }
 
         // Ensure content is in array format
         if (! is_array($content)) {
             $content = [$this->formatResourceContent($content)];
         } else {
-            // Format each content item
-            $content = array_map([$this, 'formatResourceContent'], $content);
+            // Check if this is an indexed array of content items
+            $isIndexed = array_keys($content) === range(0, count($content) - 1);
+            
+            if ($isIndexed) {
+                // This is an array of content items - check if they're formatted
+                $allFormatted = true;
+                foreach ($content as $item) {
+                    if (!is_array($item) || !isset($item['type'])) {
+                        $allFormatted = false;
+                        break;
+                    }
+                }
+                
+                if ($allFormatted) {
+                    return $content;
+                }
+                
+                // Format each content item
+                $content = array_map([$this, 'formatResourceContent'], $content);
+            } else {
+                // This is an associative array (single data object) - format as single item
+                $content = [$this->formatResourceContent($content)];
+            }
         }
 
         return $content;
@@ -293,7 +362,37 @@ class ResourceHandler extends BaseHandler
             ];
         }
 
-        if (is_array($content) || is_object($content)) {
+        if (is_array($content)) {
+            // Check if this is a partial content item with text but no type
+            if (isset($content['text']) || isset($content['uri']) || isset($content['mimeType'])) {
+                // This looks like a content item that just needs the type field
+                $formatted = [
+                    'type' => 'text',
+                ];
+                
+                // Preserve existing text content
+                if (isset($content['text'])) {
+                    $formatted['text'] = $content['text'];
+                }
+                
+                // Preserve other properties like uri, mimeType
+                foreach (['uri', 'mimeType'] as $prop) {
+                    if (isset($content[$prop])) {
+                        $formatted[$prop] = $content[$prop];
+                    }
+                }
+                
+                return $formatted;
+            }
+            
+            // Otherwise serialize as JSON
+            return [
+                'type' => 'text',
+                'text' => json_encode($content, JSON_PRETTY_PRINT),
+            ];
+        }
+
+        if (is_object($content)) {
             return [
                 'type' => 'text',
                 'text' => json_encode($content, JSON_PRETTY_PRINT),
@@ -315,14 +414,25 @@ class ResourceHandler extends BaseHandler
      */
     protected function getResourceUri(string $name, $resource): string
     {
-        if (method_exists($resource, 'getUri')) {
-            return $resource->getUri();
+        // Try getUri method first
+        try {
+            if (is_callable([$resource, 'getUri'])) {
+                return $resource->getUri();
+            }
+        } catch (\Throwable $e) {
+            // Method doesn't exist or failed, try next approach
         }
 
-        if (method_exists($resource, 'uri') && is_callable([$resource, 'uri'])) {
-            return $resource->uri();
+        // Try uri method
+        try {
+            if (is_callable([$resource, 'uri'])) {
+                return $resource->uri();
+            }
+        } catch (\Throwable $e) {
+            // Method doesn't exist or failed, try next approach
         }
 
+        // Try uri property
         if (is_object($resource) && property_exists($resource, 'uri')) {
             return $resource->uri;
         }
@@ -339,14 +449,25 @@ class ResourceHandler extends BaseHandler
      */
     protected function getResourceDescription($resource): string
     {
-        if (method_exists($resource, 'getDescription')) {
-            return $resource->getDescription();
+        // Try getDescription method first
+        try {
+            if (method_exists($resource, 'getDescription') || is_callable([$resource, 'getDescription'])) {
+                return $resource->getDescription();
+            }
+        } catch (\Throwable $e) {
+            // Method doesn't exist or failed, try next approach
         }
 
-        if (method_exists($resource, 'description') && is_callable([$resource, 'description'])) {
-            return $resource->description();
+        // Try description method
+        try {
+            if (method_exists($resource, 'description') || is_callable([$resource, 'description'])) {
+                return $resource->description();
+            }
+        } catch (\Throwable $e) {
+            // Method doesn't exist or failed, try next approach
         }
 
+        // Try description property
         if (is_object($resource) && property_exists($resource, 'description')) {
             return $resource->description;
         }
@@ -362,14 +483,25 @@ class ResourceHandler extends BaseHandler
      */
     protected function getResourceMimeType($resource): string
     {
-        if (method_exists($resource, 'getMimeType')) {
-            return $resource->getMimeType();
+        // Try getMimeType method first
+        try {
+            if (method_exists($resource, 'getMimeType') || is_callable([$resource, 'getMimeType'])) {
+                return $resource->getMimeType();
+            }
+        } catch (\Throwable $e) {
+            // Method doesn't exist or failed, try next approach
         }
 
-        if (method_exists($resource, 'mimeType') && is_callable([$resource, 'mimeType'])) {
-            return $resource->mimeType();
+        // Try mimeType method
+        try {
+            if (method_exists($resource, 'mimeType') || is_callable([$resource, 'mimeType'])) {
+                return $resource->mimeType();
+            }
+        } catch (\Throwable $e) {
+            // Method doesn't exist or failed, try next approach
         }
 
+        // Try mimeType property
         if (is_object($resource) && property_exists($resource, 'mimeType')) {
             return $resource->mimeType;
         }
@@ -388,9 +520,17 @@ class ResourceHandler extends BaseHandler
     {
         $metadata = [];
 
-        if (method_exists($resource, 'getMetadata')) {
-            $metadata = $resource->getMetadata();
-        } elseif (is_object($resource) && property_exists($resource, 'metadata')) {
+        // Try getMetadata method first
+        try {
+            if (method_exists($resource, 'getMetadata') || is_callable([$resource, 'getMetadata'])) {
+                $metadata = $resource->getMetadata();
+            }
+        } catch (\Throwable $e) {
+            // Method doesn't exist or failed, try next approach
+        }
+
+        // Try metadata property
+        if (empty($metadata) && is_object($resource) && property_exists($resource, 'metadata')) {
             $metadata = $resource->metadata;
         }
 

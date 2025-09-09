@@ -279,7 +279,7 @@ class BaseHandlerTest extends TestCase
     #[Test]
     public function handle_exception_preserves_protocol_exception_details(): void
     {
-        $originalException = new ProtocolException('Custom error', -32602, ['detail' => 'info']);
+        $originalException = new ProtocolException('Custom error', -32602, 'test/method', null, ['detail' => 'info']);
 
         $response = $this->handler->testHandleException($originalException, 'test/method');
 

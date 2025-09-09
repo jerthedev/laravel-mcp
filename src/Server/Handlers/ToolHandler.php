@@ -54,6 +54,13 @@ class ToolHandler extends BaseHandler
                 'tools/call' => $this->handleToolsCall($params, $context),
                 default => throw new ProtocolException("Unsupported method: {$method}", -32601),
             };
+        } catch (ProtocolException $e) {
+            // Re-throw validation and method not found errors
+            if (in_array($e->getCode(), [-32600, -32601, -32602])) {
+                throw $e;
+            }
+            
+            return $this->handleException($e, $method, $context);
         } catch (\Throwable $e) {
             return $this->handleException($e, $method, $context);
         }
@@ -153,13 +160,20 @@ class ToolHandler extends BaseHandler
             $tool = $this->toolRegistry->get($toolName);
 
             // Validate tool arguments if the tool supports it
-            if (method_exists($tool, 'validateArguments')) {
-                if (! $tool->validateArguments($arguments)) {
-                    $this->logError("Invalid arguments for tool: {$toolName}", [
-                        'arguments' => $this->sanitizeForLogging($arguments),
-                    ]);
-                    throw new ProtocolException("Invalid arguments for tool: {$toolName}", -32602);
+            try {
+                if (is_callable([$tool, 'validateArguments'])) {
+                    if (! $tool->validateArguments($arguments)) {
+                        $this->logError("Invalid arguments for tool: {$toolName}", [
+                            'arguments' => $this->sanitizeForLogging($arguments),
+                        ]);
+                        throw new ProtocolException("Invalid arguments for tool: {$toolName}", -32602);
+                    }
                 }
+            } catch (ProtocolException $e) {
+                // Re-throw validation errors
+                throw $e;
+            } catch (\Throwable $e) {
+                // Method doesn't exist or validation failed for other reasons, continue
             }
 
             $this->logInfo("Executing tool: {$toolName}", [
@@ -169,20 +183,47 @@ class ToolHandler extends BaseHandler
             // Execute the tool
             $result = $this->executeTool($tool, $arguments);
 
-            // Format the response according to MCP spec
-            $response = [
-                'content' => [
-                    $this->formatContent($result, $this->getContentType($result)),
-                ],
-                'isError' => false,
-            ];
+            // Check if result is already properly formatted with content array
+            if (is_array($result) && isset($result['content']) && is_array($result['content'])) {
+                // Tool returned a properly formatted response
+                $response = [
+                    'content' => $result['content'],
+                    'isError' => $result['isError'] ?? false,
+                ];
+            } else {
+                // Format the response according to MCP spec
+                $response = [
+                    'content' => [
+                        $this->formatContent($result, $this->getContentType($result)),
+                    ],
+                    'isError' => false,
+                ];
+            }
 
             $this->logInfo("Tool executed successfully: {$toolName}");
 
             return $this->createSuccessResponse($response, $context);
 
         } catch (ProtocolException $e) {
-            // Re-throw protocol exceptions
+            // Handle specific tool execution failures as error responses
+            if ($e->getCode() === -32603 && str_contains($e->getMessage(), 'Tool is not executable')) {
+                $this->logError("Tool execution failed: {$toolName}", [
+                    'error' => $e->getMessage(),
+                    'arguments' => $this->sanitizeForLogging($arguments),
+                ]);
+
+                // Return error content for tool execution failures
+                $response = [
+                    'content' => [
+                        $this->formatContent("Tool execution failed: {$e->getMessage()}", 'text'),
+                    ],
+                    'isError' => true,
+                ];
+
+                return $this->createSuccessResponse($response, $context);
+            }
+            
+            // Re-throw other protocol exceptions (method not found, invalid params, etc.)
             throw $e;
         } catch (\Throwable $e) {
             $this->logError("Tool execution failed: {$toolName}", [
@@ -190,7 +231,7 @@ class ToolHandler extends BaseHandler
                 'arguments' => $this->sanitizeForLogging($arguments),
             ]);
 
-            // Return error content instead of throwing for tool execution failures
+            // Return error content for general tool execution failures
             $response = [
                 'content' => [
                     $this->formatContent("Tool execution failed: {$e->getMessage()}", 'text'),
@@ -247,14 +288,41 @@ class ToolHandler extends BaseHandler
      */
     protected function executeTool($tool, array $arguments)
     {
-        if (method_exists($tool, 'execute')) {
+        // Try execute method first (just try calling it, don't check if it exists)
+        try {
             return $tool->execute($arguments);
+        } catch (\BadMethodCallException $e) {
+            // Method doesn't exist, try next approach
+        } catch (\Error $e) {
+            // Handle PHP 7+ errors for undefined methods
+            if (str_contains($e->getMessage(), 'undefined method') || str_contains($e->getMessage(), 'Call to undefined method')) {
+                // Method doesn't exist, try next approach
+            } else {
+                throw $e;
+            }
+        } catch (\Throwable $e) {
+            // Method exists but execution failed, re-throw the original exception
+            throw $e;
         }
 
-        if (method_exists($tool, '__invoke')) {
+        // Try __invoke method
+        try {
             return $tool($arguments);
+        } catch (\BadMethodCallException $e) {
+            // Method doesn't exist, try next approach
+        } catch (\Error $e) {
+            // Handle PHP 7+ errors for non-callable objects
+            if (str_contains($e->getMessage(), 'not callable') || str_contains($e->getMessage(), 'Function name must be')) {
+                // Object is not callable, try next approach
+            } else {
+                throw $e;
+            }
+        } catch (\Throwable $e) {
+            // Re-throw actual execution errors
+            throw $e;
         }
 
+        // Check if it's a direct callable (like closures) and try call_user_func
         if (is_callable($tool)) {
             return call_user_func($tool, $arguments);
         }
@@ -270,14 +338,25 @@ class ToolHandler extends BaseHandler
      */
     protected function getToolDescription($tool): string
     {
-        if (method_exists($tool, 'getDescription')) {
-            return $tool->getDescription();
+        // Try getDescription method first
+        try {
+            if (is_callable([$tool, 'getDescription'])) {
+                return $tool->getDescription();
+            }
+        } catch (\Throwable $e) {
+            // Method doesn't exist or failed, try next approach
         }
 
-        if (method_exists($tool, 'description') && is_callable([$tool, 'description'])) {
-            return $tool->description();
+        // Try description method
+        try {
+            if (is_callable([$tool, 'description'])) {
+                return $tool->description();
+            }
+        } catch (\Throwable $e) {
+            // Method doesn't exist or failed, try next approach
         }
 
+        // Try description property
         if (is_object($tool) && property_exists($tool, 'description')) {
             return $tool->description;
         }
@@ -293,15 +372,32 @@ class ToolHandler extends BaseHandler
      */
     protected function getToolInputSchema($tool): array
     {
-        if (method_exists($tool, 'getInputSchema')) {
-            return $tool->getInputSchema();
+        // Try getInputSchema method first
+        try {
+            if (is_callable([$tool, 'getInputSchema'])) {
+                $schema = $tool->getInputSchema();
+                if (is_array($schema)) {
+                    return $schema;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Method doesn't exist or failed, try next approach
         }
 
-        if (method_exists($tool, 'inputSchema') && is_callable([$tool, 'inputSchema'])) {
-            return $tool->inputSchema();
+        // Try inputSchema method
+        try {
+            if (is_callable([$tool, 'inputSchema'])) {
+                $schema = $tool->inputSchema();
+                if (is_array($schema)) {
+                    return $schema;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Method doesn't exist or failed, try next approach
         }
 
-        if (is_object($tool) && property_exists($tool, 'inputSchema')) {
+        // Try inputSchema property
+        if (is_object($tool) && property_exists($tool, 'inputSchema') && is_array($tool->inputSchema)) {
             return $tool->inputSchema;
         }
 

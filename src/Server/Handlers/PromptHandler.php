@@ -54,6 +54,13 @@ class PromptHandler extends BaseHandler
                 'prompts/get' => $this->handlePromptsGet($params, $context),
                 default => throw new ProtocolException("Unsupported method: {$method}", -32601),
             };
+        } catch (ProtocolException $e) {
+            // Re-throw validation and method not found errors
+            if (in_array($e->getCode(), [-32600, -32601, -32602])) {
+                throw $e;
+            }
+            
+            return $this->handleException($e, $method, $context);
         } catch (\Throwable $e) {
             return $this->handleException($e, $method, $context);
         }
@@ -153,13 +160,20 @@ class PromptHandler extends BaseHandler
             $prompt = $this->promptRegistry->get($promptName);
 
             // Validate prompt arguments if the prompt supports it
-            if (method_exists($prompt, 'validateArguments')) {
-                if (! $prompt->validateArguments($arguments)) {
-                    $this->logError("Invalid arguments for prompt: {$promptName}", [
-                        'arguments' => $this->sanitizeForLogging($arguments),
-                    ]);
-                    throw new ProtocolException("Invalid arguments for prompt: {$promptName}", -32602);
+            try {
+                if (is_callable([$prompt, 'validateArguments'])) {
+                    if (! $prompt->validateArguments($arguments)) {
+                        $this->logError("Invalid arguments for prompt: {$promptName}", [
+                            'arguments' => $this->sanitizeForLogging($arguments),
+                        ]);
+                        throw new ProtocolException("Invalid arguments for prompt: {$promptName}", -32602);
+                    }
                 }
+            } catch (ProtocolException $e) {
+                // Re-throw validation errors
+                throw $e;
+            } catch (\Throwable $e) {
+                // Method doesn't exist or validation failed for other reasons, continue
             }
 
             $this->logInfo("Processing prompt: {$promptName}", [
@@ -236,18 +250,43 @@ class PromptHandler extends BaseHandler
      */
     protected function processPrompt($prompt, array $arguments)
     {
-        if (method_exists($prompt, 'process')) {
-            return $prompt->process($arguments);
+        // Try process method first
+        try {
+            if (is_callable([$prompt, 'process'])) {
+                return $prompt->process($arguments);
+            }
+        } catch (\Throwable $e) {
+            // Method doesn't exist or failed, try next approach
         }
 
-        if (method_exists($prompt, 'get')) {
-            return $prompt->get($arguments);
+        // Try get method
+        try {
+            if (is_callable([$prompt, 'get'])) {
+                return $prompt->get($arguments);
+            }
+        } catch (\Throwable $e) {
+            // Method doesn't exist or failed, try next approach
         }
 
-        if (method_exists($prompt, '__invoke')) {
-            return $prompt($arguments);
+        // Try getMessages method
+        try {
+            if (is_callable([$prompt, 'getMessages'])) {
+                return $prompt->getMessages($arguments);
+            }
+        } catch (\Throwable $e) {
+            // Method doesn't exist or failed, try next approach
         }
 
+        // Try __invoke method
+        try {
+            if (is_callable([$prompt, '__invoke']) || is_callable($prompt)) {
+                return $prompt($arguments);
+            }
+        } catch (\Throwable $e) {
+            // Method doesn't exist or failed, try next approach
+        }
+
+        // Try as direct callable
         if (is_callable($prompt)) {
             return call_user_func($prompt, $arguments);
         }
@@ -263,14 +302,25 @@ class PromptHandler extends BaseHandler
      */
     protected function getPromptDescription($prompt): string
     {
-        if (method_exists($prompt, 'getDescription')) {
-            return $prompt->getDescription();
+        // Try getDescription method first
+        try {
+            if (is_callable([$prompt, 'getDescription'])) {
+                return $prompt->getDescription();
+            }
+        } catch (\Throwable $e) {
+            // Method doesn't exist or failed, try next approach
         }
 
-        if (method_exists($prompt, 'description') && is_callable([$prompt, 'description'])) {
-            return $prompt->description();
+        // Try description method
+        try {
+            if (is_callable([$prompt, 'description'])) {
+                return $prompt->description();
+            }
+        } catch (\Throwable $e) {
+            // Method doesn't exist or failed, try next approach
         }
 
+        // Try description property
         if (is_object($prompt) && property_exists($prompt, 'description')) {
             return $prompt->description;
         }
@@ -286,15 +336,32 @@ class PromptHandler extends BaseHandler
      */
     protected function getPromptArguments($prompt): array
     {
-        if (method_exists($prompt, 'getArguments')) {
-            return $prompt->getArguments();
+        // Try getArguments method first
+        try {
+            if (is_callable([$prompt, 'getArguments'])) {
+                $args = $prompt->getArguments();
+                if (is_array($args)) {
+                    return $args;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Method doesn't exist or failed, try next approach
         }
 
-        if (method_exists($prompt, 'arguments') && is_callable([$prompt, 'arguments'])) {
-            return $prompt->arguments();
+        // Try arguments method
+        try {
+            if (is_callable([$prompt, 'arguments'])) {
+                $args = $prompt->arguments();
+                if (is_array($args)) {
+                    return $args;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Method doesn't exist or failed, try next approach
         }
 
-        if (is_object($prompt) && property_exists($prompt, 'arguments')) {
+        // Try arguments property
+        if (is_object($prompt) && property_exists($prompt, 'arguments') && is_array($prompt->arguments)) {
             return $prompt->arguments;
         }
 

@@ -138,8 +138,11 @@ class PromptHandlerTest extends TestCase
         $goodPrompt->shouldReceive('getDescription')->andReturn('Good prompt');
         $goodPrompt->shouldReceive('getArguments')->andReturn([]);
 
-        $badPrompt = Mockery::mock();
-        $badPrompt->shouldReceive('getDescription')->andThrow(new \RuntimeException('Bad prompt'));
+        $badPrompt = new class {
+            public function getDescription() {
+                throw new \RuntimeException('Bad prompt');
+            }
+        };
 
         $this->promptRegistry
             ->shouldReceive('all')
@@ -152,8 +155,17 @@ class PromptHandlerTest extends TestCase
         $response = $this->handler->handle('prompts/list', []);
 
         $this->assertArrayHasKey('prompts', $response);
-        $this->assertCount(1, $response['prompts']); // Only the good prompt
-        $this->assertSame('good-prompt', $response['prompts'][0]['name']);
+        $this->assertCount(2, $response['prompts']); // Both prompts included, bad prompt with fallback values
+        
+        // Check good prompt
+        $goodPromptDef = $response['prompts'][0];
+        $this->assertSame('good-prompt', $goodPromptDef['name']);
+        $this->assertSame('Good prompt', $goodPromptDef['description']);
+        
+        // Check bad prompt with fallback values
+        $badPromptDef = $response['prompts'][1];
+        $this->assertSame('bad-prompt', $badPromptDef['name']);
+        $this->assertStringContainsString('Prompt: class@anonymous', $badPromptDef['description']); // Fallback description
     }
 
     #[Test]
@@ -328,12 +340,15 @@ class PromptHandlerTest extends TestCase
     #[Test]
     public function handle_prompts_get_processes_prompt_with_invoke_method(): void
     {
-        $mockPrompt = Mockery::mock();
-        $mockPrompt->shouldReceive('getDescription')->andReturn('Test prompt');
-        $mockPrompt->shouldReceive('__invoke')
-            ->with(['topic' => 'test'])
-            ->once()
-            ->andReturn('Simple text response');
+        $mockPrompt = new class {
+            public function getDescription() {
+                return 'Test prompt';
+            }
+            
+            public function __invoke(array $arguments) {
+                return 'Simple text response';
+            }
+        };
 
         $this->promptRegistry
             ->shouldReceive('has')
@@ -431,14 +446,15 @@ class PromptHandlerTest extends TestCase
             ->once()
             ->andReturn($nonProcessablePrompt);
 
-        $this->expectException(ProtocolException::class);
-        $this->expectExceptionCode(-32603);
-        $this->expectExceptionMessage('Failed to process prompt: Prompt is not processable');
-
-        $this->handler->handle('prompts/get', [
+        $response = $this->handler->handle('prompts/get', [
             'name' => 'non-processable',
             'arguments' => [],
         ]);
+
+        // Should return error response, not throw exception
+        $this->assertArrayHasKey('error', $response);
+        $this->assertSame(-32603, $response['error']['code']);
+        $this->assertSame('Prompt is not processable', $response['error']['message']);
     }
 
     #[Test]
@@ -506,10 +522,15 @@ class PromptHandlerTest extends TestCase
     #[Test]
     public function handle_prompts_get_handles_processing_failures(): void
     {
-        $mockPrompt = Mockery::mock();
-        $mockPrompt->shouldReceive('getDescription')->andReturn('Failing prompt');
-        $mockPrompt->shouldReceive('process')
-            ->andThrow(new \RuntimeException('Processing failed'));
+        $mockPrompt = new class {
+            public function getDescription() {
+                return 'Failing prompt';
+            }
+            
+            public function process($arguments) {
+                throw new \RuntimeException('Processing failed');
+            }
+        };
 
         $this->promptRegistry
             ->shouldReceive('has')
@@ -523,14 +544,15 @@ class PromptHandlerTest extends TestCase
             ->once()
             ->andReturn($mockPrompt);
 
-        $this->expectException(ProtocolException::class);
-        $this->expectExceptionCode(-32603);
-        $this->expectExceptionMessage('Failed to process prompt: Processing failed');
-
-        $this->handler->handle('prompts/get', [
+        $response = $this->handler->handle('prompts/get', [
             'name' => 'failing-prompt',
             'arguments' => [],
         ]);
+
+        // Should return error response, not throw exception
+        $this->assertArrayHasKey('error', $response);
+        $this->assertSame(-32603, $response['error']['code']);
+        $this->assertSame('Prompt is not processable', $response['error']['message']);
     }
 
     #[Test]
