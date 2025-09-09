@@ -35,7 +35,7 @@
  * - Interactive console features
  */
 
-namespace Tests\Feature\Commands;
+namespace JTD\LaravelMCP\Tests\Feature\Commands;
 
 use Illuminate\Support\Facades\File;
 use JTD\LaravelMCP\Support\ConfigGenerator;

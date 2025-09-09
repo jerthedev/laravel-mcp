@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use JTD\LaravelMCP\Commands\DocumentationCommand;
 use JTD\LaravelMCP\Commands\ListCommand;
+use JTD\LaravelMCP\McpManager;
 use JTD\LaravelMCP\Commands\MakePromptCommand;
 use JTD\LaravelMCP\Commands\MakeResourceCommand;
 use JTD\LaravelMCP\Commands\MakeToolCommand;
@@ -96,6 +97,19 @@ class LaravelMcpServiceProvider extends ServiceProvider
         // Register discovery service
         $this->app->singleton(ComponentDiscovery::class);
 
+        // Register route registrar
+        $this->app->singleton(RouteRegistrar::class, function ($app) {
+            return new RouteRegistrar($app->make(McpRegistry::class));
+        });
+
+        // Register MCP Manager that bridges facade to both registry and registrar
+        $this->app->singleton(McpManager::class, function ($app) {
+            return new McpManager(
+                $app->make(McpRegistry::class),
+                $app->make(RouteRegistrar::class)
+            );
+        });
+
         // Register transport implementations
         $this->app->bind('mcp.transport.http', HttpTransport::class);
         $this->app->bind('mcp.transport.stdio', StdioTransport::class);
@@ -107,9 +121,9 @@ class LaravelMcpServiceProvider extends ServiceProvider
 
         // Support services will be registered lazily in registerLazyServices()
 
-        // Register facade accessor - should point to McpRegistry for main functionality
+        // Register facade accessor - should point to McpManager that provides both interfaces
         $this->app->singleton('laravel-mcp', function ($app) {
-            return $app->make(McpRegistry::class);
+            return $app->make(McpManager::class);
         });
 
         // Register registry aliases for easier access

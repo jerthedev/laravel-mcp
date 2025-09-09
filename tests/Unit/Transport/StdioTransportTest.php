@@ -22,7 +22,7 @@
  * - Health checks
  */
 
-namespace Tests\Unit\Transport;
+namespace JTD\LaravelMCP\Tests\Unit\Transport;
 
 use Illuminate\Support\Facades\Log;
 use JTD\LaravelMCP\Exceptions\TransportException;

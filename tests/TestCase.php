@@ -13,7 +13,6 @@ abstract class TestCase extends OrchestraTestCase
         parent::setUp();
 
         $this->setUpMcpEnvironment();
-        $this->loadMcpConfiguration();
         $this->setupTestComponents();
     }
 
@@ -60,6 +59,7 @@ abstract class TestCase extends OrchestraTestCase
         $app['config']->set('laravel-mcp.debug', true);
         $app['config']->set('laravel-mcp.discovery.enabled', false); // Disable discovery in tests
         $app['config']->set('laravel-mcp.discovery.paths', []);
+        $app['config']->set('laravel-mcp.validation.validate_handlers', false); // Disable handler validation in tests
 
         // Enable debug mode for commands
         $app['config']->set('app.debug', true);
@@ -89,14 +89,6 @@ abstract class TestCase extends OrchestraTestCase
 
         // Clear any existing registrations
         $this->clearMcpRegistrations();
-    }
-
-    /**
-     * Load MCP configuration for testing.
-     */
-    protected function loadMcpConfiguration(): void
-    {
-        // Additional test-specific configuration can be set here
     }
 
     /**
