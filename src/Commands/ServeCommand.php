@@ -252,7 +252,7 @@ class ServeCommand extends BaseCommand
 
         try {
             // Start listening (blocking call)
-            $this->transport->listen();
+            $this->transport->start();
 
             return self::EXIT_SUCCESS;
         } catch (\Throwable $e) {
@@ -266,7 +266,7 @@ class ServeCommand extends BaseCommand
 
             return self::EXIT_ERROR;
         } finally {
-            $this->transport->close();
+            $this->transport->stop();
         }
     }
 
@@ -299,7 +299,7 @@ class ServeCommand extends BaseCommand
         $this->newLine();
 
         // Start the transport (registers routes and middleware)
-        $this->transport->listen();
+        $this->transport->start();
 
         // Keep the command running until interrupted
         $this->info('HTTP transport initialized. Waiting for requests...');
@@ -310,7 +310,7 @@ class ServeCommand extends BaseCommand
             // Check transport health periodically
             if (! $this->transport->isConnected()) {
                 $this->warning('Transport disconnected. Attempting to reconnect...');
-                $this->transport->listen();
+                $this->transport->start();
             }
         }
 
@@ -353,7 +353,7 @@ class ServeCommand extends BaseCommand
         // Close the transport if it's active
         if ($this->transport) {
             try {
-                $this->transport->close();
+                $this->transport->stop();
                 $this->debug('Transport closed successfully');
             } catch (\Throwable $e) {
                 $this->debug('Error closing transport', $e->getMessage());
