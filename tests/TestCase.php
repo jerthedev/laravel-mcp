@@ -160,13 +160,10 @@ abstract class TestCase extends OrchestraTestCase
 
             protected string $description = 'Test tool';
 
-            protected array $inputSchema = [
-                'type' => 'object',
-                'properties' => [
-                    'input' => [
-                        'type' => 'string',
-                        'description' => 'Test input',
-                    ],
+            protected array $parameterSchema = [
+                'input' => [
+                    'type' => 'string',
+                    'description' => 'Test input',
                 ],
             ];
 
@@ -176,18 +173,20 @@ abstract class TestCase extends OrchestraTestCase
                 if (isset($config['description'])) {
                     $this->description = $config['description'];
                 }
-                if (isset($config['inputSchema'])) {
-                    $this->inputSchema = $config['inputSchema'];
+                if (isset($config['parameterSchema'])) {
+                    $this->parameterSchema = $config['parameterSchema'];
                 }
+
+                parent::__construct();
             }
 
-            public function execute(array $arguments): array
+            protected function handle(array $parameters): mixed
             {
                 return [
                     'content' => [
                         [
                             'type' => 'text',
-                            'text' => 'Test result: '.($arguments['input'] ?? 'no input'),
+                            'text' => 'Test result: '.($parameters['input'] ?? 'no input'),
                         ],
                     ],
                 ];
