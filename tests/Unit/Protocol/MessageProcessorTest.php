@@ -2,6 +2,7 @@
 
 namespace JTD\LaravelMCP\Tests\Unit\Protocol;
 
+use Illuminate\Support\Facades\Log;
 use JTD\LaravelMCP\Exceptions\ProtocolException;
 use JTD\LaravelMCP\Protocol\CapabilityNegotiator;
 use JTD\LaravelMCP\Protocol\Contracts\JsonRpcHandlerInterface;
@@ -10,25 +11,31 @@ use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Registry\PromptRegistry;
 use JTD\LaravelMCP\Registry\ResourceRegistry;
 use JTD\LaravelMCP\Registry\ToolRegistry;
-use Tests\TestCase;
 use JTD\LaravelMCP\Transport\Contracts\TransportInterface;
 use Mockery;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\DataProvider;
+use Tests\TestCase;
 
 /**
- * Tests for MessageProcessor class.
+ * Comprehensive tests for MessageProcessor class.
  *
  * This test suite ensures the MessageProcessor properly integrates with handlers,
- * manages MCP server lifecycle, handles initialization, and routes messages correctly.
+ * manages MCP server lifecycle, handles initialization, routes messages correctly,
+ * manages state, handles capability negotiation, and provides robust error handling.
  *
- * @epic 009-McpServerHandlers
+ * Covers:
+ * - MCP protocol message handling
+ * - Server initialization lifecycle  
+ * - Client capability negotiation
+ * - Tool, resource, and prompt method handling
+ * - Error handling and recovery
+ * - Transport lifecycle events (connect/disconnect)
+ * - Message routing
+ * - State management
  *
- * @spec docs/Specs/009-McpServerHandlers.md
- *
- * @ticket 009-McpServerHandlers.md
- *
- * @sprint Sprint-2
+ * @epic 013-TransportProtocol
  */
 #[CoversClass(MessageProcessor::class)]
 class MessageProcessorTest extends TestCase
@@ -533,7 +540,7 @@ class MessageProcessorTest extends TestCase
         $method->setAccessible(true);
 
         // This should throw ProtocolException because not initialized
-        $method->invoke($processor, []);
+        $method->invoke($processor, [], []);
     }
 
     private function initializeProcessor(): void
@@ -589,4 +596,512 @@ class MessageProcessorTest extends TestCase
             ->with('initialized', Mockery::type('callable'))
             ->zeroOrMoreTimes();
     }
+
+    /**
+     * Test initialize request handling.
+     */
+    #[Test]
+    public function initialize_request_handles_capability_negotiation(): void
+    {
+        $initializeParams = [
+            'protocolVersion' => '2024-11-05',
+            'clientInfo' => ['name' => 'Test Client', 'version' => '1.0.0'],
+            'capabilities' => [
+                'tools' => ['listChanged' => true],
+                'resources' => ['subscribe' => true, 'listChanged' => true],
+                'prompts' => ['listChanged' => false],
+            ],
+        ];
+
+        $serverCapabilities = [
+            'tools' => ['listChanged' => false],
+            'resources' => ['subscribe' => false, 'listChanged' => false],
+            'prompts' => ['listChanged' => false],
+        ];
+
+        $negotiatedCapabilities = [
+            'tools' => ['listChanged' => false],
+            'resources' => ['subscribe' => false, 'listChanged' => false],
+            'prompts' => ['listChanged' => false],
+        ];
+
+        $this->capabilityNegotiator
+            ->shouldReceive('negotiate')
+            ->with($initializeParams['capabilities'], $serverCapabilities)
+            ->once()
+            ->andReturn($negotiatedCapabilities);
+
+        // Use reflection to access protected method
+        $reflection = new \ReflectionClass($this->processor);
+        $method = $reflection->getMethod('handleInitialize');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($this->processor, $initializeParams);
+
+        $this->assertEquals('2024-11-05', $result['protocolVersion']);
+        $this->assertEquals($negotiatedCapabilities, $result['capabilities']);
+        $this->assertArrayHasKey('serverInfo', $result);
+        $this->assertEquals('Laravel MCP Server', $result['serverInfo']['name']);
+        $this->assertEquals('1.0.0', $result['serverInfo']['version']);
+    }
+
+    /**
+     * Test initialized notification handling.
+     */
+    #[Test]
+    public function initialized_notification_sets_initialization_state(): void
+    {
+        $this->assertFalse($this->processor->isInitialized());
+
+        // Use reflection to access protected method
+        $reflection = new \ReflectionClass($this->processor);
+        $method = $reflection->getMethod('handleInitialized');
+        $method->setAccessible(true);
+
+        $method->invoke($this->processor, []);
+
+        $this->assertTrue($this->processor->isInitialized());
+    }
+
+    /**
+     * Test ping request handling.
+     */
+    #[Test]
+    public function ping_request_returns_empty_response(): void
+    {
+        // Use reflection to access protected method
+        $reflection = new \ReflectionClass($this->processor);
+        $method = $reflection->getMethod('handlePing');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($this->processor, []);
+
+        $this->assertEquals([], $result);
+    }
+
+    /**
+     * Test tools/list request requires initialization.
+     */
+    #[Test]
+    public function tools_list_requires_initialization(): void
+    {
+        $this->expectException(ProtocolException::class);
+        $this->expectExceptionCode(-32002);
+        $this->expectExceptionMessage('Server not initialized');
+
+        // Use reflection to access protected method
+        $reflection = new \ReflectionClass($this->processor);
+        $method = $reflection->getMethod('handleToolsList');
+        $method->setAccessible(true);
+
+        $method->invoke($this->processor, [], []);
+    }
+
+    /**
+     * Test tools/call request requires initialization.
+     */
+    #[Test]
+    public function tools_call_requires_initialization(): void
+    {
+        $this->expectException(ProtocolException::class);
+        $this->expectExceptionCode(-32002);
+        $this->expectExceptionMessage('Server not initialized');
+
+        // Use reflection to access protected method
+        $reflection = new \ReflectionClass($this->processor);
+        $method = $reflection->getMethod('handleToolsCall');
+        $method->setAccessible(true);
+
+        $method->invoke($this->processor, [], []);
+    }
+
+    /**
+     * Test resources/list request requires initialization.
+     */
+    #[Test]
+    public function resources_list_requires_initialization(): void
+    {
+        $this->expectException(ProtocolException::class);
+        $this->expectExceptionCode(-32002);
+        $this->expectExceptionMessage('Server not initialized');
+
+        // Use reflection to access protected method
+        $reflection = new \ReflectionClass($this->processor);
+        $method = $reflection->getMethod('handleResourcesList');
+        $method->setAccessible(true);
+
+        $method->invoke($this->processor, [], []);
+    }
+
+    /**
+     * Test resources/read request requires initialization.
+     */
+    #[Test]
+    public function resources_read_requires_initialization(): void
+    {
+        $this->expectException(ProtocolException::class);
+        $this->expectExceptionCode(-32002);
+        $this->expectExceptionMessage('Server not initialized');
+
+        // Use reflection to access protected method
+        $reflection = new \ReflectionClass($this->processor);
+        $method = $reflection->getMethod('handleResourcesRead');
+        $method->setAccessible(true);
+
+        $method->invoke($this->processor, [], []);
+    }
+
+    /**
+     * Test resources/templates/list request requires initialization.
+     */
+    #[Test]
+    public function resources_templates_list_requires_initialization(): void
+    {
+        $this->expectException(ProtocolException::class);
+        $this->expectExceptionCode(-32002);
+        $this->expectExceptionMessage('Server not initialized');
+
+        // Use reflection to access protected method
+        $reflection = new \ReflectionClass($this->processor);
+        $method = $reflection->getMethod('handleResourceTemplatesList');
+        $method->setAccessible(true);
+
+        $method->invoke($this->processor, []);
+    }
+
+    /**
+     * Test prompts/list request requires initialization.
+     */
+    #[Test]
+    public function prompts_list_requires_initialization(): void
+    {
+        $this->expectException(ProtocolException::class);
+        $this->expectExceptionCode(-32002);
+        $this->expectExceptionMessage('Server not initialized');
+
+        // Use reflection to access protected method
+        $reflection = new \ReflectionClass($this->processor);
+        $method = $reflection->getMethod('handlePromptsList');
+        $method->setAccessible(true);
+
+        $method->invoke($this->processor, [], []);
+    }
+
+    /**
+     * Test prompts/get request requires initialization.
+     */
+    #[Test]
+    public function prompts_get_requires_initialization(): void
+    {
+        $this->expectException(ProtocolException::class);
+        $this->expectExceptionCode(-32002);
+        $this->expectExceptionMessage('Server not initialized');
+
+        // Use reflection to access protected method
+        $reflection = new \ReflectionClass($this->processor);
+        $method = $reflection->getMethod('handlePromptsGet');
+        $method->setAccessible(true);
+
+        $method->invoke($this->processor, [], []);
+    }
+
+    /**
+     * Test resources/templates/list with initialized state.
+     */
+    #[Test]
+    public function resources_templates_list_works_when_initialized(): void
+    {
+        // Initialize the processor
+        $this->initializeProcessor();
+
+        $expectedTemplates = [
+            ['uri' => 'template://example', 'name' => 'Example Template'],
+        ];
+
+        $this->resourceRegistry
+            ->shouldReceive('getResourceTemplates')
+            ->once()
+            ->andReturn($expectedTemplates);
+
+        // Use reflection to access protected method
+        $reflection = new \ReflectionClass($this->processor);
+        $method = $reflection->getMethod('handleResourceTemplatesList');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($this->processor, []);
+
+        $this->assertEquals(['resourceTemplates' => $expectedTemplates], $result);
+    }
+
+    /**
+     * Test server info management.
+     */
+    #[Test]
+    public function server_info_can_be_updated_and_retrieved(): void
+    {
+        $originalInfo = $this->processor->getServerInfo();
+        $this->assertEquals('Laravel MCP Server', $originalInfo['name']);
+        $this->assertEquals('1.0.0', $originalInfo['version']);
+
+        $newInfo = [
+            'name' => 'Custom Server',
+            'version' => '2.1.0',
+            'description' => 'Custom MCP Server',
+        ];
+
+        $this->processor->setServerInfo($newInfo);
+        $updatedInfo = $this->processor->getServerInfo();
+
+        $this->assertEquals('Custom Server', $updatedInfo['name']);
+        $this->assertEquals('2.1.0', $updatedInfo['version']);
+        $this->assertEquals('Custom MCP Server', $updatedInfo['description']);
+    }
+
+    /**
+     * Test client capabilities tracking.
+     */
+    #[Test]
+    public function client_capabilities_are_tracked_correctly(): void
+    {
+        $this->assertEquals([], $this->processor->getClientCapabilities());
+
+        // Simulate initialization with capabilities
+        $capabilities = [
+            'tools' => ['listChanged' => true],
+            'resources' => ['subscribe' => false],
+        ];
+
+        // Use reflection to set client capabilities
+        $reflection = new \ReflectionClass($this->processor);
+        $property = $reflection->getProperty('clientCapabilities');
+        $property->setAccessible(true);
+        $property->setValue($this->processor, $capabilities);
+
+        $this->assertEquals($capabilities, $this->processor->getClientCapabilities());
+    }
+
+    /**
+     * Test server capabilities are set up correctly.
+     */
+    #[Test]
+    public function server_capabilities_are_set_up_correctly(): void
+    {
+        $capabilities = $this->processor->getServerCapabilities();
+
+        $this->assertArrayHasKey('tools', $capabilities);
+        $this->assertArrayHasKey('resources', $capabilities);
+        $this->assertArrayHasKey('prompts', $capabilities);
+
+        $this->assertArrayHasKey('listChanged', $capabilities['tools']);
+        $this->assertArrayHasKey('subscribe', $capabilities['resources']);
+        $this->assertArrayHasKey('listChanged', $capabilities['resources']);
+        $this->assertArrayHasKey('listChanged', $capabilities['prompts']);
+
+        // All should be false by default
+        $this->assertFalse($capabilities['tools']['listChanged']);
+        $this->assertFalse($capabilities['resources']['subscribe']);
+        $this->assertFalse($capabilities['resources']['listChanged']);
+        $this->assertFalse($capabilities['prompts']['listChanged']);
+    }
+
+    /**
+     * Test transport connection logging with different configurations.
+     */
+    #[Test]
+    #[DataProvider('transportConfigProvider')]
+    public function on_connect_logs_different_transport_configurations(array $config): void
+    {
+        $this->transport
+            ->shouldReceive('getConfig')
+            ->once()
+            ->andReturn($config);
+
+        Log::shouldReceive('info')
+            ->once()
+            ->with('MCP transport connected', [
+                'transport' => get_class($this->transport),
+                'config' => $config,
+            ]);
+
+        $this->processor->onConnect($this->transport);
+
+        $this->assertTrue(true); // Test passes if no exception is thrown
+    }
+
+    public static function transportConfigProvider(): array
+    {
+        return [
+            'HTTP config' => [['host' => '127.0.0.1', 'port' => 8080, 'path' => '/mcp']],
+            'Stdio config' => [['mode' => 'stdio', 'buffer_size' => 4096]],
+            'Empty config' => [[]],
+            'Custom config' => [['custom' => 'value', 'another' => 123]],
+        ];
+    }
+
+    /**
+     * Test transport disconnection resets state properly.
+     */
+    #[Test]
+    public function on_disconnect_resets_all_state_properly(): void
+    {
+        // First set up some state
+        $this->initializeProcessor();
+        
+        // Set some client capabilities
+        $capabilities = ['tools' => ['listChanged' => true]];
+        $reflection = new \ReflectionClass($this->processor);
+        $clientCapsProp = $reflection->getProperty('clientCapabilities');
+        $clientCapsProp->setAccessible(true);
+        $clientCapsProp->setValue($this->processor, $capabilities);
+
+        // Verify state is set
+        $this->assertTrue($this->processor->isInitialized());
+        $this->assertEquals($capabilities, $this->processor->getClientCapabilities());
+
+        Log::shouldReceive('info')
+            ->once()
+            ->with('MCP transport disconnected', [
+                'transport' => get_class($this->transport),
+            ]);
+
+        // Now disconnect
+        $this->processor->onDisconnect($this->transport);
+
+        // Verify state is reset
+        $this->assertFalse($this->processor->isInitialized());
+        $this->assertEquals([], $this->processor->getClientCapabilities());
+    }
+
+    /**
+     * Test error handling with different error types.
+     */
+    #[Test]
+    #[DataProvider('errorTypeProvider')]
+    public function handle_error_logs_different_error_types(\Throwable $error): void
+    {
+        Log::shouldReceive('error')
+            ->once()
+            ->with('Transport error', [
+                'transport' => get_class($this->transport),
+                'error' => $error->getMessage(),
+                'trace' => $error->getTraceAsString(),
+            ]);
+
+        $this->processor->handleError($error, $this->transport);
+
+        $this->assertTrue(true); // Test passes if no exception is thrown
+    }
+
+    public static function errorTypeProvider(): array
+    {
+        return [
+            'Runtime exception' => [new \RuntimeException('Runtime error')],
+            'Protocol exception' => [new ProtocolException('Protocol error', -32600)],
+            'Invalid argument exception' => [new \InvalidArgumentException('Invalid argument')],
+            'Exception with no message' => [new \Exception('')],
+        ];
+    }
+
+    /**
+     * Test message handling with various edge cases.
+     */
+    #[Test]
+    #[DataProvider('edgeCaseMessageProvider')]
+    public function handle_message_edge_cases(array $message, $expectedResult): void
+    {
+        if ($expectedResult instanceof \Exception) {
+            $this->jsonRpcHandler
+                ->shouldReceive('validateMessage')
+                ->with($message)
+                ->once()
+                ->andThrow($expectedResult);
+
+            $this->jsonRpcHandler
+                ->shouldReceive('createErrorResponse')
+                ->with(-32603, 'Internal error', null, $message['id'] ?? null)
+                ->once()
+                ->andReturn(['error' => ['code' => -32603, 'message' => 'Internal error']]);
+
+            Log::shouldReceive('error')
+                ->once()
+                ->with('Message processing error', \Mockery::type('array'));
+
+            $result = $this->processor->handle($message, $this->transport);
+            $this->assertArrayHasKey('error', $result);
+        } else {
+            $this->jsonRpcHandler
+                ->shouldReceive('validateMessage')
+                ->with($message)
+                ->once()
+                ->andReturn($expectedResult);
+
+            if (!$expectedResult) {
+                Log::shouldReceive('warning')
+                    ->once()
+                    ->with('Invalid JSON-RPC message received', ['message' => $message]);
+
+                $this->jsonRpcHandler
+                    ->shouldReceive('createErrorResponse')
+                    ->with(-32600, 'Invalid request', null, $message['id'] ?? null)
+                    ->once()
+                    ->andReturn(['error' => ['code' => -32600, 'message' => 'Invalid request']]);
+            }
+
+            $result = $this->processor->handle($message, $this->transport);
+            
+            if (!$expectedResult) {
+                $this->assertArrayHasKey('error', $result);
+            }
+        }
+    }
+
+    public static function edgeCaseMessageProvider(): array
+    {
+        return [
+            'Empty message' => [[], false],
+            'Message with null values' => [['jsonrpc' => null, 'method' => null, 'id' => null], false],
+            'Message with numeric method' => [['jsonrpc' => '2.0', 'method' => 123, 'id' => 1], false],
+            'Very large message' => [[str_repeat('large', 1000) => 'data'], false],
+            'Exception during validation' => [['test' => 'data'], new \RuntimeException('Validation failed')],
+        ];
+    }
+
+    /**
+     * Test that message processor constructor sets up handlers correctly.
+     */
+    #[Test]
+    public function constructor_sets_up_all_handlers(): void
+    {
+        $jsonRpcHandler = Mockery::mock(JsonRpcHandlerInterface::class);
+        
+        // Expect all handler registrations
+        $expectedMethods = [
+            'initialize', 'ping', 'tools/list', 'tools/call',
+            'resources/list', 'resources/read', 'resources/templates/list',
+            'prompts/list', 'prompts/get'
+        ];
+        
+        foreach ($expectedMethods as $method) {
+            $jsonRpcHandler->shouldReceive('onRequest')
+                ->with($method, Mockery::type('callable'))
+                ->once();
+        }
+        
+        $jsonRpcHandler->shouldReceive('onNotification')
+            ->with('initialized', Mockery::type('callable'))
+            ->once();
+            
+        // Create new processor to trigger constructor
+        $processor = new MessageProcessor(
+            $jsonRpcHandler,
+            $this->registry,
+            $this->toolRegistry,
+            $this->resourceRegistry,
+            $this->promptRegistry,
+            $this->capabilityNegotiator
+        );
+        
+        $this->assertInstanceOf(MessageProcessor::class, $processor);
+    }
+
 }

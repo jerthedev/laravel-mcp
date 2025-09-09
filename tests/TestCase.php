@@ -139,6 +139,16 @@ abstract class TestCase extends OrchestraTestCase
                 // Ignore errors during setup
             }
         }
+
+        // Also clear the registry directly if available
+        try {
+            $registry = app('mcp.registry');
+            if ($registry && method_exists($registry, 'clear')) {
+                $registry->clear();
+            }
+        } catch (\Exception $e) {
+            // Ignore errors during setup
+        }
     }
 
     /**
@@ -406,6 +416,23 @@ abstract class TestCase extends OrchestraTestCase
             default:
                 return file_get_contents($path);
         }
+    }
+
+    /**
+     * Create a test stdio transport for simulation.
+     */
+    protected function createStdioTransportMock()
+    {
+        return $this->createMock(\JTD\LaravelMCP\Transport\StdioTransport::class);
+    }
+
+    /**
+     * Simulate stdio input/output for testing.
+     */
+    protected function simulateStdioMessage(string $input): string
+    {
+        // Simulate stdio message framing
+        return json_encode(json_decode($input, true));
     }
 
     /**

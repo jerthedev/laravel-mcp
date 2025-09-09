@@ -2,7 +2,6 @@
 
 namespace JTD\LaravelMCP\Registry;
 
-use JTD\LaravelMCP\Abstracts\McpResource;
 use JTD\LaravelMCP\Exceptions\RegistrationException;
 use JTD\LaravelMCP\Registry\Contracts\RegistryInterface;
 
@@ -215,17 +214,17 @@ class ResourceRegistry implements RegistryInterface
             try {
                 $reflection = new \ReflectionClass($resource);
                 $constructor = $reflection->getConstructor();
-                
+
                 if ($constructor && $constructor->getNumberOfRequiredParameters() > 0) {
                     // If constructor requires parameters, try passing the name
                     $resource = new $resource($name);
                 } else {
                     // No required parameters, instantiate without arguments
-                    $resource = new $resource();
+                    $resource = new $resource;
                 }
             } catch (\Exception $e) {
                 // Fall back to no arguments
-                $resource = new $resource();
+                $resource = new $resource;
             }
         }
 

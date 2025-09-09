@@ -158,7 +158,7 @@ class PromptHandler extends BaseHandler
         try {
             // Get the prompt data from registry
             $promptData = $this->promptRegistry->get($promptName);
-            
+
             // Extract the prompt handler from the data array
             $prompt = $promptData['handler'] ?? $promptData;
 
@@ -223,7 +223,7 @@ class PromptHandler extends BaseHandler
             try {
                 // Extract the prompt handler from the data array
                 $prompt = $promptData['handler'] ?? $promptData;
-                
+
                 $definition = [
                     'name' => $name,
                     'description' => $this->getPromptDescription($prompt),

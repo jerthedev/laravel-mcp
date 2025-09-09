@@ -4,8 +4,8 @@ namespace JTD\LaravelMCP\Tests\Unit\Registry\Contracts;
 
 use JTD\LaravelMCP\Exceptions\RegistrationException;
 use JTD\LaravelMCP\Registry\Contracts\RegistryInterface;
-use Tests\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
+use Tests\TestCase;
 
 /**
  * Unit tests for RegistryInterface contract.

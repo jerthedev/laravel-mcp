@@ -14,7 +14,7 @@ use JTD\LaravelMCP\Support\ClientDetector;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use TestCase;
 
 #[Group('unit')]
 #[Group('support')]

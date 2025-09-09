@@ -6,12 +6,12 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use JTD\LaravelMCP\Exceptions\TransportException;
-use Tests\TestCase;
 use JTD\LaravelMCP\Transport\Contracts\MessageHandlerInterface;
 use JTD\LaravelMCP\Transport\HttpTransport;
 use Mockery;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 #[CoversClass(HttpTransport::class)]
 class HttpTransportTest extends TestCase

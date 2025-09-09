@@ -8,8 +8,8 @@ use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Registry\PromptRegistry;
 use JTD\LaravelMCP\Registry\ResourceRegistry;
 use JTD\LaravelMCP\Registry\ToolRegistry;
-use Tests\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
+use Tests\TestCase;
 
 /**
  * Test suite for McpRegistry core functionality.

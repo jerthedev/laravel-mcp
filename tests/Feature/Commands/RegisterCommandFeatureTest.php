@@ -39,9 +39,9 @@ namespace Tests\Feature\Commands;
 
 use Illuminate\Support\Facades\File;
 use JTD\LaravelMCP\Support\ConfigGenerator;
-use Tests\TestCase;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 #[Group('feature')]
 #[Group('commands')]

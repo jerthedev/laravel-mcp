@@ -20,7 +20,6 @@ use JTD\LaravelMCP\Registry\ResourceRegistry;
 use JTD\LaravelMCP\Registry\ToolRegistry;
 use JTD\LaravelMCP\Support\ConfigGenerator;
 use JTD\LaravelMCP\Support\DocumentationGenerator;
-use Tests\TestCase;
 use JTD\LaravelMCP\Transport\Contracts\TransportInterface;
 use JTD\LaravelMCP\Transport\HttpTransport;
 use JTD\LaravelMCP\Transport\StdioTransport;
@@ -30,6 +29,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 /**
  * EPIC: SERVICEPROVIDER
