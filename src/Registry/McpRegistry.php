@@ -2,6 +2,9 @@
 
 namespace JTD\LaravelMCP\Registry;
 
+use JTD\LaravelMCP\Abstracts\McpPrompt;
+use JTD\LaravelMCP\Abstracts\McpResource;
+use JTD\LaravelMCP\Abstracts\McpTool;
 use JTD\LaravelMCP\Exceptions\RegistrationException;
 use JTD\LaravelMCP\Registry\Contracts\RegistryInterface;
 
@@ -11,22 +14,17 @@ use JTD\LaravelMCP\Registry\Contracts\RegistryInterface;
  * This class serves as the central registry for all MCP components,
  * managing tools, resources, and prompts through type-specific registries.
  */
-class McpRegistry implements RegistryInterface
+class McpRegistry
 {
-    /**
-     * Registered components storage.
-     */
-    protected array $components = [];
+    private ToolRegistry $toolRegistry;
 
-    /**
-     * Component metadata storage.
-     */
-    protected array $metadata = [];
+    private ResourceRegistry $resourceRegistry;
 
-    /**
-     * Registry type identifier.
-     */
-    protected string $type = 'main';
+    private PromptRegistry $promptRegistry;
+
+    private array $registered = [];
+
+    private bool $initialized = false;
 
     /**
      * Type-specific registries.
@@ -47,10 +45,13 @@ class McpRegistry implements RegistryInterface
      * Create a new MCP registry instance.
      */
     public function __construct(
-        protected ToolRegistry $toolRegistry,
-        protected ResourceRegistry $resourceRegistry,
-        protected PromptRegistry $promptRegistry
+        ToolRegistry $toolRegistry,
+        ResourceRegistry $resourceRegistry,
+        PromptRegistry $promptRegistry
     ) {
+        $this->toolRegistry = $toolRegistry;
+        $this->resourceRegistry = $resourceRegistry;
+        $this->promptRegistry = $promptRegistry;
         $this->typeRegistries = [
             'tool' => $this->toolRegistry,
             'tools' => $this->toolRegistry,
@@ -128,69 +129,112 @@ class McpRegistry implements RegistryInterface
         });
     }
 
-    /**
-     * Unregister a component from the registry.
-     */
-    public function unregister(string $name): bool
+    public function unregister(string $type, string $name): bool
     {
-        if (! $this->has($name)) {
-            return false;
+        $success = match ($type) {
+            'tool' => $this->toolRegistry->unregister($name),
+            'resource' => $this->resourceRegistry->unregister($name),
+            'prompt' => $this->promptRegistry->unregister($name),
+            default => false
+        };
+
+        if ($success) {
+            unset($this->registered[$type][$name]);
         }
 
-        $type = $this->metadata[$name]['type'];
+        return $success;
+    }
 
-        // Unregister from type-specific registry
-        if (isset($this->typeRegistries[$type])) {
-            $this->typeRegistries[$type]->unregister($name);
+    public function count(?string $type = null): int
+    {
+        if ($type === null) {
+            // Count from both internal registry and type-specific registries
+            $internalCount = count($this->registered['tool'] ?? []) +
+                           count($this->registered['resource'] ?? []) +
+                           count($this->registered['prompt'] ?? []);
+            
+            // If we have items in internal registry, use that count
+            if ($internalCount > 0) {
+                return $internalCount;
+            }
+            
+            // Otherwise fall back to type-specific registries
+            return $this->toolRegistry->count() +
+                   $this->resourceRegistry->count() +
+                   $this->promptRegistry->count();
         }
 
-        unset($this->components[$name], $this->metadata[$name]);
-
-        return true;
-    }
-
-    /**
-     * Check if a component is registered.
-     */
-    public function has(string $name): bool
-    {
-        return array_key_exists($name, $this->components);
-    }
-
-    /**
-     * Get a registered component.
-     */
-    public function get(string $name)
-    {
-        if (! $this->has($name)) {
-            throw new RegistrationException("Component '{$name}' is not registered");
+        // For specific type, check internal registry first
+        if (isset($this->registered[$type])) {
+            $count = count($this->registered[$type]);
+            if ($count > 0) {
+                return $count;
+            }
         }
-
-        return $this->components[$name];
+        
+        return match ($type) {
+            'tool' => $this->toolRegistry->count(),
+            'resource' => $this->resourceRegistry->count(),
+            'prompt' => $this->promptRegistry->count(),
+            default => 0
+        };
     }
 
-    /**
-     * Get all registered components.
-     */
-    public function all(): array
+    public function getTypes(): array
     {
-        return $this->components;
+        return ['tool', 'resource', 'prompt'];
     }
 
-    /**
-     * Get all registered component names.
-     */
-    public function names(): array
+    public function getMetadata(string $type, string $name): array
     {
-        return array_keys($this->components);
+        if (!isset($this->registered[$type][$name])) {
+            return [];
+        }
+        
+        $metadata = $this->registered[$type][$name]['options'] ?? [];
+        
+        // Include registered_at timestamp if available
+        if (isset($this->registered[$type][$name]['registered_at'])) {
+            $metadata['registered_at'] = $this->registered[$type][$name]['registered_at'];
+        }
+        
+        return $metadata;
     }
 
-    /**
-     * Count registered components.
-     */
-    public function count(): int
+    public function has(string $type, string $name): bool
     {
-        return count($this->components);
+        // First check if registered in the internal registry
+        if (isset($this->registered[$type][$name])) {
+            return true;
+        }
+        
+        // Then check type-specific registries
+        return match ($type) {
+            'tool' => $this->toolRegistry->has($name),
+            'resource' => $this->resourceRegistry->has($name),
+            'prompt' => $this->promptRegistry->has($name),
+            default => false
+        };
+    }
+
+    public function get(string $type, string $name): mixed
+    {
+        return match ($type) {
+            'tool' => $this->toolRegistry->get($name),
+            'resource' => $this->resourceRegistry->get($name),
+            'prompt' => $this->promptRegistry->get($name),
+            default => null
+        };
+    }
+
+    public function getAll(string $type): array
+    {
+        return match ($type) {
+            'tool' => $this->toolRegistry->getAll(),
+            'resource' => $this->resourceRegistry->getAll(),
+            'prompt' => $this->promptRegistry->getAll(),
+            default => []
+        };
     }
 
     /**
@@ -198,61 +242,12 @@ class McpRegistry implements RegistryInterface
      */
     public function clear(): void
     {
-        $this->components = [];
-        $this->metadata = [];
+        $this->registered = [];
 
         // Clear type-specific registries
         foreach ($this->typeRegistries as $registry) {
             $registry->clear();
         }
-    }
-
-    /**
-     * Get metadata for a registered component.
-     */
-    public function getMetadata(string $name): array
-    {
-        if (! $this->has($name)) {
-            throw new RegistrationException("Component '{$name}' is not registered");
-        }
-
-        return $this->metadata[$name];
-    }
-
-    /**
-     * Filter components by metadata criteria.
-     */
-    public function filter(array $criteria): array
-    {
-        return array_filter($this->components, function ($component, $name) use ($criteria) {
-            $metadata = $this->metadata[$name];
-
-            foreach ($criteria as $key => $value) {
-                if (! isset($metadata[$key]) || $metadata[$key] !== $value) {
-                    return false;
-                }
-            }
-
-            return true;
-        }, ARRAY_FILTER_USE_BOTH);
-    }
-
-    /**
-     * Get components matching a pattern.
-     */
-    public function search(string $pattern): array
-    {
-        return array_filter($this->components, function ($component, $name) use ($pattern) {
-            return fnmatch($pattern, $name);
-        }, ARRAY_FILTER_USE_BOTH);
-    }
-
-    /**
-     * Get the registry type identifier.
-     */
-    public function getType(): string
-    {
-        return $this->type;
     }
 
     /**
@@ -271,57 +266,52 @@ class McpRegistry implements RegistryInterface
         return $this->typeRegistries;
     }
 
-    /**
-     * Get components by type.
-     */
-    public function getByType(string $type): array
+    private function validateRegistration(string $type, string $name, $handler): void
     {
-        return $this->filter(['type' => $type]);
-    }
-
-    /**
-     * Get component count by type.
-     */
-    public function getCountByType(): array
-    {
-        $counts = [];
-
-        foreach ($this->typeRegistries as $type => $registry) {
-            $counts[$type] = $registry->count();
+        if (empty($name)) {
+            throw new RegistrationException('Component name cannot be empty');
         }
 
-        return $counts;
+        if ($this->has($type, $name)) {
+            throw new RegistrationException("Component '{$name}' of type '{$type}' is already registered");
+        }
+
+        $this->validateHandler($type, $handler);
     }
+
+    private function validateHandler(string $type, $handler): void
+    {
+        if (is_string($handler) && ! class_exists($handler)) {
+            throw new RegistrationException("Handler class '{$handler}' does not exist");
+        }
+
+        if (is_string($handler)) {
+            $requiredInterface = match ($type) {
+                'tool' => McpTool::class,
+                'resource' => McpResource::class,
+                'prompt' => McpPrompt::class,
+                default => null
+            };
+
+            if ($requiredInterface && ! is_subclass_of($handler, $requiredInterface)) {
+                throw new RegistrationException("Handler must extend {$requiredInterface}");
+            }
+        }
+    }
+
+    // Backward compatibility and facade support methods
 
     /**
-     * Detect the component type based on the component instance.
+     * Backward compatibility: Get all components (legacy method).
      */
-    protected function detectComponentType($component): string
+    public function all(): array
     {
-        if (is_string($component) && class_exists($component)) {
-            $component = new $component;
-        }
-
-        if (is_object($component)) {
-            $class = get_class($component);
-
-            if (str_contains($class, 'Tool')) {
-                return 'tools';
-            }
-
-            if (str_contains($class, 'Resource')) {
-                return 'resources';
-            }
-
-            if (str_contains($class, 'Prompt')) {
-                return 'prompts';
-            }
-        }
-
-        return 'unknown';
+        return array_merge(
+            $this->getTools(),
+            $this->getResources(),
+            $this->getPrompts()
+        );
     }
-
-    // Facade support methods
 
     /**
      * Get server capabilities.
@@ -345,123 +335,155 @@ class McpRegistry implements RegistryInterface
     }
 
     /**
-     * Register a tool.
+     * Register a tool (backward compatibility).
      */
     public function registerTool(string $name, $tool, array $metadata = []): void
     {
-        $this->toolRegistry->register($name, $tool, $metadata);
+        $this->register('tool', $name, $tool, $metadata);
     }
 
     /**
-     * Register a resource.
+     * Register a resource (backward compatibility).
      */
     public function registerResource(string $name, $resource, array $metadata = []): void
     {
-        $this->resourceRegistry->register($name, $resource, $metadata);
+        $this->register('resource', $name, $resource, $metadata);
     }
 
     /**
-     * Register a prompt.
+     * Register a prompt (backward compatibility).
      */
     public function registerPrompt(string $name, $prompt, array $metadata = []): void
     {
-        $this->promptRegistry->register($name, $prompt, $metadata);
+        $this->register('prompt', $name, $prompt, $metadata);
     }
 
     /**
-     * Unregister a tool.
+     * Unregister a tool (backward compatibility).
      */
     public function unregisterTool(string $name): bool
     {
-        return $this->toolRegistry->unregister($name);
+        return $this->unregister('tool', $name);
     }
 
     /**
-     * Unregister a resource.
+     * Unregister a resource (backward compatibility).
      */
     public function unregisterResource(string $name): bool
     {
-        return $this->resourceRegistry->unregister($name);
+        return $this->unregister('resource', $name);
     }
 
     /**
-     * Unregister a prompt.
+     * Unregister a prompt (backward compatibility).
      */
     public function unregisterPrompt(string $name): bool
     {
-        return $this->promptRegistry->unregister($name);
+        return $this->unregister('prompt', $name);
     }
 
     /**
-     * List all tools.
+     * List all tools (backward compatibility).
      */
     public function listTools(): array
     {
-        return $this->toolRegistry->all();
+        return $this->getTools();
     }
 
     /**
-     * List all resources.
+     * List all resources (backward compatibility).
      */
     public function listResources(): array
     {
-        return $this->resourceRegistry->all();
+        return $this->getResources();
     }
 
     /**
-     * List all prompts.
+     * List all prompts (backward compatibility).
      */
     public function listPrompts(): array
     {
-        return $this->promptRegistry->all();
+        return $this->getPrompts();
     }
 
-    /**
-     * Get a tool.
-     */
-    public function getTool(string $name)
+    public function getTool(string $name): ?McpTool
     {
-        return $this->toolRegistry->get($name);
+        $tool = $this->toolRegistry->get($name);
+        
+        if (is_string($tool) && class_exists($tool)) {
+            return $this->instantiate($tool, $name);
+        }
+        
+        return $tool instanceof McpTool ? $tool : null;
     }
 
-    /**
-     * Get a resource.
-     */
-    public function getResource(string $name)
+    public function getResource(string $name): ?McpResource
     {
-        return $this->resourceRegistry->get($name);
+        $resource = $this->resourceRegistry->get($name);
+        
+        if (is_string($resource) && class_exists($resource)) {
+            return $this->instantiate($resource, $name);
+        }
+        
+        return $resource instanceof McpResource ? $resource : null;
     }
 
-    /**
-     * Get a prompt.
-     */
-    public function getPrompt(string $name)
+    public function getPrompt(string $name): ?McpPrompt
     {
-        return $this->promptRegistry->get($name);
+        $prompt = $this->promptRegistry->get($name);
+        
+        if (is_string($prompt) && class_exists($prompt)) {
+            return $this->instantiate($prompt, $name);
+        }
+        
+        return $prompt instanceof McpPrompt ? $prompt : null;
     }
 
     /**
-     * Check if a tool exists.
+     * Instantiate a class with optional name parameter.
+     */
+    private function instantiate(string $className, string $name = null): mixed
+    {
+        try {
+            $reflection = new \ReflectionClass($className);
+            $constructor = $reflection->getConstructor();
+            
+            if ($constructor && $constructor->getNumberOfRequiredParameters() > 0 && $name) {
+                return new $className($name);
+            } else {
+                return new $className();
+            }
+        } catch (\Exception $e) {
+            try {
+                return new $className();
+            } catch (\Exception $fallbackException) {
+                throw new RegistrationException("Unable to instantiate {$className}: {$fallbackException->getMessage()}");
+            }
+        }
+    }
+
+    /**
+     * Check if a tool exists (backward compatibility).
      */
     public function hasTool(string $name): bool
     {
-        return $this->toolRegistry->has($name);
+        return $this->has('tool', $name);
     }
 
     /**
-     * Check if a resource exists.
+     * Check if a resource exists (backward compatibility).
      */
     public function hasResource(string $name): bool
     {
-        return $this->resourceRegistry->has($name);
+        return $this->has('resource', $name);
     }
 
     /**
-     * Check if a prompt exists.
+     * Check if a prompt exists (backward compatibility).
      */
     public function hasPrompt(string $name): bool
     {
-        return $this->promptRegistry->has($name);
+        return $this->has('prompt', $name);
     }
 
     /**
@@ -541,9 +563,6 @@ class McpRegistry implements RegistryInterface
         return false;
     }
 
-    /**
-     * Initialize the registry.
-     */
     public function initialize(): void
     {
         if ($this->initialized) {
@@ -627,28 +646,19 @@ class McpRegistry implements RegistryInterface
         }
     }
 
-    /**
-     * Get all tools.
-     */
     public function getTools(): array
     {
-        return $this->toolRegistry->all();
+        return $this->toolRegistry->getAll();
     }
 
-    /**
-     * Get all resources.
-     */
     public function getResources(): array
     {
-        return $this->resourceRegistry->all();
+        return $this->resourceRegistry->getAll();
     }
 
-    /**
-     * Get all prompts.
-     */
     public function getPrompts(): array
     {
-        return $this->promptRegistry->all();
+        return $this->promptRegistry->getAll();
     }
 
     /**

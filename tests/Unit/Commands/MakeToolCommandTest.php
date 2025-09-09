@@ -5,7 +5,7 @@ namespace JTD\LaravelMCP\Tests\Unit\Commands;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\File;
 use JTD\LaravelMCP\Commands\MakeToolCommand;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use Mockery;
 use ReflectionClass;
 use Symfony\Component\Console\Input\ArrayInput;

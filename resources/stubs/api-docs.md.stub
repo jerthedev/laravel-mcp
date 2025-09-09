@@ -1,0 +1,498 @@
+# {{ $serverName }} API Documentation
+
+**Version:** {{ $version }}  
+**Protocol:** JSON-RPC 2.0  
+**MCP Version:** {{ $mcpVersion }}  
+**Generated:** {{ $generated }}
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Connection](#connection)
+3. [Core Methods](#core-methods)
+4. [Tool Methods](#tool-methods)
+5. [Resource Methods](#resource-methods)
+6. [Prompt Methods](#prompt-methods)
+7. [Error Handling](#error-handling)
+8. [Examples](#examples)
+
+## Overview
+
+{{ $description }}
+
+### Server Capabilities
+
+- **Tools:** {{ $capabilities['tools'] ? 'Enabled' : 'Disabled' }}
+- **Resources:** {{ $capabilities['resources'] ? 'Enabled' : 'Disabled' }}
+- **Prompts:** {{ $capabilities['prompts'] ? 'Enabled' : 'Disabled' }}
+- **Logging:** {{ $capabilities['logging'] ? 'Enabled' : 'Disabled' }}
+
+## Connection
+
+### Transport Options
+
+#### Stdio Transport
+```bash
+php artisan mcp:serve
+```
+
+#### HTTP Transport
+```bash
+php artisan mcp:serve --transport=http --port={{ $httpPort }}
+```
+
+### Client Configuration
+
+#### Claude Desktop
+```json
+{
+  "mcpServers": {
+    "{{ $serverSlug }}": {
+      "command": "php",
+      "args": ["artisan", "mcp:serve"],
+      "cwd": "{{ $projectPath }}"
+    }
+  }
+}
+```
+
+## Core Methods
+
+### initialize
+
+Initialize the MCP connection and negotiate capabilities.
+
+**Request:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "{{ $mcpVersion }}",
+    "capabilities": {
+      "tools": {},
+      "resources": {},
+      "prompts": {}
+    },
+    "clientInfo": {
+      "name": "client-name",
+      "version": "1.0.0"
+    }
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "protocolVersion": "{{ $mcpVersion }}",
+    "capabilities": {
+      "tools": {{ json_encode($serverCapabilities['tools'] ?? new stdClass()) }},
+      "resources": {{ json_encode($serverCapabilities['resources'] ?? new stdClass()) }},
+      "prompts": {{ json_encode($serverCapabilities['prompts'] ?? new stdClass()) }}
+    },
+    "serverInfo": {
+      "name": "{{ $serverName }}",
+      "version": "{{ $version }}"
+    }
+  }
+}
+```
+
+### ping
+
+Check server connectivity and responsiveness.
+
+**Request:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "ping"
+}
+```
+
+**Response:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {}
+}
+```
+
+@if ($capabilities['tools'])
+## Tool Methods
+
+### tools/list
+
+List all available tools with their schemas.
+
+**Request:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/list"
+}
+```
+
+**Response:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "result": {
+    "tools": [
+      @foreach ($tools as $tool)
+      {
+        "name": "{{ $tool['name'] }}",
+        "description": "{{ $tool['description'] }}",
+        "inputSchema": {{ json_encode($tool['inputSchema'] ?? new stdClass()) }}
+      }{{ !$loop->last ? ',' : '' }}
+      @endforeach
+    ]
+  }
+}
+```
+
+### tools/call
+
+Execute a tool with the provided parameters.
+
+**Request:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "tools/call",
+  "params": {
+    "name": "tool-name",
+    "arguments": {
+      "param1": "value1",
+      "param2": "value2"
+    }
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Tool execution result"
+      }
+    ]
+  }
+}
+```
+@endif
+
+@if ($capabilities['resources'])
+## Resource Methods
+
+### resources/list
+
+List all available resources.
+
+**Request:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 5,
+  "method": "resources/list"
+}
+```
+
+**Response:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 5,
+  "result": {
+    "resources": [
+      @foreach ($resources as $resource)
+      {
+        "uri": "{{ $resource['uri'] }}",
+        "name": "{{ $resource['name'] }}",
+        "description": "{{ $resource['description'] }}",
+        "mimeType": "{{ $resource['mimeType'] ?? 'application/json' }}"
+      }{{ !$loop->last ? ',' : '' }}
+      @endforeach
+    ]
+  }
+}
+```
+
+### resources/read
+
+Read a specific resource by URI.
+
+**Request:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 6,
+  "method": "resources/read",
+  "params": {
+    "uri": "resource://example-resource"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 6,
+  "result": {
+    "contents": [
+      {
+        "uri": "resource://example-resource",
+        "mimeType": "application/json",
+        "text": "{ \"data\": \"Resource content\" }"
+      }
+    ]
+  }
+}
+```
+
+### resources/templates/list
+
+List available resource templates.
+
+**Request:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 7,
+  "method": "resources/templates/list"
+}
+```
+
+**Response:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 7,
+  "result": {
+    "resourceTemplates": [
+      @foreach ($resourceTemplates as $template)
+      {
+        "uriTemplate": "{{ $template['uriTemplate'] }}",
+        "name": "{{ $template['name'] }}",
+        "description": "{{ $template['description'] }}"
+      }{{ !$loop->last ? ',' : '' }}
+      @endforeach
+    ]
+  }
+}
+```
+@endif
+
+@if ($capabilities['prompts'])
+## Prompt Methods
+
+### prompts/list
+
+List all available prompts.
+
+**Request:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 8,
+  "method": "prompts/list"
+}
+```
+
+**Response:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 8,
+  "result": {
+    "prompts": [
+      @foreach ($prompts as $prompt)
+      {
+        "name": "{{ $prompt['name'] }}",
+        "description": "{{ $prompt['description'] }}",
+        "arguments": {{ json_encode($prompt['arguments'] ?? []) }}
+      }{{ !$loop->last ? ',' : '' }}
+      @endforeach
+    ]
+  }
+}
+```
+
+### prompts/get
+
+Get a prompt with the specified arguments.
+
+**Request:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 9,
+  "method": "prompts/get",
+  "params": {
+    "name": "prompt-name",
+    "arguments": {
+      "arg1": "value1",
+      "arg2": "value2"
+    }
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 9,
+  "result": {
+    "messages": [
+      {
+        "role": "user",
+        "content": {
+          "type": "text",
+          "text": "Generated prompt content"
+        }
+      }
+    ]
+  }
+}
+```
+@endif
+
+## Error Handling
+
+### Error Response Format
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 10,
+  "error": {
+    "code": -32601,
+    "message": "Method not found",
+    "data": {
+      "method": "unknown/method"
+    }
+  }
+}
+```
+
+### Standard Error Codes
+
+| Code | Message | Description |
+|------|---------|-------------|
+| -32700 | Parse error | Invalid JSON received |
+| -32600 | Invalid Request | JSON-RPC request is invalid |
+| -32601 | Method not found | The method does not exist |
+| -32602 | Invalid params | Invalid method parameters |
+| -32603 | Internal error | Internal JSON-RPC error |
+| -32000 | Server error | Generic server error |
+
+### MCP-Specific Error Codes
+
+| Code | Message | Description |
+|------|---------|-------------|
+| -32001 | Tool not found | The specified tool does not exist |
+| -32002 | Resource not found | The specified resource does not exist |
+| -32003 | Prompt not found | The specified prompt does not exist |
+| -32004 | Invalid schema | Input does not match schema |
+| -32005 | Execution failed | Tool/resource/prompt execution failed |
+
+## Examples
+
+### Complete Tool Execution Flow
+
+1. **Initialize Connection**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "{{ $mcpVersion }}",
+    "capabilities": {}
+  }
+}
+```
+
+2. **List Available Tools**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/list"
+}
+```
+
+3. **Execute a Tool**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "example-tool",
+    "arguments": {
+      "input": "test data"
+    }
+  }
+}
+```
+
+### Batch Requests
+
+Multiple requests can be sent in a single batch:
+
+```json
+[
+  {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/list"
+  },
+  {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "resources/list"
+  },
+  {
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "prompts/list"
+  }
+]
+```
+
+### Notifications
+
+Notifications (requests without an `id`) do not require a response:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "notifications/progress",
+  "params": {
+    "progress": 50,
+    "message": "Processing..."
+  }
+}
+```
+
+---
+
+*This documentation was automatically generated for {{ $serverName }} v{{ $version }}*

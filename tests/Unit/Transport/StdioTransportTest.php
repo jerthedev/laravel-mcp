@@ -26,7 +26,7 @@ namespace JTD\LaravelMCP\Tests\Unit\Transport;
 
 use Illuminate\Support\Facades\Log;
 use JTD\LaravelMCP\Exceptions\TransportException;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use JTD\LaravelMCP\Transport\Contracts\MessageHandlerInterface;
 use JTD\LaravelMCP\Transport\StdioTransport;
 use Mockery;

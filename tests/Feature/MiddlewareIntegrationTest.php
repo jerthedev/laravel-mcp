@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
 use JTD\LaravelMCP\Http\Middleware\McpAuthMiddleware;
 use JTD\LaravelMCP\Http\Middleware\McpCorsMiddleware;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 

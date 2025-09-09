@@ -17,7 +17,7 @@ namespace JTD\LaravelMCP\Tests\Unit\Abstracts;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use JTD\LaravelMCP\Abstracts\McpTool;
-use JTD\LaravelMCP\Tests\TestCase;
+use Tests\TestCase;
 use Mockery;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
