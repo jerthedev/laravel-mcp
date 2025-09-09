@@ -23,6 +23,7 @@ use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Registry\PromptRegistry;
 use JTD\LaravelMCP\Registry\ResourceRegistry;
 use JTD\LaravelMCP\Registry\RouteRegistrar;
+use JTD\LaravelMCP\Registry\RoutingPatterns;
 use JTD\LaravelMCP\Registry\ToolRegistry;
 use JTD\LaravelMCP\Server\CapabilityManager;
 use JTD\LaravelMCP\Server\Contracts\ServerInterface;
@@ -89,6 +90,9 @@ class LaravelMcpServiceProvider extends ServiceProvider
         // Register route registrar for fluent API
         $this->app->singleton(RouteRegistrar::class);
 
+        // Register routing patterns as singleton
+        $this->app->singleton(RoutingPatterns::class);
+
         // Register discovery service
         $this->app->singleton(ComponentDiscovery::class);
 
@@ -153,6 +157,7 @@ class LaravelMcpServiceProvider extends ServiceProvider
             $this->bootCommands();
             $this->bootMiddleware();
             $this->bootDiscovery();
+            $this->bootMcpRoutes();
             $this->bootViews();
 
             if ($this->app->runningInConsole()) {
@@ -317,7 +322,7 @@ class LaravelMcpServiceProvider extends ServiceProvider
             ]);
 
             // Ensure paths is an array
-            if (!is_array($paths)) {
+            if (! is_array($paths)) {
                 $paths = [$paths];
             }
 
@@ -335,7 +340,7 @@ class LaravelMcpServiceProvider extends ServiceProvider
             }
 
             // In non-production, we want to know about discovery issues
-            if (!$this->app->environment('production')) {
+            if (! $this->app->environment('production')) {
                 throw $e;
             }
         }
@@ -435,24 +440,79 @@ class LaravelMcpServiceProvider extends ServiceProvider
     private function loadMcpRoutes(): void
     {
         $routeFile = base_path('routes/mcp.php');
-        
+
         // Only load routes if the file exists
-        if (!file_exists($routeFile)) {
+        if (! file_exists($routeFile)) {
             return;
         }
-        
+
         $middleware = config('laravel-mcp.routes.middleware', ['api']);
-        
+
         // Ensure middleware is an array
-        if (!is_array($middleware)) {
+        if (! is_array($middleware)) {
             $middleware = [$middleware];
         }
-        
+
         $this->app['router']->group([
             'middleware' => $middleware,
         ], function () use ($routeFile) {
             require $routeFile;
         });
+    }
+
+    /**
+     * Boot MCP component routes.
+     */
+    private function bootMcpRoutes(): void
+    {
+        // Check if route registration is enabled
+        if (! config('laravel-mcp.routes.auto_register', true)) {
+            return;
+        }
+
+        try {
+            $discovery = $this->app->make(ComponentDiscovery::class);
+
+            // Check for cached routes first if caching is enabled
+            $routingPatterns = $this->app->make(RoutingPatterns::class);
+
+            if ($routingPatterns->isCacheEnabled()) {
+                $cacheKey = $routingPatterns->generateCacheKey('discovered_routes');
+
+                if (function_exists('cache') && cache()->has($cacheKey)) {
+                    // Routes are already cached, no need to re-register
+                    return;
+                }
+            }
+
+            // Discover and register component routes
+            $paths = config('laravel-mcp.discovery.paths', [
+                app_path('Mcp/Tools'),
+                app_path('Mcp/Resources'),
+                app_path('Mcp/Prompts'),
+            ]);
+
+            // Ensure paths is an array
+            if (! is_array($paths)) {
+                $paths = [$paths];
+            }
+
+            $discovered = $discovery->discover($paths);
+            $discovery->registerRoutes($discovered);
+        } catch (\Throwable $e) {
+            // Log route registration errors but don't fail the boot process
+            if ($this->app->bound('log')) {
+                $this->app['log']->warning('MCP route registration failed', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
+
+            // In non-production, we want to know about route issues
+            if (! $this->app->environment('production')) {
+                throw $e;
+            }
+        }
     }
 
     private function bootConsole(): void

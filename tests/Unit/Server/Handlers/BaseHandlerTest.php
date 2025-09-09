@@ -5,10 +5,10 @@ namespace JTD\LaravelMCP\Tests\Unit\Server\Handlers;
 use Illuminate\Support\Facades\Log;
 use JTD\LaravelMCP\Exceptions\ProtocolException;
 use JTD\LaravelMCP\Server\Handlers\BaseHandler;
-use Tests\TestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 /**
  * Tests for BaseHandler abstract class.

@@ -4,8 +4,8 @@ namespace JTD\LaravelMCP\Tests\Unit\Registry;
 
 use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Registry\RouteRegistrar;
-use Tests\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
+use Tests\TestCase;
 
 /**
  * Test suite for RouteRegistrar functionality.
@@ -529,5 +529,304 @@ class RouteRegistrarTest extends TestCase
             ->with('tool', 'null_version_tool', $tool, $options);
 
         $this->registrar->tool('null_version_tool', $tool, $options);
+    }
+
+    /**
+     * Test route-related attribute merging.
+     */
+    public function test_route_attribute_merging(): void
+    {
+        $tool = $this->createTestTool('tool');
+
+        $this->mockRegistry->expects($this->once())
+            ->method('register')
+            ->willReturnCallback(function ($type, $name, $handler, $options) {
+                $this->assertEquals('api.v1', $options['prefix']);
+                $this->assertEquals('App\\Tools\\Api\\V1', $options['namespace']);
+                $this->assertEquals(['cors', 'auth', 'throttle'], $options['middleware']);
+                $this->assertEquals(['route' => 'custom'], $options['route_options']);
+            });
+
+        $this->registrar->group([
+            'prefix' => 'api',
+            'namespace' => 'App\\Tools\\Api',
+            'middleware' => ['cors', 'auth'],
+        ], function ($registrar) use ($tool) {
+            $registrar->prefix('v1', function ($registrar) use ($tool) {
+                $registrar->namespace('V1', function ($registrar) use ($tool) {
+                    $registrar->tool('endpoint', $tool, [
+                        'middleware' => 'throttle',
+                        'route_options' => ['route' => 'custom'],
+                    ]);
+                });
+            });
+        });
+    }
+
+    /**
+     * Test registration with route-specific options.
+     */
+    public function test_registration_with_route_options(): void
+    {
+        $tool = $this->createTestTool('tool');
+        $routeOptions = [
+            'methods' => ['GET', 'POST'],
+            'constraints' => ['id' => '[0-9]+'],
+            'domain' => 'api.example.com',
+            'secure' => true,
+        ];
+
+        $this->mockRegistry->expects($this->once())
+            ->method('register')
+            ->willReturnCallback(function ($type, $name, $handler, $options) use ($routeOptions) {
+                $this->assertEquals($routeOptions, $options['route_options']);
+            });
+
+        $this->registrar->tool('api_tool', $tool, ['route_options' => $routeOptions]);
+    }
+
+    /**
+     * Test error handling during registration.
+     */
+    public function test_error_handling_during_registration(): void
+    {
+        $tool = $this->createTestTool('tool');
+
+        $this->mockRegistry->expects($this->once())
+            ->method('register')
+            ->willThrowException(new \InvalidArgumentException('Invalid tool configuration'));
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid tool configuration');
+
+        $this->registrar->tool('invalid_tool', $tool);
+    }
+
+    /**
+     * Test fluent API with different component types in chain.
+     */
+    public function test_fluent_api_with_mixed_component_types(): void
+    {
+        $tool = $this->createTestTool('tool');
+        $resource = $this->createTestResource('resource');
+        $prompt = $this->createTestPrompt('prompt');
+
+        $this->mockRegistry->expects($this->exactly(6))
+            ->method('register')
+            ->willReturnCallback(function ($type, $name, $handler, $options) {
+                $this->assertContains($type, ['tool', 'resource', 'prompt']);
+                $this->assertIsString($name);
+                $this->assertNotNull($handler);
+                $this->assertIsArray($options);
+            });
+
+        $result = $this->registrar
+            ->tool('calculator', $tool)
+            ->resource('user_data', $resource, ['cache' => true])
+            ->prompt('email_template', $prompt, ['version' => 'v1'])
+            ->batch('tool', [
+                'validator' => $tool,
+                'transformer' => $tool,
+            ])
+            ->resource('file_system', $resource);
+
+        $this->assertSame($this->registrar, $result);
+    }
+
+    /**
+     * Test registration with callable handlers.
+     */
+    public function test_registration_with_callable_handlers(): void
+    {
+        $toolCallback = function ($params) {
+            return ['result' => 'Tool executed'];
+        };
+
+        $resourceCallback = function ($options) {
+            return ['data' => 'Resource data'];
+        };
+
+        $promptCallback = function ($args) {
+            return ['messages' => ['Prompt rendered']];
+        };
+
+        $this->mockRegistry->expects($this->exactly(3))
+            ->method('register')
+            ->willReturnCallback(function ($type, $name, $handler, $options) {
+                $this->assertIsCallable($handler);
+            });
+
+        $this->registrar
+            ->tool('callback_tool', $toolCallback)
+            ->resource('callback_resource', $resourceCallback)
+            ->prompt('callback_prompt', $promptCallback);
+    }
+
+    /**
+     * Test registration with string class names.
+     */
+    public function test_registration_with_string_class_names(): void
+    {
+        $toolClassName = 'App\\Tools\\Calculator';
+        $resourceClassName = 'App\\Resources\\UserData';
+        $promptClassName = 'App\\Prompts\\EmailTemplate';
+
+        $this->mockRegistry->expects($this->exactly(3))
+            ->method('register')
+            ->willReturnCallback(function ($type, $name, $handler, $options) {
+                $this->assertIsString($handler);
+                $this->assertStringStartsWith('App\\', $handler);
+            });
+
+        $this->registrar
+            ->tool('string_tool', $toolClassName)
+            ->resource('string_resource', $resourceClassName)
+            ->prompt('string_prompt', $promptClassName);
+    }
+
+    /**
+     * Test batch registration with empty arrays.
+     */
+    public function test_batch_registration_with_empty_arrays(): void
+    {
+        $this->mockRegistry->expects($this->never())
+            ->method('register');
+
+        $result = $this->registrar->batch('tool', [], ['common' => 'value']);
+        $this->assertSame($this->registrar, $result);
+    }
+
+    /**
+     * Test complex nested group scenarios.
+     */
+    public function test_complex_nested_group_scenarios(): void
+    {
+        $tool = $this->createTestTool('tool');
+
+        $this->mockRegistry->expects($this->exactly(2))
+            ->method('register')
+            ->willReturnCallback(function ($type, $name, $handler, $options) {
+                if ($name === 'nested_tool1') {
+                    $this->assertEquals('api.v1.admin', $options['prefix']);
+                    $this->assertEquals('App\\Api\\V1\\Admin', $options['namespace']);
+                    $this->assertEquals(['cors', 'auth', 'admin'], $options['middleware']);
+                } elseif ($name === 'nested_tool2') {
+                    $this->assertEquals('api.v1.user', $options['prefix']);
+                    $this->assertEquals('App\\Api\\V1\\User', $options['namespace']);
+                    $this->assertEquals(['cors', 'auth', 'user'], $options['middleware']);
+                }
+            });
+
+        $this->registrar->group(['prefix' => 'api', 'namespace' => 'App\\Api', 'middleware' => ['cors', 'auth']], function ($registrar) use ($tool) {
+            $registrar->group(['prefix' => 'v1', 'namespace' => 'V1'], function ($registrar) use ($tool) {
+                $registrar->group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admin'], function ($registrar) use ($tool) {
+                    $registrar->tool('nested_tool1', $tool);
+                });
+                $registrar->group(['prefix' => 'user', 'namespace' => 'User', 'middleware' => 'user'], function ($registrar) use ($tool) {
+                    $registrar->tool('nested_tool2', $tool);
+                });
+            });
+        });
+    }
+
+    /**
+     * Test middleware array handling in groups.
+     */
+    public function test_middleware_array_handling_in_groups(): void
+    {
+        $tool = $this->createTestTool('tool');
+
+        $this->mockRegistry->expects($this->once())
+            ->method('register')
+            ->willReturnCallback(function ($type, $name, $handler, $options) {
+                $this->assertEquals(['cors', 'auth', 'throttle', 'component1', 'component2'], $options['middleware']);
+            });
+
+        $this->registrar->middleware(['cors', 'auth'], function ($registrar) use ($tool) {
+            $registrar->middleware('throttle', function ($registrar) use ($tool) {
+                $registrar->tool('multi_middleware_tool', $tool, ['middleware' => ['component1', 'component2']]);
+            });
+        });
+    }
+
+    /**
+     * Test registration with duplicate names.
+     */
+    public function test_registration_with_duplicate_names(): void
+    {
+        $tool1 = $this->createTestTool('tool1');
+        $tool2 = $this->createTestTool('tool2');
+
+        $this->mockRegistry->expects($this->exactly(2))
+            ->method('register')
+            ->willReturnCallback(function ($type, $name, $handler, $options) {
+                $this->assertEquals('duplicate_tool', $name);
+            });
+
+        // Both registrations should be passed to the registry
+        // The registry itself should handle duplicate detection
+        $this->registrar
+            ->tool('duplicate_tool', $tool1)
+            ->tool('duplicate_tool', $tool2);
+    }
+
+    /**
+     * Test group attributes don't leak between separate group calls.
+     */
+    public function test_group_attributes_isolation(): void
+    {
+        $tool = $this->createTestTool('tool');
+
+        $this->mockRegistry->expects($this->exactly(2))
+            ->method('register')
+            ->willReturnCallback(function ($type, $name, $handler, $options) {
+                if ($name === 'group1_tool') {
+                    $this->assertEquals('v1', $options['version']);
+                    $this->assertArrayNotHasKey('scope', $options);
+                } elseif ($name === 'group2_tool') {
+                    $this->assertEquals('internal', $options['scope']);
+                    $this->assertArrayNotHasKey('version', $options);
+                }
+            });
+
+        // First group
+        $this->registrar->group(['version' => 'v1'], function ($registrar) use ($tool) {
+            $registrar->tool('group1_tool', $tool);
+        });
+
+        // Second group - should not have attributes from first group
+        $this->registrar->group(['scope' => 'internal'], function ($registrar) use ($tool) {
+            $registrar->tool('group2_tool', $tool);
+        });
+    }
+
+    /**
+     * Test registration count tracking.
+     */
+    public function test_registration_count_tracking(): void
+    {
+        $tool = $this->createTestTool('tool');
+        $resource = $this->createTestResource('resource');
+        $prompt = $this->createTestPrompt('prompt');
+
+        $registrationCount = 0;
+        $this->mockRegistry->expects($this->exactly(7))
+            ->method('register')
+            ->willReturnCallback(function () use (&$registrationCount) {
+                $registrationCount++;
+            });
+
+        $this->registrar
+            ->tool('tool1', $tool)
+            ->resource('resource1', $resource)
+            ->prompt('prompt1', $prompt)
+            ->batch('tool', [
+                'tool2' => $tool,
+                'tool3' => $tool,
+                'tool4' => $tool,
+            ])
+            ->tool('tool5', $tool);
+
+        $this->assertEquals(7, $registrationCount);
     }
 }

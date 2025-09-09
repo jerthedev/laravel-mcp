@@ -154,12 +154,12 @@ class RouteRegistrar
     {
         // First, build up group attributes
         $groupAttributes = [];
-        
+
         foreach ($this->groupStack as $group) {
             foreach ($group as $key => $value) {
                 if ($key === 'middleware') {
                     // Build middleware array from groups
-                    if (!isset($groupAttributes['middleware'])) {
+                    if (! isset($groupAttributes['middleware'])) {
                         $groupAttributes['middleware'] = [];
                     }
                     $middleware = is_array($value) ? $value : [$value];
@@ -184,10 +184,10 @@ class RouteRegistrar
                 }
             }
         }
-        
+
         // Now merge with component options
         $merged = [];
-        
+
         // Handle middleware specially - group middleware comes first
         if (isset($groupAttributes['middleware']) && isset($options['middleware'])) {
             $componentMiddleware = is_array($options['middleware']) ? $options['middleware'] : [$options['middleware']];
@@ -197,7 +197,7 @@ class RouteRegistrar
         } elseif (isset($options['middleware'])) {
             $merged['middleware'] = $options['middleware'];
         }
-        
+
         // Handle prefix specially - group prefix comes first
         if (isset($groupAttributes['prefix']) && isset($options['prefix'])) {
             $merged['prefix'] = $groupAttributes['prefix'].'.'.$options['prefix'];
@@ -206,7 +206,7 @@ class RouteRegistrar
         } elseif (isset($options['prefix'])) {
             $merged['prefix'] = $options['prefix'];
         }
-        
+
         // Handle namespace specially - group namespace comes first
         if (isset($groupAttributes['namespace']) && isset($options['namespace'])) {
             $merged['namespace'] = $groupAttributes['namespace'].'\\'.$options['namespace'];
@@ -215,16 +215,16 @@ class RouteRegistrar
         } elseif (isset($options['namespace'])) {
             $merged['namespace'] = $options['namespace'];
         }
-        
+
         // Merge other attributes - component options override group attributes
         foreach ($groupAttributes as $key => $value) {
-            if (!in_array($key, ['middleware', 'prefix', 'namespace'])) {
+            if (! in_array($key, ['middleware', 'prefix', 'namespace'])) {
                 $merged[$key] = $value;
             }
         }
-        
+
         foreach ($options as $key => $value) {
-            if (!in_array($key, ['middleware', 'prefix', 'namespace'])) {
+            if (! in_array($key, ['middleware', 'prefix', 'namespace'])) {
                 $merged[$key] = $value;
             }
         }

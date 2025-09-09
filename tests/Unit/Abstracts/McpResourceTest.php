@@ -16,11 +16,11 @@ namespace JTD\LaravelMCP\Tests\Unit\Abstracts;
 
 use Illuminate\Container\Container;
 use JTD\LaravelMCP\Abstracts\McpResource;
-use Tests\TestCase;
 use Mockery;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
+use Tests\TestCase;
 
 #[Group('base-classes')]
 #[Group('mcp-resource')]
