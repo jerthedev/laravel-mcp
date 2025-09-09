@@ -131,7 +131,7 @@ abstract class BaseCommand extends Command
     protected function debug(string $message, $data = null): void
     {
         $debugEnabled = ($this->hasOption('debug') && $this->option('debug')) || $this->output->isVerbose();
-        
+
         if ($debugEnabled) {
             $this->line("<fg=gray>[DEBUG]</> $message");
 

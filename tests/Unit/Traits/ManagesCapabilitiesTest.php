@@ -52,7 +52,7 @@ class ManagesCapabilitiesTest extends TestCase
     public function it_adds_capability()
     {
         $this->traitObject->addCapability('custom');
-        
+
         $this->assertTrue($this->traitObject->hasCapability('custom'));
         $this->assertContains('custom', $this->traitObject->getCapabilities());
     }
@@ -62,7 +62,7 @@ class ManagesCapabilitiesTest extends TestCase
     {
         $this->traitObject->addCapability('custom');
         $this->traitObject->addCapability('custom');
-        
+
         $capabilities = $this->traitObject->getCapabilities();
         $count = array_count_values($capabilities);
         $this->assertEquals(1, $count['custom']);
@@ -73,9 +73,9 @@ class ManagesCapabilitiesTest extends TestCase
     {
         $this->traitObject->addCapability('custom');
         $this->traitObject->addCapability('another');
-        
+
         $this->traitObject->removeCapability('custom');
-        
+
         $this->assertFalse($this->traitObject->hasCapability('custom'));
         $this->assertTrue($this->traitObject->hasCapability('another'));
     }
@@ -85,7 +85,7 @@ class ManagesCapabilitiesTest extends TestCase
     {
         $this->traitObject->addCapability('old');
         $this->traitObject->setCapabilities(['new1', 'new2']);
-        
+
         $capabilities = $this->traitObject->getCapabilities();
         $this->assertContains('new1', $capabilities);
         $this->assertContains('new2', $capabilities);
@@ -153,7 +153,7 @@ class ManagesCapabilitiesTest extends TestCase
     public function it_checks_capability_existence()
     {
         $this->traitObject->addCapability('test');
-        
+
         $this->assertTrue($this->traitObject->hasCapability('test'));
         $this->assertFalse($this->traitObject->hasCapability('nonexistent'));
     }
@@ -163,7 +163,7 @@ class ManagesCapabilitiesTest extends TestCase
     {
         $this->traitObject->addCapability('test');
         $array = $this->traitObject->getCapabilitiesArray();
-        
+
         $this->assertArrayHasKey('capabilities', $array);
         $this->assertArrayHasKey('supports', $array);
         $this->assertIsArray($array['capabilities']);
@@ -214,7 +214,7 @@ class ManagesCapabilitiesTest extends TestCase
     public function it_checks_operation_support()
     {
         $this->traitObject->addCapability('execute');
-        
+
         $this->assertTrue($this->traitObject->supportsOperation('execute'));
         $this->assertFalse($this->traitObject->supportsOperation('read'));
     }
@@ -223,7 +223,7 @@ class ManagesCapabilitiesTest extends TestCase
     public function it_enables_subscription_capability()
     {
         $this->traitObject->enableSubscription();
-        
+
         $this->assertTrue($this->traitObject->hasCapability('subscribe'));
         $this->assertTrue($this->traitObject->supportsSubscription());
     }
@@ -233,7 +233,7 @@ class ManagesCapabilitiesTest extends TestCase
     {
         $this->traitObject->enableSubscription();
         $this->traitObject->disableSubscription();
-        
+
         $this->assertFalse($this->traitObject->hasCapability('subscribe'));
         $this->assertFalse($this->traitObject->supportsSubscription());
     }
@@ -243,13 +243,13 @@ class ManagesCapabilitiesTest extends TestCase
     {
         $this->traitObject->addCapability('custom');
         $metadata = $this->traitObject->getCapabilityMetadata();
-        
+
         $this->assertArrayHasKey('type', $metadata);
         $this->assertArrayHasKey('capabilities', $metadata);
         $this->assertArrayHasKey('operations', $metadata);
         $this->assertArrayHasKey('default_capabilities', $metadata);
         $this->assertArrayHasKey('custom_capabilities', $metadata);
-        
+
         $this->assertContains('custom', $metadata['custom_capabilities']);
     }
 
@@ -420,7 +420,7 @@ class ManagesCapabilitiesTest extends TestCase
 
         $tool->addCapability('custom');
         $capabilities = $tool->getCapabilities();
-        
+
         $this->assertContains('execute', $capabilities); // Default
         $this->assertContains('custom', $capabilities); // Custom
     }
@@ -452,7 +452,7 @@ class ManagesCapabilitiesTest extends TestCase
         $reflection = new \ReflectionObject($object);
         $method = $reflection->getMethod($method);
         $method->setAccessible(true);
-        
+
         return $method->invokeArgs($object, $params);
     }
 }
