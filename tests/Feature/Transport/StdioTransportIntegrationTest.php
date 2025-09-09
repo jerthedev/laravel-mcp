@@ -20,7 +20,7 @@
  * - Message exchange patterns
  */
 
-namespace Tests\Feature\Transport;
+namespace JTD\LaravelMCP\Tests\Feature\Transport;
 
 use JTD\LaravelMCP\Tests\TestCase;
 use JTD\LaravelMCP\Transport\Contracts\TransportInterface;

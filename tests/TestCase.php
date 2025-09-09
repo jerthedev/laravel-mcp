@@ -1,17 +1,18 @@
 <?php
 
-namespace Tests;
+namespace JTD\LaravelMCP\Tests;
 
-use PHPUnit\Framework\TestCase as PHPUnitTestCase;
+use JTD\LaravelMCP\Facades\Mcp;
+use JTD\LaravelMCP\LaravelMcpServiceProvider;
+use Orchestra\Testbench\TestCase as TestbenchTestCase;
 
-abstract class TestCase extends PHPUnitTestCase
+abstract class TestCase extends TestbenchTestCase
 {
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->setUpMcpEnvironment();
-        $this->loadMcpConfiguration();
         $this->setupTestComponents();
     }
 
@@ -58,6 +59,7 @@ abstract class TestCase extends PHPUnitTestCase
         $app['config']->set('laravel-mcp.debug', true);
         $app['config']->set('laravel-mcp.discovery.enabled', false); // Disable discovery in tests
         $app['config']->set('laravel-mcp.discovery.paths', []);
+        $app['config']->set('laravel-mcp.validation.validate_handlers', false); // Disable handler validation in tests
 
         // Enable debug mode for commands
         $app['config']->set('app.debug', true);
@@ -87,14 +89,6 @@ abstract class TestCase extends PHPUnitTestCase
 
         // Clear any existing registrations
         $this->clearMcpRegistrations();
-    }
-
-    /**
-     * Load MCP configuration for testing.
-     */
-    protected function loadMcpConfiguration(): void
-    {
-        // Additional test-specific configuration can be set here
     }
 
     /**

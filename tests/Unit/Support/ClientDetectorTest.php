@@ -8,13 +8,13 @@
  * TICKET: 019-ClientConfigGeneration
  */
 
-namespace Tests\Unit\Support;
+namespace JTD\LaravelMCP\Tests\Unit\Support;
 
 use JTD\LaravelMCP\Support\ClientDetector;
+use JTD\LaravelMCP\Tests\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
 
 #[Group('unit')]
 #[Group('support')]

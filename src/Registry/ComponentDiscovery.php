@@ -2,12 +2,15 @@
 
 namespace JTD\LaravelMCP\Registry;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use JTD\LaravelMCP\Abstracts\McpPrompt;
 use JTD\LaravelMCP\Abstracts\McpResource;
 use JTD\LaravelMCP\Abstracts\McpTool;
 use JTD\LaravelMCP\Registry\Contracts\DiscoveryInterface;
 use ReflectionClass;
+use Symfony\Component\Finder\Finder;
 
 /**
  * Component discovery service for MCP components.
@@ -45,25 +48,40 @@ class ComponentDiscovery implements DiscoveryInterface
      */
     protected McpRegistry $registry;
 
-    protected ToolRegistry $toolRegistry;
+    /**
+     * Discovered components cache.
+     */
+    private array $discoveredComponents = [];
 
-    protected ResourceRegistry $resourceRegistry;
+    /**
+     * Discovery paths from configuration.
+     */
+    private array $discoveryPaths;
 
-    protected PromptRegistry $promptRegistry;
+    /**
+     * Whether caching is enabled.
+     */
+    private bool $cacheEnabled;
+
+    /**
+     * Cache key for discovered components.
+     */
+    private string $cacheKey = 'laravel_mcp_discovered_components';
 
     /**
      * Create a new component discovery instance.
      */
-    public function __construct(
-        McpRegistry $registry,
-        ToolRegistry $toolRegistry,
-        ResourceRegistry $resourceRegistry,
-        PromptRegistry $promptRegistry
-    ) {
+    public function __construct(McpRegistry $registry)
+    {
         $this->registry = $registry;
-        $this->toolRegistry = $toolRegistry;
-        $this->resourceRegistry = $resourceRegistry;
-        $this->promptRegistry = $promptRegistry;
+
+        $this->discoveryPaths = config('laravel-mcp.discovery.paths', [
+            app_path('Mcp/Tools'),
+            app_path('Mcp/Resources'),
+            app_path('Mcp/Prompts'),
+        ]);
+
+        $this->cacheEnabled = config('laravel-mcp.discovery.cache', true);
     }
 
     /**
@@ -82,7 +100,11 @@ class ComponentDiscovery implements DiscoveryInterface
                 continue;
             }
 
-            $files = $this->scanDirectory($path);
+            $files = $this->getPhpFiles($path);
+
+            if (! $files) {
+                continue;
+            }
 
             foreach ($files as $file) {
                 foreach ($this->supportedTypes as $type => $baseClass) {
@@ -116,7 +138,11 @@ class ComponentDiscovery implements DiscoveryInterface
                 continue;
             }
 
-            $files = $this->scanDirectory($path);
+            $files = $this->getPhpFiles($path);
+
+            if (! $files) {
+                continue;
+            }
 
             foreach ($files as $file) {
                 if ($this->isValidComponent($file, $type)) {
@@ -205,6 +231,9 @@ class ComponentDiscovery implements DiscoveryInterface
         $namespace = '';
         if (preg_match('/^\s*namespace\s+([^\s;]+)/m', $content, $matches)) {
             $namespace = trim($matches[1]).'\\';
+        } else {
+            // No namespace found - MCP components must have namespaces
+            return null;
         }
 
         // Extract class name
@@ -279,21 +308,29 @@ class ComponentDiscovery implements DiscoveryInterface
     /**
      * Discover and register components.
      */
-    public function discoverComponents(array $paths): void
+    public function discoverComponents(array $paths = []): array
     {
-        $discovered = $this->discover($paths);
+        $searchPaths = empty($paths) ? $this->discoveryPaths : $paths;
 
-        foreach ($discovered['tools'] as $className => $metadata) {
-            $this->toolRegistry->register($metadata['name'], $className, $metadata);
+        if ($this->cacheEnabled && $cached = $this->getCachedDiscovery()) {
+            $this->discoveredComponents = $cached;
+
+            return $cached;
         }
 
-        foreach ($discovered['resources'] as $className => $metadata) {
-            $this->resourceRegistry->register($metadata['name'], $className, $metadata);
+        $this->discoveredComponents = [];
+
+        foreach ($searchPaths as $path) {
+            if (is_dir($path)) {
+                $this->scanDirectory($path);
+            }
         }
 
-        foreach ($discovered['prompts'] as $className => $metadata) {
-            $this->promptRegistry->register($metadata['name'], $className, $metadata);
+        if ($this->cacheEnabled) {
+            $this->cacheDiscovery();
         }
+
+        return $this->discoveredComponents;
     }
 
     /**
@@ -301,31 +338,216 @@ class ComponentDiscovery implements DiscoveryInterface
      */
     public function registerDiscoveredComponents(): void
     {
-        // This method is called after discovery to finalize registration
-        // Implementation can be expanded based on needs
+        foreach ($this->discoveredComponents as $component) {
+            try {
+                $this->registry->registerWithType(
+                    $component['type'],
+                    $component['name'],
+                    $component['class'],
+                    $component['options'] ?? []
+                );
+            } catch (\Throwable $e) {
+                logger()->warning('Failed to register discovered component', [
+                    'component' => $component,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Validate discovered components.
+     */
+    public function validateDiscoveredComponents(): void
+    {
+        foreach ($this->discoveredComponents as $component) {
+            try {
+                if (! class_exists($component['class'])) {
+                    logger()->warning('Discovered component class does not exist', [
+                        'component' => $component,
+                    ]);
+
+                    continue;
+                }
+
+                $reflection = new ReflectionClass($component['class']);
+                if ($reflection->isAbstract() || $reflection->isInterface()) {
+                    logger()->warning('Discovered component is abstract or interface', [
+                        'component' => $component,
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                logger()->warning('Failed to validate discovered component', [
+                    'component' => $component,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Get cached discovery results.
+     */
+    private function getCachedDiscovery(): ?array
+    {
+        return Cache::get($this->cacheKey);
+    }
+
+    /**
+     * Cache discovery results.
+     */
+    private function cacheDiscovery(): void
+    {
+        Cache::put($this->cacheKey, $this->discoveredComponents, now()->addHours(1));
+    }
+
+    /**
+     * Clear discovery cache.
+     */
+    public function clearCache(): void
+    {
+        Cache::forget($this->cacheKey);
     }
 
     /**
      * Scan directory for PHP files.
      */
-    protected function scanDirectory(string $path): array
+    protected function scanDirectory(string $path): void
     {
         if (! is_dir($path)) {
-            return [];
+            return;
         }
 
-        $iterator = $this->config['recursive']
-            ? File::allFiles($path)
-            : File::files($path);
+        $finder = new Finder;
+        $finder->files()->name('*.php')->in($path);
+
+        foreach ($finder as $file) {
+            $this->analyzeFile($file->getRealPath());
+        }
+    }
+
+    /**
+     * Get PHP files from a directory.
+     */
+    private function getPhpFiles(string $directory): ?array
+    {
+        if (! is_dir($directory)) {
+            return null;
+        }
 
         $files = [];
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($directory, \RecursiveDirectoryIterator::SKIP_DOTS)
+        );
+
         foreach ($iterator as $file) {
-            if ($file->getExtension() === 'php' && $this->passesFilters($file->getPathname())) {
-                $files[] = $file->getPathname();
+            if ($file->isFile() && $file->getExtension() === 'php') {
+                $files[] = $file->getRealPath();
             }
         }
 
         return $files;
+    }
+
+    /**
+     * Analyze a file for MCP components.
+     */
+    private function analyzeFile(string $filePath): void
+    {
+        try {
+            $className = $this->extractClassName($filePath);
+
+            if (! $className || ! class_exists($className)) {
+                return;
+            }
+
+            $reflection = new ReflectionClass($className);
+
+            if ($reflection->isAbstract() || $reflection->isInterface() || $reflection->isTrait()) {
+                return;
+            }
+
+            $component = $this->classifyComponent($reflection);
+
+            if ($component) {
+                $this->discoveredComponents[] = $component;
+            }
+        } catch (\Throwable $e) {
+            logger()->debug('Failed to analyze file for MCP discovery', [
+                'file' => $filePath,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Extract class name from file.
+     */
+    private function extractClassName(string $filePath): ?string
+    {
+        $content = file_get_contents($filePath);
+
+        // Extract namespace
+        if (! preg_match('/namespace\s+([^;]+);/', $content, $namespaceMatches)) {
+            return null;
+        }
+        $namespace = trim($namespaceMatches[1]);
+
+        // Extract class name
+        if (! preg_match('/class\s+(\w+)/', $content, $classMatches)) {
+            return null;
+        }
+        $className = trim($classMatches[1]);
+
+        return $namespace.'\\'.$className;
+    }
+
+    /**
+     * Classify a component based on its reflection.
+     */
+    private function classifyComponent(ReflectionClass $reflection): ?array
+    {
+        $className = $reflection->getName();
+
+        if ($reflection->isSubclassOf(McpTool::class)) {
+            return [
+                'type' => 'tool',
+                'name' => $this->generateComponentName($className, 'Tool'),
+                'class' => $className,
+                'file' => $reflection->getFileName(),
+            ];
+        }
+
+        if ($reflection->isSubclassOf(McpResource::class)) {
+            return [
+                'type' => 'resource',
+                'name' => $this->generateComponentName($className, 'Resource'),
+                'class' => $className,
+                'file' => $reflection->getFileName(),
+            ];
+        }
+
+        if ($reflection->isSubclassOf(McpPrompt::class)) {
+            return [
+                'type' => 'prompt',
+                'name' => $this->generateComponentName($className, 'Prompt'),
+                'class' => $className,
+                'file' => $reflection->getFileName(),
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * Generate component name from class name.
+     */
+    private function generateComponentName(string $className, string $suffix): string
+    {
+        $baseName = class_basename($className);
+        $name = str_replace($suffix, '', $baseName);
+
+        return Str::snake($name);
     }
 
     /**

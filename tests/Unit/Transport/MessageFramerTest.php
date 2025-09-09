@@ -21,15 +21,15 @@
  * - Content-Length header support
  */
 
-namespace Tests\Unit\Transport;
+namespace JTD\LaravelMCP\Tests\Unit\Transport;
 
 use JTD\LaravelMCP\Exceptions\TransportException;
+use JTD\LaravelMCP\Tests\TestCase;
 use JTD\LaravelMCP\Transport\MessageFramer;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
 
 #[CoversClass(MessageFramer::class)]
 #[Group('transport')]
