@@ -105,7 +105,8 @@ class HttpTransport extends BaseTransport
     /**
      * Perform transport-specific send operations.
      *
-     * @param string $message The message to send
+     * @param  string  $message  The message to send
+     *
      * @throws \Throwable If send fails
      */
     protected function doSend(string $message): void
@@ -119,11 +120,12 @@ class HttpTransport extends BaseTransport
      * Perform transport-specific receive operations.
      *
      * @return string|null The received message, or null if none available
+     *
      * @throws \Throwable If receive fails
      */
     protected function doReceive(): ?string
     {
-        if (!$this->currentRequest) {
+        if (! $this->currentRequest) {
             return null;
         }
 
@@ -139,7 +141,7 @@ class HttpTransport extends BaseTransport
             if (json_last_error() !== JSON_ERROR_NONE) {
                 throw TransportException::framingError(
                     $this->getTransportType(),
-                    'Invalid JSON in request body: ' . json_last_error_msg()
+                    'Invalid JSON in request body: '.json_last_error_msg()
                 );
             }
 
@@ -153,7 +155,7 @@ class HttpTransport extends BaseTransport
 
             throw TransportException::transmissionError(
                 $this->getTransportType(),
-                'Failed to receive HTTP message: ' . $e->getMessage()
+                'Failed to receive HTTP message: '.$e->getMessage()
             );
         }
     }
@@ -161,7 +163,7 @@ class HttpTransport extends BaseTransport
     /**
      * Handle an HTTP request.
      *
-     * @param Request $request The incoming HTTP request
+     * @param  Request  $request  The incoming HTTP request
      * @return Response The HTTP response
      */
     public function handleHttpRequest(Request $request): Response
@@ -169,16 +171,16 @@ class HttpTransport extends BaseTransport
         $this->currentRequest = $request;
 
         try {
-            if (!$this->isConnected()) {
+            if (! $this->isConnected()) {
                 throw TransportException::transportClosed($this->getTransportType());
             }
 
-            if (!$this->messageHandler) {
+            if (! $this->messageHandler) {
                 throw new TransportException('No message handler configured');
             }
 
             // Validate request headers
-            if (!$this->validateHeaders($request)) {
+            if (! $this->validateHeaders($request)) {
                 return $this->createErrorResponse(
                     'Invalid Content-Type header. Expected application/json',
                     -32700,
@@ -193,7 +195,7 @@ class HttpTransport extends BaseTransport
             // Receive the message
             $message = $this->receive();
 
-            if (!$message) {
+            if (! $message) {
                 return $this->createErrorResponse(
                     'Parse error: Empty or invalid request body',
                     -32700,
@@ -213,10 +215,11 @@ class HttpTransport extends BaseTransport
                 // Encode response and send
                 $responseJson = json_encode($response, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
                 if (json_last_error() !== JSON_ERROR_NONE) {
-                    throw new TransportException('Failed to encode response: ' . json_last_error_msg());
+                    throw new TransportException('Failed to encode response: '.json_last_error_msg());
                 }
 
                 $this->send($responseJson);
+
                 return $this->createResponse($this->currentResponseData, 200);
             }
 
@@ -238,14 +241,14 @@ class HttpTransport extends BaseTransport
             $requestId = null;
             if ($this->currentRequest) {
                 $content = $this->currentRequest->getContent();
-                if (!empty($content)) {
+                if (! empty($content)) {
                     $decoded = json_decode($content, true);
                     $requestId = $decoded['id'] ?? null;
                 }
             }
 
             return $this->createErrorResponse(
-                'Internal error: ' . $e->getMessage(),
+                'Internal error: '.$e->getMessage(),
                 -32603,
                 $requestId,
                 500
@@ -271,41 +274,44 @@ class HttpTransport extends BaseTransport
     public function handleOptionsRequest(): Response
     {
         $response = new Response('', 204);
+
         return $this->addCorsHeaders($response);
     }
 
     /**
      * Validate HTTP headers.
      *
-     * @param Request $request The request to validate
+     * @param  Request  $request  The request to validate
      * @return bool True if headers are valid
      */
     protected function validateHeaders(Request $request): bool
     {
         $contentType = $request->header('Content-Type');
+
         return str_contains($contentType ?? '', 'application/json');
     }
 
     /**
      * Create an HTTP response.
      *
-     * @param string $content Response content
-     * @param int $status HTTP status code
+     * @param  string  $content  Response content
+     * @param  int  $status  HTTP status code
      * @return Response HTTP response
      */
     protected function createResponse(string $content, int $status = 200): Response
     {
         $response = new Response($content, $status, $this->config['headers']);
+
         return $this->addCorsHeaders($response);
     }
 
     /**
      * Create an error response.
      *
-     * @param string $message Error message
-     * @param int $code Error code
-     * @param mixed $id Request ID
-     * @param int $httpStatus HTTP status code
+     * @param  string  $message  Error message
+     * @param  int  $code  Error code
+     * @param  mixed  $id  Request ID
+     * @param  int  $httpStatus  HTTP status code
      * @return Response Error response
      */
     protected function createErrorResponse(string $message, int $code, $id = null, int $httpStatus = 500): Response
@@ -320,35 +326,36 @@ class HttpTransport extends BaseTransport
         ];
 
         $content = json_encode($errorResponse, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
         return $this->createResponse($content, $httpStatus);
     }
 
     /**
      * Add CORS headers to response.
      *
-     * @param Response $response The response to modify
+     * @param  Response  $response  The response to modify
      * @return Response Modified response
      */
     protected function addCorsHeaders(Response $response): Response
     {
         if ($this->config['cors']['enabled'] ?? false) {
             $corsConfig = $this->config['cors'];
-            
+
             $response->headers->set(
-                'Access-Control-Allow-Origin', 
+                'Access-Control-Allow-Origin',
                 implode(', ', $corsConfig['allowed_origins'] ?? ['*'])
             );
-            
+
             $response->headers->set(
-                'Access-Control-Allow-Methods', 
+                'Access-Control-Allow-Methods',
                 implode(', ', $corsConfig['allowed_methods'] ?? ['POST', 'OPTIONS'])
             );
-            
+
             $response->headers->set(
-                'Access-Control-Allow-Headers', 
+                'Access-Control-Allow-Headers',
                 implode(', ', $corsConfig['allowed_headers'] ?? ['Content-Type', 'Authorization'])
             );
-            
+
             $response->headers->set('Access-Control-Max-Age', '86400');
         }
 
@@ -391,7 +398,7 @@ class HttpTransport extends BaseTransport
     /**
      * Set the current request (for testing purposes).
      *
-     * @param Request $request The request to set
+     * @param  Request  $request  The request to set
      */
     public function setCurrentRequest(Request $request): void
     {
@@ -421,23 +428,23 @@ class HttpTransport extends BaseTransport
         // Check if server is ready
         $checks['server_started'] = $this->serverStarted;
 
-        if (!$checks['server_started']) {
+        if (! $checks['server_started']) {
             $errors[] = 'HTTP server is not started';
         }
 
         // Check SSL configuration if enabled
         if ($this->config['ssl']['enabled'] ?? false) {
             $sslConfig = $this->config['ssl'];
-            
+
             $checks['ssl_cert_exists'] = file_exists($sslConfig['cert_path'] ?? '');
             $checks['ssl_key_exists'] = file_exists($sslConfig['key_path'] ?? '');
 
-            if (!$checks['ssl_cert_exists']) {
-                $errors[] = 'SSL certificate file not found: ' . ($sslConfig['cert_path'] ?? '');
+            if (! $checks['ssl_cert_exists']) {
+                $errors[] = 'SSL certificate file not found: '.($sslConfig['cert_path'] ?? '');
             }
 
-            if (!$checks['ssl_key_exists']) {
-                $errors[] = 'SSL key file not found: ' . ($sslConfig['key_path'] ?? '');
+            if (! $checks['ssl_key_exists']) {
+                $errors[] = 'SSL key file not found: '.($sslConfig['key_path'] ?? '');
             }
         } else {
             $checks['ssl_cert_exists'] = null; // N/A
@@ -449,7 +456,7 @@ class HttpTransport extends BaseTransport
         // we consider the port check as passed if the transport is properly started
         $host = $this->config['host'] ?? 'localhost';
         $port = $this->config['port'] ?? 8000;
-        
+
         // If the transport is started and server is ready, we don't need to check port accessibility
         // as the HTTP server lifecycle is managed externally (by Laravel, web server, etc.)
         if ($this->serverStarted) {
@@ -480,7 +487,7 @@ class HttpTransport extends BaseTransport
     public function getConnectionInfo(): array
     {
         $info = parent::getConnectionInfo();
-        
+
         $info['http_specific'] = [
             'base_url' => $this->getBaseUrl(),
             'server_started' => $this->serverStarted,

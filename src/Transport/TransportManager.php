@@ -51,12 +51,12 @@ class TransportManager
     public function __construct(Container $container)
     {
         $this->container = $container;
-        
+
         try {
             $this->registerDefaultDrivers();
         } catch (\Throwable $e) {
             throw new TransportException(
-                'Failed to register default transport drivers: ' . $e->getMessage(),
+                'Failed to register default transport drivers: '.$e->getMessage(),
                 0,
                 null,
                 ['original_error' => $e->getMessage()],
@@ -87,17 +87,17 @@ class TransportManager
      */
     public function createTransport(string $type, array $config = []): TransportInterface
     {
-        if (!isset($this->drivers[$type])) {
+        if (! isset($this->drivers[$type])) {
             throw new TransportException("Unknown transport type: $type");
         }
 
         $factory = $this->drivers[$type];
         $transport = $factory($this->container, array_merge($this->getDriverConfig($type), $config));
-        
-        if (!$transport instanceof TransportInterface) {
+
+        if (! $transport instanceof TransportInterface) {
             throw new TransportException("Transport type '$type' must implement TransportInterface");
         }
-        
+
         return $transport;
     }
 
@@ -146,7 +146,7 @@ class TransportManager
         if ($this->defaultDriverExplicitlySet) {
             return $this->defaultDriver;
         }
-        
+
         return config('mcp-transports.default') ?? $this->defaultDriver;
     }
 
@@ -213,13 +213,14 @@ class TransportManager
             $this->container->make(HttpTransport::class);
             $this->container->make(StdioTransport::class);
         } catch (\Throwable $e) {
-            throw new \Exception("Failed to resolve transport classes: " . $e->getMessage(), 0, $e);
+            throw new \Exception('Failed to resolve transport classes: '.$e->getMessage(), 0, $e);
         }
 
         // Register HTTP transport driver
         $this->extend('http', function (Container $container, array $config) {
             $transport = $container->make(HttpTransport::class);
             $transport->initialize($config);
+
             return $transport;
         });
 
@@ -227,6 +228,7 @@ class TransportManager
         $this->extend('stdio', function (Container $container, array $config) {
             $transport = $container->make(StdioTransport::class);
             $transport->initialize($config);
+
             return $transport;
         });
     }

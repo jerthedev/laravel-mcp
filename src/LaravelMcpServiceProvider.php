@@ -88,7 +88,7 @@ class LaravelMcpServiceProvider extends ServiceProvider
         // Register transport implementations
         $this->app->bind('mcp.transport.http', HttpTransport::class);
         $this->app->bind('mcp.transport.stdio', StdioTransport::class);
-        
+
         // Register transport manager with proper factory methods
         $this->app->singleton(TransportManager::class, function ($app) {
             return new TransportManager($app);
@@ -108,6 +108,7 @@ class LaravelMcpServiceProvider extends ServiceProvider
             TransportInterface::class,
             function ($app) {
                 $manager = $app->make(TransportManager::class);
+
                 return $manager->driver(); // Uses default driver from configuration
             }
         );

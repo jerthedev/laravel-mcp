@@ -116,9 +116,9 @@ class ServeCommandTest extends TestCase
         $stdioTransport->shouldReceive('setMessageHandler')
             ->once()
             ->with($this->messageProcessor);
-        $stdioTransport->shouldReceive('listen')
+        $stdioTransport->shouldReceive('start')
             ->once();
-        $stdioTransport->shouldReceive('close')
+        $stdioTransport->shouldReceive('stop')
             ->once();
 
         // Set up transport manager expectations

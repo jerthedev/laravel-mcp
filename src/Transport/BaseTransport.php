@@ -64,7 +64,8 @@ abstract class BaseTransport implements TransportInterface
     /**
      * Initialize the transport layer.
      *
-     * @param array $config Transport-specific configuration options
+     * @param  array  $config  Transport-specific configuration options
+     *
      * @throws TransportException If initialization fails
      */
     public function initialize(array $config = []): void
@@ -128,7 +129,7 @@ abstract class BaseTransport implements TransportInterface
      */
     public function stop(): void
     {
-        if (!$this->running) {
+        if (! $this->running) {
             return;
         }
 
@@ -161,12 +162,13 @@ abstract class BaseTransport implements TransportInterface
     /**
      * Send a message.
      *
-     * @param string $message The message to send
+     * @param  string  $message  The message to send
+     *
      * @throws TransportException If sending fails
      */
     public function send(string $message): void
     {
-        if (!$this->isConnected()) {
+        if (! $this->isConnected()) {
             throw TransportException::transportClosed($this->getTransportType());
         }
 
@@ -185,7 +187,7 @@ abstract class BaseTransport implements TransportInterface
             $this->handleError($e);
             throw TransportException::transmissionError(
                 $this->getTransportType(),
-                'Failed to send message: ' . $e->getMessage(),
+                'Failed to send message: '.$e->getMessage(),
                 ['original_error' => $e->getMessage()]
             );
         }
@@ -195,11 +197,12 @@ abstract class BaseTransport implements TransportInterface
      * Receive a message.
      *
      * @return string|null The received message, or null if none available
+     *
      * @throws TransportException If receiving fails
      */
     public function receive(): ?string
     {
-        if (!$this->isConnected()) {
+        if (! $this->isConnected()) {
             return null;
         }
 
@@ -223,7 +226,7 @@ abstract class BaseTransport implements TransportInterface
             $this->handleError($e);
             throw TransportException::transmissionError(
                 $this->getTransportType(),
-                'Failed to receive message: ' . $e->getMessage(),
+                'Failed to receive message: '.$e->getMessage(),
                 ['original_error' => $e->getMessage()]
             );
         }
@@ -258,7 +261,7 @@ abstract class BaseTransport implements TransportInterface
     /**
      * Set the message handler for processing received messages.
      *
-     * @param MessageHandlerInterface $handler The message handler
+     * @param  MessageHandlerInterface  $handler  The message handler
      */
     public function setMessageHandler(MessageHandlerInterface $handler): void
     {
@@ -309,7 +312,7 @@ abstract class BaseTransport implements TransportInterface
     /**
      * Handle transport errors.
      *
-     * @param \Throwable $error The error to handle
+     * @param  \Throwable  $error  The error to handle
      */
     protected function handleError(\Throwable $error): void
     {
@@ -338,7 +341,8 @@ abstract class BaseTransport implements TransportInterface
     /**
      * Send a message with retry logic.
      *
-     * @param string $message The message to send
+     * @param  string  $message  The message to send
+     *
      * @throws TransportException If all retry attempts fail
      */
     protected function sendWithRetry(string $message): void
@@ -350,6 +354,7 @@ abstract class BaseTransport implements TransportInterface
         while ($attempts < $maxAttempts) {
             try {
                 $this->send($message);
+
                 return;
             } catch (TransportException $e) {
                 $attempts++;
@@ -464,20 +469,20 @@ abstract class BaseTransport implements TransportInterface
             $health['checks']['configuration'] = true;
         } catch (\Throwable $e) {
             $health['checks']['configuration'] = false;
-            $health['errors'][] = 'Configuration invalid: ' . $e->getMessage();
+            $health['errors'][] = 'Configuration invalid: '.$e->getMessage();
         }
 
         // Transport-specific health checks
         $specificChecks = $this->performTransportSpecificHealthChecks();
         $health['checks'] = array_merge($health['checks'], $specificChecks['checks']);
-        
+
         if (isset($specificChecks['errors'])) {
             $health['errors'] = array_merge($health['errors'] ?? [], $specificChecks['errors']);
         }
 
         // Overall health determination
-        $health['healthy'] = empty($health['errors']) && 
-                           $health['checks']['connectivity'] && 
+        $health['healthy'] = empty($health['errors']) &&
+                           $health['checks']['connectivity'] &&
                            $health['checks']['configuration'];
 
         return $health;
@@ -527,7 +532,8 @@ abstract class BaseTransport implements TransportInterface
     /**
      * Perform transport-specific send operations.
      *
-     * @param string $message The message to send
+     * @param  string  $message  The message to send
+     *
      * @throws \Throwable If send fails
      */
     abstract protected function doSend(string $message): void;
@@ -536,6 +542,7 @@ abstract class BaseTransport implements TransportInterface
      * Perform transport-specific receive operations.
      *
      * @return string|null The received message, or null if none available
+     *
      * @throws \Throwable If receive fails
      */
     abstract protected function doReceive(): ?string;
