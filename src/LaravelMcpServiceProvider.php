@@ -22,6 +22,10 @@ use JTD\LaravelMCP\Transport\Contracts\TransportInterface;
 use JTD\LaravelMCP\Transport\HttpTransport;
 use JTD\LaravelMCP\Transport\StdioTransport;
 use JTD\LaravelMCP\Transport\TransportManager;
+use JTD\LaravelMCP\Server\Contracts\ServerInterface;
+use JTD\LaravelMCP\Server\McpServer;
+use JTD\LaravelMCP\Server\ServerInfo;
+use JTD\LaravelMCP\Server\CapabilityManager;
 
 class LaravelMcpServiceProvider extends ServiceProvider
 {
@@ -64,6 +68,11 @@ class LaravelMcpServiceProvider extends ServiceProvider
         $this->app->singleton(MessageProcessor::class);
         $this->app->singleton(CapabilityNegotiator::class);
 
+        // Register server services
+        $this->app->singleton(ServerInfo::class);
+        $this->app->singleton(CapabilityManager::class);
+        $this->app->singleton(McpServer::class);
+
         // Register registry services
         $this->app->singleton(ToolRegistry::class);
         $this->app->singleton(ResourceRegistry::class);
@@ -99,6 +108,11 @@ class LaravelMcpServiceProvider extends ServiceProvider
         $this->app->bind(
             RegistryInterface::class,
             McpRegistry::class
+        );
+
+        $this->app->bind(
+            ServerInterface::class,
+            McpServer::class
         );
     }
 

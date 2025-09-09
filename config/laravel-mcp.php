@@ -3,6 +3,39 @@
 return [
     'enabled' => env('MCP_ENABLED', true),
 
+    'server' => [
+        'name' => env('MCP_SERVER_NAME', 'Laravel MCP Server'),
+        'version' => '1.0.0',
+        'description' => env('MCP_SERVER_DESCRIPTION', 'MCP Server built with Laravel'),
+        'vendor' => 'JTD/LaravelMCP',
+    ],
+
+    'capabilities' => [
+        'tools' => [
+            'enabled' => env('MCP_TOOLS_ENABLED', true),
+            'list_changed_notifications' => true,
+        ],
+        'resources' => [
+            'enabled' => env('MCP_RESOURCES_ENABLED', true),
+            'list_changed_notifications' => true,
+            'subscriptions' => env('MCP_RESOURCE_SUBSCRIPTIONS', false),
+        ],
+        'prompts' => [
+            'enabled' => env('MCP_PROMPTS_ENABLED', true),
+            'list_changed_notifications' => true,
+        ],
+        'logging' => [
+            'enabled' => env('MCP_LOGGING_ENABLED', true),
+            'level' => env('MCP_LOG_LEVEL', 'info'),
+        ],
+        'experimental' => [
+            'enabled' => env('MCP_EXPERIMENTAL_ENABLED', false),
+        ],
+        'completion' => [
+            'enabled' => env('MCP_COMPLETION_ENABLED', false),
+        ],
+    ],
+
     'transports' => [
         'default' => env('MCP_DEFAULT_TRANSPORT', 'stdio'),
         'http' => [

@@ -257,4 +257,92 @@ class TransportManager
 
         return $this->driver($driver);
     }
+
+    /**
+     * Register a transport instance with a custom name.
+     */
+    public function registerTransport(string $name, TransportInterface $transport): void
+    {
+        $this->transports[$name] = $transport;
+    }
+
+    /**
+     * Remove a transport instance.
+     */
+    public function removeTransport(string $name): void
+    {
+        if (isset($this->transports[$name])) {
+            $this->transports[$name]->close();
+            unset($this->transports[$name]);
+        }
+    }
+
+    /**
+     * Start all registered transports.
+     */
+    public function startAllTransports(): void
+    {
+        foreach ($this->transports as $name => $transport) {
+            try {
+                if (!$transport->isConnected()) {
+                    $transport->connect();
+                }
+            } catch (\Throwable $e) {
+                throw new TransportException("Failed to start transport '{$name}': {$e->getMessage()}", 0, $e);
+            }
+        }
+    }
+
+    /**
+     * Stop all registered transports.
+     */
+    public function stopAllTransports(): void
+    {
+        foreach ($this->transports as $name => $transport) {
+            try {
+                if ($transport->isConnected()) {
+                    $transport->disconnect();
+                }
+            } catch (\Throwable $e) {
+                // Log but don't throw during shutdown
+                error_log("Error stopping transport '{$name}': {$e->getMessage()}");
+            }
+        }
+    }
+
+    /**
+     * Get count of active transports.
+     */
+    public function getActiveTransportCount(): int
+    {
+        return count(array_filter($this->transports, fn($transport) => $transport->isConnected()));
+    }
+
+    /**
+     * Cleanup resources.
+     */
+    public function cleanup(): void
+    {
+        $this->stopAllTransports();
+        $this->transports = [];
+    }
+
+    /**
+     * Initialize the transport manager.
+     */
+    public function initialize(): void
+    {
+        // Initialize default transports based on configuration
+        $defaultTransports = config('mcp-transports.auto_start', []);
+        
+        foreach ($defaultTransports as $driver) {
+            if ($this->hasDriver($driver)) {
+                try {
+                    $this->driver($driver);
+                } catch (\Throwable $e) {
+                    error_log("Failed to initialize transport '{$driver}': {$e->getMessage()}");
+                }
+            }
+        }
+    }
 }
