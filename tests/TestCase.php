@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests;
+namespace JTD\LaravelMCP\Tests;
 
 use PHPUnit\Framework\TestCase as PHPUnitTestCase;
 
