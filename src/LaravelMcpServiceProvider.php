@@ -69,7 +69,6 @@ class LaravelMcpServiceProvider extends ServiceProvider
     {
         // Register core MCP services as singletons
         $this->app->singleton(McpRegistry::class);
-        $this->app->singleton(TransportManager::class);
         $this->app->singleton(JsonRpcHandler::class);
         $this->app->singleton(MessageProcessor::class);
         $this->app->singleton(CapabilityNegotiator::class);
@@ -90,6 +89,11 @@ class LaravelMcpServiceProvider extends ServiceProvider
         // Register transport implementations
         $this->app->bind('mcp.transport.http', HttpTransport::class);
         $this->app->bind('mcp.transport.stdio', StdioTransport::class);
+        
+        // Register transport manager with proper factory methods
+        $this->app->singleton(TransportManager::class, function ($app) {
+            return new TransportManager($app);
+        });
 
         // Support services will be registered lazily in registerLazyServices()
 
@@ -103,7 +107,10 @@ class LaravelMcpServiceProvider extends ServiceProvider
     {
         $this->app->bind(
             TransportInterface::class,
-            fn ($app) => $app->make(TransportManager::class)->getDefaultTransport()
+            function ($app) {
+                $manager = $app->make(TransportManager::class);
+                return $manager->driver(); // Uses default driver from configuration
+            }
         );
 
         $this->app->bind(

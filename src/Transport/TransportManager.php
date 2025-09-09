@@ -31,6 +31,16 @@ class TransportManager
     protected string $defaultDriver = 'stdio';
 
     /**
+     * Whether the default driver was explicitly set.
+     */
+    protected bool $defaultDriverExplicitlySet = false;
+
+    /**
+     * Active transport instance.
+     */
+    protected ?TransportInterface $activeTransport = null;
+
+    /**
      * Laravel container instance.
      */
     protected Container $container;
@@ -41,7 +51,54 @@ class TransportManager
     public function __construct(Container $container)
     {
         $this->container = $container;
-        $this->registerDefaultDrivers();
+        
+        try {
+            $this->registerDefaultDrivers();
+        } catch (\Throwable $e) {
+            throw new TransportException(
+                'Failed to register default transport drivers: ' . $e->getMessage(),
+                0,
+                null,
+                ['original_error' => $e->getMessage()],
+                [],
+                $e
+            );
+        }
+    }
+
+    /**
+     * Set the active transport.
+     */
+    public function setActiveTransport(string $type, array $config = []): void
+    {
+        $this->activeTransport = $this->createTransport($type, $config);
+    }
+
+    /**
+     * Get the active transport.
+     */
+    public function getActiveTransport(): ?TransportInterface
+    {
+        return $this->activeTransport;
+    }
+
+    /**
+     * Create a transport instance.
+     */
+    public function createTransport(string $type, array $config = []): TransportInterface
+    {
+        if (!isset($this->drivers[$type])) {
+            throw new TransportException("Unknown transport type: $type");
+        }
+
+        $factory = $this->drivers[$type];
+        $transport = $factory($this->container, array_merge($this->getDriverConfig($type), $config));
+        
+        if (!$transport instanceof TransportInterface) {
+            throw new TransportException("Transport type '$type' must implement TransportInterface");
+        }
+        
+        return $transport;
     }
 
     /**
@@ -52,7 +109,7 @@ class TransportManager
         $driver = $driver ?: $this->getDefaultDriver();
 
         if (! isset($this->transports[$driver])) {
-            $this->transports[$driver] = $this->createTransport($driver);
+            $this->transports[$driver] = $this->createTransportForDriver($driver);
         }
 
         return $this->transports[$driver];
@@ -76,6 +133,7 @@ class TransportManager
         }
 
         $this->defaultDriver = $driver;
+        $this->defaultDriverExplicitlySet = true;
     }
 
     /**
@@ -83,7 +141,13 @@ class TransportManager
      */
     public function getDefaultDriver(): string
     {
-        return config('mcp-transports.default', $this->defaultDriver);
+        // If a driver was explicitly set via setDefaultDriver, use that
+        // Otherwise, fall back to config, then to the default
+        if ($this->defaultDriverExplicitlySet) {
+            return $this->defaultDriver;
+        }
+        
+        return config('mcp-transports.default') ?? $this->defaultDriver;
     }
 
     /**
@@ -113,7 +177,7 @@ class TransportManager
     /**
      * Create a transport instance for a driver.
      */
-    protected function createTransport(string $driver): TransportInterface
+    protected function createTransportForDriver(string $driver): TransportInterface
     {
         if (! $this->hasDriver($driver)) {
             throw new TransportException("Transport driver '{$driver}' is not registered");
@@ -144,11 +208,18 @@ class TransportManager
      */
     protected function registerDefaultDrivers(): void
     {
+        // Validate that the container can resolve the transport classes
+        try {
+            $this->container->make(HttpTransport::class);
+            $this->container->make(StdioTransport::class);
+        } catch (\Throwable $e) {
+            throw new \Exception("Failed to resolve transport classes: " . $e->getMessage(), 0, $e);
+        }
+
         // Register HTTP transport driver
         $this->extend('http', function (Container $container, array $config) {
             $transport = $container->make(HttpTransport::class);
             $transport->initialize($config);
-
             return $transport;
         });
 
@@ -156,7 +227,6 @@ class TransportManager
         $this->extend('stdio', function (Container $container, array $config) {
             $transport = $container->make(StdioTransport::class);
             $transport->initialize($config);
-
             return $transport;
         });
     }
@@ -169,7 +239,7 @@ class TransportManager
         $driver = $driver ?: $this->getDefaultDriver();
 
         if (isset($this->transports[$driver])) {
-            $this->transports[$driver]->close();
+            $this->transports[$driver]->stop();
             unset($this->transports[$driver]);
         }
     }
@@ -272,7 +342,7 @@ class TransportManager
     public function removeTransport(string $name): void
     {
         if (isset($this->transports[$name])) {
-            $this->transports[$name]->close();
+            $this->transports[$name]->stop();
             unset($this->transports[$name]);
         }
     }
@@ -285,7 +355,7 @@ class TransportManager
         foreach ($this->transports as $name => $transport) {
             try {
                 if (! $transport->isConnected()) {
-                    $transport->connect();
+                    $transport->start();
                 }
             } catch (\Throwable $e) {
                 throw new TransportException("Failed to start transport '{$name}': {$e->getMessage()}", 0, $e);
@@ -301,7 +371,7 @@ class TransportManager
         foreach ($this->transports as $name => $transport) {
             try {
                 if ($transport->isConnected()) {
-                    $transport->disconnect();
+                    $transport->stop();
                 }
             } catch (\Throwable $e) {
                 // Log but don't throw during shutdown
