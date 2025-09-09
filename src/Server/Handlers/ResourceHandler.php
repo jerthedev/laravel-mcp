@@ -59,7 +59,7 @@ class ResourceHandler extends BaseHandler
             if (in_array($e->getCode(), [-32600, -32601, -32602])) {
                 throw $e;
             }
-            
+
             return $this->handleException($e, $method, $context);
         } catch (\Throwable $e) {
             return $this->handleException($e, $method, $context);
@@ -307,6 +307,7 @@ class ResourceHandler extends BaseHandler
                     $formattedContents[] = $this->formatResourceContent($item);
                 }
             }
+
             return $formattedContents;
         }
 
@@ -316,21 +317,21 @@ class ResourceHandler extends BaseHandler
         } else {
             // Check if this is an indexed array of content items
             $isIndexed = array_keys($content) === range(0, count($content) - 1);
-            
+
             if ($isIndexed) {
                 // This is an array of content items - check if they're formatted
                 $allFormatted = true;
                 foreach ($content as $item) {
-                    if (!is_array($item) || !isset($item['type'])) {
+                    if (! is_array($item) || ! isset($item['type'])) {
                         $allFormatted = false;
                         break;
                     }
                 }
-                
+
                 if ($allFormatted) {
                     return $content;
                 }
-                
+
                 // Format each content item
                 $content = array_map([$this, 'formatResourceContent'], $content);
             } else {
@@ -369,22 +370,22 @@ class ResourceHandler extends BaseHandler
                 $formatted = [
                     'type' => 'text',
                 ];
-                
+
                 // Preserve existing text content
                 if (isset($content['text'])) {
                     $formatted['text'] = $content['text'];
                 }
-                
+
                 // Preserve other properties like uri, mimeType
                 foreach (['uri', 'mimeType'] as $prop) {
                     if (isset($content[$prop])) {
                         $formatted[$prop] = $content[$prop];
                     }
                 }
-                
+
                 return $formatted;
             }
-            
+
             // Otherwise serialize as JSON
             return [
                 'type' => 'text',

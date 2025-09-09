@@ -59,7 +59,7 @@ class ToolHandler extends BaseHandler
             if (in_array($e->getCode(), [-32600, -32601, -32602])) {
                 throw $e;
             }
-            
+
             return $this->handleException($e, $method, $context);
         } catch (\Throwable $e) {
             return $this->handleException($e, $method, $context);
@@ -222,7 +222,7 @@ class ToolHandler extends BaseHandler
 
                 return $this->createSuccessResponse($response, $context);
             }
-            
+
             // Re-throw other protocol exceptions (method not found, invalid params, etc.)
             throw $e;
         } catch (\Throwable $e) {

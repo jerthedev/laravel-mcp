@@ -139,7 +139,7 @@ class CapabilityNegotiator
         }
 
         // Validate client value for boolean features - if invalid, use safe default
-        if (is_bool($serverValue) && !is_bool($clientValue)) {
+        if (is_bool($serverValue) && ! is_bool($clientValue)) {
             // For invalid client values, use conservative safe defaults instead of server config
             return $this->getSafeDefaultForFeature($capability, $feature);
         }
