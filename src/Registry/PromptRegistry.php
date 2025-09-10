@@ -2,7 +2,6 @@
 
 namespace JTD\LaravelMCP\Registry;
 
-use JTD\LaravelMCP\Abstracts\McpPrompt;
 use JTD\LaravelMCP\Exceptions\RegistrationException;
 use JTD\LaravelMCP\Registry\Contracts\RegistryInterface;
 

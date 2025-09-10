@@ -8,13 +8,13 @@
  * TICKET: 019-ClientConfigGeneration
  */
 
-namespace Tests\Unit\Support\Generators;
+namespace JTD\LaravelMCP\Tests\Unit\Support\Generators;
 
 use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Support\Generators\ClaudeDesktopGenerator;
+use JTD\LaravelMCP\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
 
 #[Group('unit')]
 #[Group('support')]

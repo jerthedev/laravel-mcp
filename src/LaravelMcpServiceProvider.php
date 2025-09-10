@@ -4,7 +4,9 @@ namespace JTD\LaravelMCP;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use JTD\LaravelMCP\Commands\DocumentationCommand;
 use JTD\LaravelMCP\Commands\ListCommand;
+use JTD\LaravelMCP\McpManager;
 use JTD\LaravelMCP\Commands\MakePromptCommand;
 use JTD\LaravelMCP\Commands\MakeResourceCommand;
 use JTD\LaravelMCP\Commands\MakeToolCommand;
@@ -22,6 +24,7 @@ use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Registry\PromptRegistry;
 use JTD\LaravelMCP\Registry\ResourceRegistry;
 use JTD\LaravelMCP\Registry\RouteRegistrar;
+use JTD\LaravelMCP\Registry\RoutingPatterns;
 use JTD\LaravelMCP\Registry\ToolRegistry;
 use JTD\LaravelMCP\Server\CapabilityManager;
 use JTD\LaravelMCP\Server\Contracts\ServerInterface;
@@ -29,6 +32,7 @@ use JTD\LaravelMCP\Server\McpServer;
 use JTD\LaravelMCP\Server\ServerInfo;
 use JTD\LaravelMCP\Support\ConfigGenerator;
 use JTD\LaravelMCP\Support\DocumentationGenerator;
+use JTD\LaravelMCP\Support\SchemaDocumenter;
 use JTD\LaravelMCP\Transport\Contracts\TransportInterface;
 use JTD\LaravelMCP\Transport\HttpTransport;
 use JTD\LaravelMCP\Transport\StdioTransport;
@@ -87,8 +91,24 @@ class LaravelMcpServiceProvider extends ServiceProvider
         // Register route registrar for fluent API
         $this->app->singleton(RouteRegistrar::class);
 
+        // Register routing patterns as singleton
+        $this->app->singleton(RoutingPatterns::class);
+
         // Register discovery service
         $this->app->singleton(ComponentDiscovery::class);
+
+        // Register route registrar
+        $this->app->singleton(RouteRegistrar::class, function ($app) {
+            return new RouteRegistrar($app->make(McpRegistry::class));
+        });
+
+        // Register MCP Manager that bridges facade to both registry and registrar
+        $this->app->singleton(McpManager::class, function ($app) {
+            return new McpManager(
+                $app->make(McpRegistry::class),
+                $app->make(RouteRegistrar::class)
+            );
+        });
 
         // Register transport implementations
         $this->app->bind('mcp.transport.http', HttpTransport::class);
@@ -101,8 +121,13 @@ class LaravelMcpServiceProvider extends ServiceProvider
 
         // Support services will be registered lazily in registerLazyServices()
 
-        // Register facade accessor - should point to McpRegistry for main functionality
+        // Register facade accessor - should point to McpManager that provides both interfaces
         $this->app->singleton('laravel-mcp', function ($app) {
+            return $app->make(McpManager::class);
+        });
+
+        // Register registry aliases for easier access
+        $this->app->singleton('mcp.registry', function ($app) {
             return $app->make(McpRegistry::class);
         });
         
@@ -149,6 +174,7 @@ class LaravelMcpServiceProvider extends ServiceProvider
             $this->bootCommands();
             $this->bootMiddleware();
             $this->bootDiscovery();
+            $this->bootMcpRoutes();
             $this->bootViews();
 
             if ($this->app->runningInConsole()) {
@@ -313,7 +339,7 @@ class LaravelMcpServiceProvider extends ServiceProvider
             ]);
 
             // Ensure paths is an array
-            if (!is_array($paths)) {
+            if (! is_array($paths)) {
                 $paths = [$paths];
             }
 
@@ -331,7 +357,7 @@ class LaravelMcpServiceProvider extends ServiceProvider
             }
 
             // In non-production, we want to know about discovery issues
-            if (!$this->app->environment('production')) {
+            if (! $this->app->environment('production')) {
                 throw $e;
             }
         }
@@ -392,6 +418,7 @@ class LaravelMcpServiceProvider extends ServiceProvider
                 MakeResourceCommand::class,
                 MakePromptCommand::class,
                 RegisterCommand::class,
+                DocumentationCommand::class,
             ]);
         }
     }
@@ -430,24 +457,79 @@ class LaravelMcpServiceProvider extends ServiceProvider
     private function loadMcpRoutes(): void
     {
         $routeFile = base_path('routes/mcp.php');
-        
+
         // Only load routes if the file exists
-        if (!file_exists($routeFile)) {
+        if (! file_exists($routeFile)) {
             return;
         }
-        
+
         $middleware = config('laravel-mcp.routes.middleware', ['api']);
-        
+
         // Ensure middleware is an array
-        if (!is_array($middleware)) {
+        if (! is_array($middleware)) {
             $middleware = [$middleware];
         }
-        
+
         $this->app['router']->group([
             'middleware' => $middleware,
         ], function () use ($routeFile) {
             require $routeFile;
         });
+    }
+
+    /**
+     * Boot MCP component routes.
+     */
+    private function bootMcpRoutes(): void
+    {
+        // Check if route registration is enabled
+        if (! config('laravel-mcp.routes.auto_register', true)) {
+            return;
+        }
+
+        try {
+            $discovery = $this->app->make(ComponentDiscovery::class);
+
+            // Check for cached routes first if caching is enabled
+            $routingPatterns = $this->app->make(RoutingPatterns::class);
+
+            if ($routingPatterns->isCacheEnabled()) {
+                $cacheKey = $routingPatterns->generateCacheKey('discovered_routes');
+
+                if (function_exists('cache') && cache()->has($cacheKey)) {
+                    // Routes are already cached, no need to re-register
+                    return;
+                }
+            }
+
+            // Discover and register component routes
+            $paths = config('laravel-mcp.discovery.paths', [
+                app_path('Mcp/Tools'),
+                app_path('Mcp/Resources'),
+                app_path('Mcp/Prompts'),
+            ]);
+
+            // Ensure paths is an array
+            if (! is_array($paths)) {
+                $paths = [$paths];
+            }
+
+            $discovered = $discovery->discover($paths);
+            $discovery->registerRoutes($discovered);
+        } catch (\Throwable $e) {
+            // Log route registration errors but don't fail the boot process
+            if ($this->app->bound('log')) {
+                $this->app['log']->warning('MCP route registration failed', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
+
+            // In non-production, we want to know about route issues
+            if (! $this->app->environment('production')) {
+                throw $e;
+            }
+        }
     }
 
     private function bootConsole(): void
@@ -485,6 +567,10 @@ class LaravelMcpServiceProvider extends ServiceProvider
                 $app->make(ResourceRegistry::class),
                 $app->make(PromptRegistry::class)
             );
+        });
+
+        $this->app->singleton(SchemaDocumenter::class, function ($app) {
+            return new SchemaDocumenter;
         });
 
         $this->app->singleton(ConfigGenerator::class, function ($app) {

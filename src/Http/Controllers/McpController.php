@@ -8,6 +8,7 @@ use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Log;
 use JTD\LaravelMCP\Exceptions\TransportException;
+use JTD\LaravelMCP\Protocol\MessageProcessor;
 use JTD\LaravelMCP\Transport\HttpTransport;
 use JTD\LaravelMCP\Transport\TransportManager;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -26,6 +27,11 @@ class McpController extends Controller
     protected TransportManager $transportManager;
 
     /**
+     * Message processor instance.
+     */
+    protected MessageProcessor $messageProcessor;
+
+    /**
      * HTTP transport instance.
      */
     protected ?HttpTransport $httpTransport = null;
@@ -34,10 +40,12 @@ class McpController extends Controller
      * Create a new MCP controller instance.
      *
      * @param  TransportManager  $transportManager  Transport manager instance
+     * @param  MessageProcessor  $messageProcessor  Message processor instance
      */
-    public function __construct(TransportManager $transportManager)
+    public function __construct(TransportManager $transportManager, MessageProcessor $messageProcessor)
     {
         $this->transportManager = $transportManager;
+        $this->messageProcessor = $messageProcessor;
     }
 
     /**

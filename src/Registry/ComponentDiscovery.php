@@ -2,12 +2,17 @@
 
 namespace JTD\LaravelMCP\Registry;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use JTD\LaravelMCP\Abstracts\McpPrompt;
 use JTD\LaravelMCP\Abstracts\McpResource;
 use JTD\LaravelMCP\Abstracts\McpTool;
 use JTD\LaravelMCP\Registry\Contracts\DiscoveryInterface;
 use ReflectionClass;
+use Symfony\Component\Finder\Finder;
 
 /**
  * Component discovery service for MCP components.
@@ -45,25 +50,47 @@ class ComponentDiscovery implements DiscoveryInterface
      */
     protected McpRegistry $registry;
 
-    protected ToolRegistry $toolRegistry;
+    /**
+     * Discovered components cache.
+     */
+    private array $discoveredComponents = [];
 
-    protected ResourceRegistry $resourceRegistry;
+    /**
+     * Discovery paths from configuration.
+     */
+    private array $discoveryPaths;
 
-    protected PromptRegistry $promptRegistry;
+    /**
+     * Whether caching is enabled.
+     */
+    private bool $cacheEnabled;
+
+    /**
+     * Cache key for discovered components.
+     */
+    private string $cacheKey = 'laravel_mcp_discovered_components';
+
+    /**
+     * Routing patterns instance for route generation.
+     * 
+     * Note: This will be implemented in future iterations when routing is fully integrated
+     */
+    // protected RoutingPatterns $routingPatterns;
 
     /**
      * Create a new component discovery instance.
      */
-    public function __construct(
-        McpRegistry $registry,
-        ToolRegistry $toolRegistry,
-        ResourceRegistry $resourceRegistry,
-        PromptRegistry $promptRegistry
-    ) {
+    public function __construct(McpRegistry $registry)
+    {
         $this->registry = $registry;
-        $this->toolRegistry = $toolRegistry;
-        $this->resourceRegistry = $resourceRegistry;
-        $this->promptRegistry = $promptRegistry;
+
+        $this->discoveryPaths = config('laravel-mcp.discovery.paths', [
+            app_path('Mcp/Tools'),
+            app_path('Mcp/Resources'),
+            app_path('Mcp/Prompts'),
+        ]);
+
+        $this->cacheEnabled = config('laravel-mcp.discovery.cache', true);
     }
 
     /**
@@ -82,7 +109,11 @@ class ComponentDiscovery implements DiscoveryInterface
                 continue;
             }
 
-            $files = $this->scanDirectory($path);
+            $files = $this->getPhpFiles($path);
+
+            if (! $files) {
+                continue;
+            }
 
             foreach ($files as $file) {
                 foreach ($this->supportedTypes as $type => $baseClass) {
@@ -116,7 +147,11 @@ class ComponentDiscovery implements DiscoveryInterface
                 continue;
             }
 
-            $files = $this->scanDirectory($path);
+            $files = $this->getPhpFiles($path);
+
+            if (! $files) {
+                continue;
+            }
 
             foreach ($files as $file) {
                 if ($this->isValidComponent($file, $type)) {
@@ -169,6 +204,7 @@ class ComponentDiscovery implements DiscoveryInterface
                 'description' => $this->parseDescription($docComment),
                 'methods' => $this->getPublicMethods($reflection),
                 'properties' => $this->getPublicProperties($reflection),
+                'route_metadata' => $this->extractRouteMetadata($reflection),
             ];
 
             // Extract component-specific metadata
@@ -205,6 +241,9 @@ class ComponentDiscovery implements DiscoveryInterface
         $namespace = '';
         if (preg_match('/^\s*namespace\s+([^\s;]+)/m', $content, $matches)) {
             $namespace = trim($matches[1]).'\\';
+        } else {
+            // No namespace found - MCP components must have namespaces
+            return null;
         }
 
         // Extract class name
@@ -278,51 +317,71 @@ class ComponentDiscovery implements DiscoveryInterface
 
     /**
      * Discover and register components.
+     *
+     * @param  array  $paths  Paths to scan for components
+     * @param  bool  $registerRoutes  Whether to automatically register routes
      */
-    public function discoverComponents(array $paths): void
+    public function discoverComponents(array $paths = []): array
     {
-        $discovered = $this->discover($paths);
+        $searchPaths = empty($paths) ? $this->discoveryPaths : $paths;
 
-        foreach ($discovered['tools'] as $className => $metadata) {
-            $this->toolRegistry->register($metadata['name'], $className, $metadata);
+        if ($this->cacheEnabled && $cached = $this->getCachedDiscovery()) {
+            $this->discoveredComponents = $cached;
+
+            return $cached;
         }
 
-        foreach ($discovered['resources'] as $className => $metadata) {
-            $this->resourceRegistry->register($metadata['name'], $className, $metadata);
+        $this->discoveredComponents = [];
+
+        foreach ($searchPaths as $path) {
+            if (is_dir($path)) {
+                $this->scanDirectory($path);
+            }
         }
 
-        foreach ($discovered['prompts'] as $className => $metadata) {
-            $this->promptRegistry->register($metadata['name'], $className, $metadata);
+        if ($this->cacheEnabled) {
+            $this->cacheDiscovery();
         }
+
+        return $this->discoveredComponents;
     }
 
     /**
      * Register discovered components.
+     *
+     * @param  bool  $registerRoutes  Whether to automatically register routes
      */
-    public function registerDiscoveredComponents(): void
+    public function registerDiscoveredComponents(bool $registerRoutes = true): void
     {
         $discovered = $this->discover([]);
 
-        foreach ($discovered as $component) {
-            try {
-                $this->registry->register(
-                    $component['type'],
-                    $component['name'],
-                    $component['class'],
-                    $component['metadata'] ?? []
-                );
+        foreach ($discovered as $componentType => $components) {
+            foreach ($components as $className => $metadata) {
+                try {
+                    $this->registry->register(
+                        $metadata['type'],
+                        $metadata['name'],
+                        $className,
+                        $metadata
+                    );
 
-                logger()->debug('Registered discovered component', [
-                    'type' => $component['type'],
-                    'name' => $component['name'],
-                    'class' => $component['class'],
-                ]);
-            } catch (\Exception $e) {
-                logger()->warning('Failed to register discovered component', [
-                    'component' => $component,
-                    'error' => $e->getMessage(),
-                ]);
+                    Log::debug('Registered discovered component', [
+                        'type' => $metadata['type'],
+                        'name' => $metadata['name'],
+                        'class' => $className,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::warning('Failed to register discovered component', [
+                        'component' => $metadata,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
             }
+        }
+
+        // Register routes for discovered components if requested
+        if ($registerRoutes) {
+            $this->registerRoutes($discovered);
         }
     }
 
@@ -380,24 +439,142 @@ class ComponentDiscovery implements DiscoveryInterface
     /**
      * Scan directory for PHP files.
      */
-    protected function scanDirectory(string $path): array
+    protected function scanDirectory(string $path): void
     {
         if (! is_dir($path)) {
-            return [];
+            return;
         }
 
-        $iterator = $this->config['recursive']
-            ? File::allFiles($path)
-            : File::files($path);
+        $finder = new Finder;
+        $finder->files()->name('*.php')->in($path);
+
+        foreach ($finder as $file) {
+            $this->analyzeFile($file->getRealPath());
+        }
+    }
+
+    /**
+     * Get PHP files from a directory.
+     */
+    private function getPhpFiles(string $directory): ?array
+    {
+        if (! is_dir($directory)) {
+            return null;
+        }
 
         $files = [];
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($directory, \RecursiveDirectoryIterator::SKIP_DOTS)
+        );
+
         foreach ($iterator as $file) {
-            if ($file->getExtension() === 'php' && $this->passesFilters($file->getPathname())) {
-                $files[] = $file->getPathname();
+            if ($file->isFile() && $file->getExtension() === 'php') {
+                $files[] = $file->getRealPath();
             }
         }
 
         return $files;
+    }
+
+    /**
+     * Analyze a file for MCP components.
+     */
+    private function analyzeFile(string $filePath): void
+    {
+        try {
+            $className = $this->extractClassName($filePath);
+
+            if (! $className || ! class_exists($className)) {
+                return;
+            }
+
+            $reflection = new ReflectionClass($className);
+
+            if ($reflection->isAbstract() || $reflection->isInterface() || $reflection->isTrait()) {
+                return;
+            }
+
+            $component = $this->classifyComponent($reflection);
+
+            if ($component) {
+                $this->discoveredComponents[] = $component;
+            }
+        } catch (\Throwable $e) {
+            logger()->debug('Failed to analyze file for MCP discovery', [
+                'file' => $filePath,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Extract class name from file.
+     */
+    private function extractClassName(string $filePath): ?string
+    {
+        $content = file_get_contents($filePath);
+
+        // Extract namespace
+        if (! preg_match('/namespace\s+([^;]+);/', $content, $namespaceMatches)) {
+            return null;
+        }
+        $namespace = trim($namespaceMatches[1]);
+
+        // Extract class name
+        if (! preg_match('/class\s+(\w+)/', $content, $classMatches)) {
+            return null;
+        }
+        $className = trim($classMatches[1]);
+
+        return $namespace.'\\'.$className;
+    }
+
+    /**
+     * Classify a component based on its reflection.
+     */
+    private function classifyComponent(ReflectionClass $reflection): ?array
+    {
+        $className = $reflection->getName();
+
+        if ($reflection->isSubclassOf(McpTool::class)) {
+            return [
+                'type' => 'tool',
+                'name' => $this->generateComponentName($className, 'Tool'),
+                'class' => $className,
+                'file' => $reflection->getFileName(),
+            ];
+        }
+
+        if ($reflection->isSubclassOf(McpResource::class)) {
+            return [
+                'type' => 'resource',
+                'name' => $this->generateComponentName($className, 'Resource'),
+                'class' => $className,
+                'file' => $reflection->getFileName(),
+            ];
+        }
+
+        if ($reflection->isSubclassOf(McpPrompt::class)) {
+            return [
+                'type' => 'prompt',
+                'name' => $this->generateComponentName($className, 'Prompt'),
+                'class' => $className,
+                'file' => $reflection->getFileName(),
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * Generate component name from class name.
+     */
+    private function generateComponentName(string $className, string $suffix): string
+    {
+        $baseName = class_basename($className);
+        $name = str_replace($suffix, '', $baseName);
+
+        return Str::snake($name);
     }
 
     /**
@@ -441,19 +618,19 @@ class ComponentDiscovery implements DiscoveryInterface
             $line = trim($line);
             $line = trim($line, '/*');
             $line = trim($line);
-            
+
             // Skip empty lines at the beginning
-            if (!$startedParsing && empty($line)) {
+            if (! $startedParsing && empty($line)) {
                 continue;
             }
-            
+
             // Stop at @annotations
             if (str_starts_with($line, '@')) {
                 break;
             }
-            
+
             // If we have content, add it to description
-            if (!empty($line)) {
+            if (! empty($line)) {
                 $startedParsing = true;
                 $emptyLineCount = 0;
                 $description .= ($description ? ' ' : '').$line;
@@ -533,5 +710,269 @@ class ComponentDiscovery implements DiscoveryInterface
     {
         // This could be enhanced to parse method signatures or annotations
         return [];
+    }
+
+    /**
+     * Register routes for discovered components.
+     *
+     * @param  array  $discovered  Discovered components grouped by type
+     */
+    public function registerRoutes(array $discovered): void
+    {
+        try {
+            $registeredRoutes = [];
+
+            foreach ($discovered as $componentType => $components) {
+                // Get the singular form for component type (tools -> tool)
+                $singularType = rtrim($componentType, 's');
+
+                foreach ($components as $className => $metadata) {
+                    $componentName = $metadata['name'];
+                    $routeMetadata = $metadata['route_metadata'] ?? [];
+
+                    // Generate route definitions for this component
+                    $routes = $this->generateComponentRoutes($singularType, $componentName, $routeMetadata);
+
+                    foreach ($routes as $route) {
+                        try {
+                            // Register the route with Laravel's router
+                            $this->registerSingleRoute($route, $className, $metadata);
+
+                            $registeredRoutes[] = [
+                                'name' => $route['name'],
+                                'uri' => $route['uri'],
+                                'methods' => $route['methods'],
+                                'component' => $componentName,
+                                'type' => $singularType,
+                            ];
+
+                            Log::debug('Registered route for component', [
+                                'route_name' => $route['name'],
+                                'uri' => $route['uri'],
+                                'component' => $componentName,
+                                'type' => $singularType,
+                            ]);
+                        } catch (\Exception $e) {
+                            Log::warning('Failed to register route for component', [
+                                'component' => $componentName,
+                                'route' => $route,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            // Cache the registered routes if caching is enabled
+            if ($this->routingPatterns->isCacheEnabled()) {
+                $this->cacheRegisteredRoutes($registeredRoutes);
+            }
+
+            Log::info('Completed route registration for discovered components', [
+                'total_routes' => count($registeredRoutes),
+                'components' => array_sum(array_map('count', $discovered)),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to register routes for discovered components', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            throw $e;
+        }
+    }
+
+    /**
+     * Generate route definitions for a component.
+     *
+     * @param  string  $type  Component type (tool, resource, prompt)
+     * @param  string  $name  Component name
+     * @param  array  $routeMetadata  Route-specific metadata from component
+     * @return array Array of route definitions
+     */
+    protected function generateComponentRoutes(string $type, string $name, array $routeMetadata = []): array
+    {
+        $routes = [];
+        $useResourceRoutes = $routeMetadata['resource_routes'] ?? false;
+
+        if ($useResourceRoutes) {
+            // Generate full resource-style routes (index, show, store, etc.)
+            $routes = $this->routingPatterns->generateResourceRoutes($type.'s', $name);
+        } else {
+            // Generate basic route for the component
+            $routeName = $this->routingPatterns->generateRouteName($type.'s', $name);
+            $routeUri = $this->routingPatterns->generateRouteUri($type.'s', $name);
+            $middleware = $this->routingPatterns->getMiddleware($type.'s');
+            $httpMethods = $this->routingPatterns->getHttpMethods($type.'s');
+            $controllerAction = $this->routingPatterns->getControllerAction($type.'s');
+
+            // Apply custom middleware from route metadata
+            if (isset($routeMetadata['middleware'])) {
+                $customMiddleware = is_array($routeMetadata['middleware'])
+                    ? $routeMetadata['middleware']
+                    : [$routeMetadata['middleware']];
+                $middleware = array_unique(array_merge($middleware, $customMiddleware));
+            }
+
+            $routes[] = [
+                'name' => $routeName,
+                'uri' => $routeUri,
+                'methods' => $httpMethods,
+                'middleware' => $middleware,
+                'action' => $controllerAction,
+                'constraints' => $this->getRouteConstraints($type),
+            ];
+        }
+
+        return $routes;
+    }
+
+    /**
+     * Register a single route with Laravel's router.
+     *
+     * @param  array  $route  Route definition
+     * @param  string  $className  Component class name
+     * @param  array  $metadata  Component metadata
+     */
+    protected function registerSingleRoute(array $route, string $className, array $metadata): void
+    {
+        $router = app('router');
+
+        // Create the route registration
+        $routeRegistration = $router->match(
+            $route['methods'],
+            $route['uri'],
+            [
+                'uses' => 'JTD\LaravelMCP\Http\Controllers\McpController@'.$route['action'],
+                'as' => $route['name'],
+                'middleware' => $route['middleware'] ?? [],
+            ]
+        );
+
+        // Apply route constraints if specified
+        if (isset($route['constraints'])) {
+            foreach ($route['constraints'] as $parameter => $pattern) {
+                if ($pattern) {
+                    $routeRegistration->where($parameter, $pattern);
+                }
+            }
+        }
+
+        // Add component metadata to route for runtime access
+        $routeRegistration->defaults('component_class', $className);
+        $routeRegistration->defaults('component_metadata', $metadata);
+        $routeRegistration->defaults('component_type', $metadata['type']);
+    }
+
+    /**
+     * Get route constraints for a component type.
+     *
+     * @param  string  $type  Component type
+     * @return array Route constraints
+     */
+    protected function getRouteConstraints(string $type): array
+    {
+        return [
+            $type => $this->routingPatterns->getConstraint($type),
+        ];
+    }
+
+    /**
+     * Cache registered routes for performance.
+     *
+     * @param  array  $routes  Array of registered route information
+     */
+    protected function cacheRegisteredRoutes(array $routes): void
+    {
+        try {
+            $cacheKey = $this->routingPatterns->generateCacheKey('discovered_routes');
+
+            if (function_exists('cache')) {
+                cache()->put($cacheKey, $routes, now()->addHours(24));
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to cache registered routes', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Extract route-specific metadata from component reflection.
+     *
+     * @param  ReflectionClass  $reflection  Component reflection
+     * @return array Route metadata
+     */
+    protected function extractRouteMetadata(ReflectionClass $reflection): array
+    {
+        $metadata = [];
+        $docComment = $reflection->getDocComment();
+
+        if ($docComment) {
+            // Extract @route annotations
+            if (preg_match('/@route\s+([^\n]+)/i', $docComment, $matches)) {
+                $routeAnnotation = trim($matches[1]);
+                $metadata['custom_route'] = $routeAnnotation;
+            }
+
+            // Extract @middleware annotations
+            if (preg_match_all('/@middleware\s+([^\n]+)/i', $docComment, $matches)) {
+                $middleware = [];
+                foreach ($matches[1] as $middlewareList) {
+                    $middleware = array_merge($middleware, array_map('trim', explode(',', $middlewareList)));
+                }
+                $metadata['middleware'] = array_unique($middleware);
+            }
+
+            // Extract @resource annotation for resource-style routes
+            if (preg_match('/@resource/i', $docComment)) {
+                $metadata['resource_routes'] = true;
+            }
+
+            // Extract @methods annotation
+            if (preg_match('/@methods\s+([^\n]+)/i', $docComment, $matches)) {
+                $methods = array_map('trim', explode(',', $matches[1]));
+                $metadata['http_methods'] = array_map('strtoupper', $methods);
+            }
+        }
+
+        return $metadata;
+    }
+
+    /**
+     * Get cached discovery results.
+     */
+    private function getCachedDiscovery(): ?array
+    {
+        if (!$this->cacheEnabled) {
+            return null;
+        }
+
+        try {
+            return Cache::get($this->cacheKey);
+        } catch (\Exception $e) {
+            logger()->warning('Failed to retrieve cached discovery results', [
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Cache discovery results.
+     */
+    private function cacheDiscovery(): void
+    {
+        if (!$this->cacheEnabled || empty($this->discoveredComponents)) {
+            return;
+        }
+
+        try {
+            Cache::put($this->cacheKey, $this->discoveredComponents, now()->addHours(1));
+        } catch (\Exception $e) {
+            logger()->warning('Failed to cache discovery results', [
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

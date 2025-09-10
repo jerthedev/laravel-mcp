@@ -6,10 +6,10 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use JTD\LaravelMCP\Protocol\MessageProcessor;
-use Tests\TestCase;
 use JTD\LaravelMCP\Transport\HttpTransport;
 use JTD\LaravelMCP\Transport\StdioTransport;
 use JTD\LaravelMCP\Transport\TransportManager;
+use Tests\TestCase;
 
 /**
  * Feature tests for the MCP ServeCommand.

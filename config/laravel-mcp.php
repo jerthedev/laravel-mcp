@@ -89,4 +89,9 @@ return [
         'store' => env('MCP_CACHE_STORE', 'file'),
         'ttl' => env('MCP_CACHE_TTL', 3600),
     ],
+
+    'validation' => [
+        'validate_handlers' => env('MCP_VALIDATE_HANDLERS', true),
+        'strict_mode' => env('MCP_STRICT_MODE', false),
+    ],
 ];

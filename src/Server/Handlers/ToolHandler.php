@@ -158,7 +158,7 @@ class ToolHandler extends BaseHandler
         try {
             // Get the tool data from registry
             $toolData = $this->toolRegistry->get($toolName);
-            
+
             // Extract the tool handler from the data array
             $tool = $toolData['handler'] ?? $toolData;
 
@@ -261,7 +261,7 @@ class ToolHandler extends BaseHandler
             try {
                 // Extract the tool handler from the data array
                 $tool = $toolData['handler'] ?? $toolData;
-                
+
                 $definition = [
                     'name' => $name,
                     'description' => $this->getToolDescription($tool),

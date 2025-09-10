@@ -2,13 +2,13 @@
 
 namespace JTD\LaravelMCP\Tests\Feature;
 
-use Tests\TestCase;
 use JTD\LaravelMCP\Transport\Contracts\TransportInterface;
 use JTD\LaravelMCP\Transport\HttpTransport;
 use JTD\LaravelMCP\Transport\StdioTransport;
 use JTD\LaravelMCP\Transport\TransportManager;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 #[Group('Epic-Transport')]
 #[Group('Sprint-Core')]

@@ -4,13 +4,13 @@ namespace JTD\LaravelMCP\Tests\Unit\Transport;
 
 use Illuminate\Container\Container;
 use JTD\LaravelMCP\Exceptions\TransportException;
-use Tests\TestCase;
 use JTD\LaravelMCP\Transport\Contracts\TransportInterface;
 use JTD\LaravelMCP\Transport\HttpTransport;
 use JTD\LaravelMCP\Transport\StdioTransport;
 use JTD\LaravelMCP\Transport\TransportManager;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 #[Group('Epic-Transport')]
 #[Group('Sprint-Core')]

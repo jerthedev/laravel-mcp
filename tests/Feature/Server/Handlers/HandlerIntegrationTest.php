@@ -12,9 +12,9 @@ use JTD\LaravelMCP\Registry\ToolRegistry;
 use JTD\LaravelMCP\Server\Handlers\PromptHandler;
 use JTD\LaravelMCP\Server\Handlers\ResourceHandler;
 use JTD\LaravelMCP\Server\Handlers\ToolHandler;
-use Tests\TestCase;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 /**
  * Integration tests for MCP Server Handler workflows.
@@ -182,6 +182,11 @@ class HandlerIntegrationTest extends TestCase
                 protected function handle(array $parameters): mixed
                 {
                     return ['result' => 'ok'];
+                }
+
+                public function execute(array $arguments): array
+                {
+                    return $this->handle($arguments);
                 }
             };
             $this->toolRegistry->register("tool-{$i}", $tool);
@@ -435,6 +440,11 @@ class HandlerIntegrationTest extends TestCase
                     ],
                 ];
             }
+
+            public function execute(array $arguments): array
+            {
+                return $this->handle($arguments);
+            }
         };
 
         $arrayTool = new class extends McpTool
@@ -457,6 +467,11 @@ class HandlerIntegrationTest extends TestCase
             protected function handle(array $parameters): mixed
             {
                 return ['key' => 'value', 'count' => 42];
+            }
+
+            public function execute(array $arguments): array
+            {
+                return $this->handle($arguments);
             }
         };
 
@@ -631,6 +646,11 @@ class HandlerIntegrationTest extends TestCase
 
                 return ['result' => $result];
             }
+
+            public function execute(array $arguments): array
+            {
+                return $this->handle($arguments);
+            }
         };
 
         // Register sample tool
@@ -654,6 +674,11 @@ class HandlerIntegrationTest extends TestCase
             protected function handle(array $parameters): mixed
             {
                 return ['sample' => 'response'];
+            }
+
+            public function execute(array $arguments): array
+            {
+                return $this->handle($arguments);
             }
         };
 

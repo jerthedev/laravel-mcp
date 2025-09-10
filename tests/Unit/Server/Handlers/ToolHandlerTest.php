@@ -5,11 +5,11 @@ namespace JTD\LaravelMCP\Tests\Unit\Server\Handlers;
 use JTD\LaravelMCP\Exceptions\ProtocolException;
 use JTD\LaravelMCP\Registry\ToolRegistry;
 use JTD\LaravelMCP\Server\Handlers\ToolHandler;
-use Tests\TestCase;
 use Mockery;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 /**
  * Tests for ToolHandler class.

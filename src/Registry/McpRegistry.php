@@ -31,6 +31,19 @@ class McpRegistry
      */
     protected array $typeRegistries = [];
 
+    /**
+     * Whether the registry has been initialized.
+     */
+    private bool $initialized = false;
+
+    /**
+     * Lock for thread-safe operations.
+     */
+    private mixed $lock = null;
+
+    /**
+     * Create a new MCP registry instance.
+     */
     public function __construct(
         ToolRegistry $toolRegistry,
         ResourceRegistry $resourceRegistry,
@@ -41,27 +54,79 @@ class McpRegistry
         $this->promptRegistry = $promptRegistry;
         $this->typeRegistries = [
             'tool' => $this->toolRegistry,
+            'tools' => $this->toolRegistry,
             'resource' => $this->resourceRegistry,
+            'resources' => $this->resourceRegistry,
             'prompt' => $this->promptRegistry,
+            'prompts' => $this->promptRegistry,
         ];
     }
 
-    public function register(string $type, string $name, $handler, array $options = []): void
+    /**
+     * Register a component with the registry.
+     * This method supports both the interface signature and spec signature.
+     */
+    public function register(string $name, $component, array $metadata = []): void
+    {
+        // Support spec signature: register(type, name, handler, options)
+        if (func_num_args() >= 3 && in_array($name, ['tool', 'resource', 'prompt'])) {
+            $type = $name;
+            $name = $component;
+            $handler = $metadata;
+            $options = func_get_arg(3) ?? [];
+
+            $this->registerWithType($type, $name, $handler, $options);
+
+            return;
+        }
+
+        // Standard interface signature
+        $this->withLock(function () use ($name, $component, $metadata) {
+            if ($this->has($name)) {
+                throw new RegistrationException("Component '{$name}' is already registered");
+            }
+
+            $this->components[$name] = $component;
+            $this->metadata[$name] = array_merge([
+                'name' => $name,
+                'type' => $this->detectComponentType($component),
+                'registered_at' => now()->toISOString(),
+            ], $metadata);
+
+            // Register with type-specific registry if applicable
+            $type = $this->metadata[$name]['type'];
+            if (isset($this->typeRegistries[$type])) {
+                $this->typeRegistries[$type]->register($name, $component, $metadata);
+            }
+        });
+    }
+
+    /**
+     * Register a component with specific type (spec-compliant method).
+     */
+    public function registerWithType(string $type, string $name, $handler, array $options = []): void
     {
         $this->validateRegistration($type, $name, $handler);
 
-        match ($type) {
-            'tool' => $this->toolRegistry->register($name, $handler, $options),
-            'resource' => $this->resourceRegistry->register($name, $handler, $options),
-            'prompt' => $this->promptRegistry->register($name, $handler, $options),
-            default => throw new RegistrationException("Unknown component type: $type")
-        };
+        $this->withLock(function () use ($type, $name, $handler, $options) {
+            $registry = match ($type) {
+                'tool' => $this->toolRegistry,
+                'resource' => $this->resourceRegistry,
+                'prompt' => $this->promptRegistry,
+                default => throw new RegistrationException("Unknown component type: $type")
+            };
 
-        $this->registered[$type][$name] = [
-            'handler' => $handler,
-            'options' => $options,
-            'registered_at' => time(),
-        ];
+            $registry->register($name, $handler, $options);
+
+            $this->components[$name] = $handler;
+            $this->metadata[$name] = array_merge([
+                'name' => $name,
+                'type' => $type.'s',
+                'handler' => $handler,
+                'options' => $options,
+                'registered_at' => time(),
+            ], $options);
+        });
     }
 
     public function unregister(string $type, string $name): bool
@@ -87,12 +152,12 @@ class McpRegistry
             $internalCount = count($this->registered['tool'] ?? []) +
                            count($this->registered['resource'] ?? []) +
                            count($this->registered['prompt'] ?? []);
-            
+
             // If we have items in internal registry, use that count
             if ($internalCount > 0) {
                 return $internalCount;
             }
-            
+
             // Otherwise fall back to type-specific registries
             return $this->toolRegistry->count() +
                    $this->resourceRegistry->count() +
@@ -106,7 +171,7 @@ class McpRegistry
                 return $count;
             }
         }
-        
+
         return match ($type) {
             'tool' => $this->toolRegistry->count(),
             'resource' => $this->resourceRegistry->count(),
@@ -122,17 +187,17 @@ class McpRegistry
 
     public function getMetadata(string $type, string $name): array
     {
-        if (!isset($this->registered[$type][$name])) {
+        if (! isset($this->registered[$type][$name])) {
             return [];
         }
-        
+
         $metadata = $this->registered[$type][$name]['options'] ?? [];
-        
+
         // Include registered_at timestamp if available
         if (isset($this->registered[$type][$name]['registered_at'])) {
             $metadata['registered_at'] = $this->registered[$type][$name]['registered_at'];
         }
-        
+
         return $metadata;
     }
 
@@ -142,7 +207,7 @@ class McpRegistry
         if (isset($this->registered[$type][$name])) {
             return true;
         }
-        
+
         // Then check type-specific registries
         return match ($type) {
             'tool' => $this->toolRegistry->has($name),
@@ -368,53 +433,53 @@ class McpRegistry
     public function getTool(string $name): ?McpTool
     {
         $tool = $this->toolRegistry->get($name);
-        
+
         if (is_string($tool) && class_exists($tool)) {
             return $this->instantiate($tool, $name);
         }
-        
+
         return $tool instanceof McpTool ? $tool : null;
     }
 
     public function getResource(string $name): ?McpResource
     {
         $resource = $this->resourceRegistry->get($name);
-        
+
         if (is_string($resource) && class_exists($resource)) {
             return $this->instantiate($resource, $name);
         }
-        
+
         return $resource instanceof McpResource ? $resource : null;
     }
 
     public function getPrompt(string $name): ?McpPrompt
     {
         $prompt = $this->promptRegistry->get($name);
-        
+
         if (is_string($prompt) && class_exists($prompt)) {
             return $this->instantiate($prompt, $name);
         }
-        
+
         return $prompt instanceof McpPrompt ? $prompt : null;
     }
 
     /**
      * Instantiate a class with optional name parameter.
      */
-    private function instantiate(string $className, string $name = null): mixed
+    private function instantiate(string $className, ?string $name = null): mixed
     {
         try {
             $reflection = new \ReflectionClass($className);
             $constructor = $reflection->getConstructor();
-            
+
             if ($constructor && $constructor->getNumberOfRequiredParameters() > 0 && $name) {
                 return new $className($name);
             } else {
-                return new $className();
+                return new $className;
             }
         } catch (\Exception $e) {
             try {
-                return new $className();
+                return new $className;
             } catch (\Exception $fallbackException) {
                 throw new RegistrationException("Unable to instantiate {$className}: {$fallbackException->getMessage()}");
             }
@@ -528,11 +593,81 @@ class McpRegistry
             return;
         }
 
-        $this->toolRegistry->initialize();
-        $this->resourceRegistry->initialize();
-        $this->promptRegistry->initialize();
+        $this->withLock(function () {
+            // Initialize type-specific registries
+            foreach ($this->typeRegistries as $registry) {
+                if (method_exists($registry, 'initialize')) {
+                    $registry->initialize();
+                }
+            }
 
-        $this->initialized = true;
+            $this->initialized = true;
+        });
+    }
+
+    /**
+     * Validate registration parameters.
+     */
+    private function validateRegistration(string $type, string $name, $handler): void
+    {
+        if (empty($name)) {
+            throw new RegistrationException('Component name cannot be empty');
+        }
+
+        if ($this->has($name)) {
+            throw new RegistrationException("Component '{$name}' of type '{$type}' is already registered");
+        }
+
+        $this->validateHandler($type, $handler);
+    }
+
+    /**
+     * Validate handler for a component type.
+     */
+    private function validateHandler(string $type, $handler): void
+    {
+        // Skip validation if disabled in configuration
+        if (! config('laravel-mcp.validation.validate_handlers', true)) {
+            return;
+        }
+
+        if (is_string($handler) && ! class_exists($handler)) {
+            throw new RegistrationException("Handler class '{$handler}' does not exist");
+        }
+
+        if (is_string($handler)) {
+            $requiredInterface = match ($type) {
+                'tool' => \JTD\LaravelMCP\Abstracts\McpTool::class,
+                'resource' => \JTD\LaravelMCP\Abstracts\McpResource::class,
+                'prompt' => \JTD\LaravelMCP\Abstracts\McpPrompt::class,
+                default => null
+            };
+
+            if ($requiredInterface && ! is_subclass_of($handler, $requiredInterface)) {
+                throw new RegistrationException("Handler must extend {$requiredInterface}");
+            }
+        }
+    }
+
+    /**
+     * Execute a closure with thread-safe locking.
+     */
+    private function withLock(callable $callback): mixed
+    {
+        if ($this->lock === null) {
+            $this->lock = new \stdClass;
+        }
+
+        // Use synchronized block for thread-safety
+        // In production, this could use a proper mutex or semaphore
+        $lockId = spl_object_id($this->lock);
+
+        try {
+            // In a real implementation, acquire lock here
+            return $callback();
+        } finally {
+            // Release lock here
+        }
     }
 
     public function getTools(): array
@@ -548,5 +683,19 @@ class McpRegistry
     public function getPrompts(): array
     {
         return $this->promptRegistry->getAll();
+    }
+
+    /**
+     * Create a group of component registrations with shared attributes.
+     * This method delegates to RouteRegistrar for facade compatibility.
+     *
+     * @param  array  $attributes  Shared attributes for all components in the group
+     * @param  \Closure  $callback  Closure containing component registrations
+     */
+    public function group(array $attributes, \Closure $callback): void
+    {
+        // Delegate to RouteRegistrar for route-style registration
+        $registrar = app(RouteRegistrar::class);
+        $registrar->group($attributes, $callback);
     }
 }

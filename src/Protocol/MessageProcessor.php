@@ -143,7 +143,9 @@ class MessageProcessor implements MessageHandlerInterface
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return $this->jsonRpcHandler->createErrorResponse(-32603, 'Internal error', null, $message['id'] ?? null);
+            // Log more detailed error in debug mode
+            $errorMessage = config('app.debug') ? 'Internal error: ' . $e->getMessage() : 'Internal error';
+            return $this->jsonRpcHandler->createErrorResponse(-32603, $errorMessage, null, $message['id'] ?? null);
         }
     }
 

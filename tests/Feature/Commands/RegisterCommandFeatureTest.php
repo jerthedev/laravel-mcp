@@ -35,13 +35,13 @@
  * - Interactive console features
  */
 
-namespace Tests\Feature\Commands;
+namespace JTD\LaravelMCP\Tests\Feature\Commands;
 
 use Illuminate\Support\Facades\File;
 use JTD\LaravelMCP\Support\ConfigGenerator;
-use Tests\TestCase;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 #[Group('feature')]
 #[Group('commands')]

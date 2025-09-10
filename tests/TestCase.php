@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests;
+namespace JTD\LaravelMCP\Tests;
 
 use JTD\LaravelMCP\Facades\Mcp;
 use JTD\LaravelMCP\LaravelMcpServiceProvider;
@@ -13,7 +13,6 @@ abstract class TestCase extends OrchestraTestCase
         parent::setUp();
 
         $this->setUpMcpEnvironment();
-        $this->loadMcpConfiguration();
         $this->setupTestComponents();
     }
 
@@ -60,6 +59,7 @@ abstract class TestCase extends OrchestraTestCase
         $app['config']->set('laravel-mcp.debug', true);
         $app['config']->set('laravel-mcp.discovery.enabled', false); // Disable discovery in tests
         $app['config']->set('laravel-mcp.discovery.paths', []);
+        $app['config']->set('laravel-mcp.validation.validate_handlers', false); // Disable handler validation in tests
 
         // Enable debug mode for commands
         $app['config']->set('app.debug', true);
@@ -92,14 +92,6 @@ abstract class TestCase extends OrchestraTestCase
 
         // Clear any existing registrations
         $this->clearMcpRegistrations();
-    }
-
-    /**
-     * Load MCP configuration for testing.
-     */
-    protected function loadMcpConfiguration(): void
-    {
-        // Additional test-specific configuration can be set here
     }
 
     /**
@@ -141,6 +133,16 @@ abstract class TestCase extends OrchestraTestCase
             } catch (\Exception $e) {
                 // Ignore errors during setup
             }
+        }
+
+        // Also clear the registry directly if available
+        try {
+            $registry = app('mcp.registry');
+            if ($registry && method_exists($registry, 'clear')) {
+                $registry->clear();
+            }
+        } catch (\Exception $e) {
+            // Ignore errors during setup
         }
     }
 
@@ -409,6 +411,23 @@ abstract class TestCase extends OrchestraTestCase
             default:
                 return file_get_contents($path);
         }
+    }
+
+    /**
+     * Create a test stdio transport for simulation.
+     */
+    protected function createStdioTransportMock()
+    {
+        return $this->createMock(\JTD\LaravelMCP\Transport\StdioTransport::class);
+    }
+
+    /**
+     * Simulate stdio input/output for testing.
+     */
+    protected function simulateStdioMessage(string $input): string
+    {
+        // Simulate stdio message framing
+        return json_encode(json_decode($input, true));
     }
 
     /**
