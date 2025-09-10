@@ -69,7 +69,7 @@ class RegistrationSystemTest extends TestCase
                 $this->name = $name;
             }
             
-            public function execute(array $arguments): array
+            public function handle(array $arguments): array
             {
                 $operation = $arguments['operation'] ?? 'add';
                 $a = $arguments['a'] ?? 0;

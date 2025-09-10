@@ -364,7 +364,14 @@ class StdioTransport extends BaseTransport
     public function handleShutdown(): void
     {
         if ($this->isConnected()) {
-            Log::info('Shutdown handler triggered, stopping transport');
+            // Only log if the application is still available
+            try {
+                if (app() && app()->bound('log')) {
+                    Log::info('Shutdown handler triggered, stopping transport');
+                }
+            } catch (\Exception $e) {
+                // Ignore logging errors during shutdown
+            }
             $this->stop();
         }
     }

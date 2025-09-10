@@ -31,6 +31,16 @@ class HttpTransport extends BaseTransport
     protected bool $serverStarted = false;
 
     /**
+     * Statistics tracking properties.
+     */
+    protected int $messagesSent = 0;
+    protected int $messagesReceived = 0;
+    protected int $bytesSent = 0;
+    protected int $bytesReceived = 0;
+    protected ?int $startedAt = null;
+    protected ?int $lastActivity = null;
+
+    /**
      * Get transport type identifier.
      *
      * @return string Transport type
@@ -507,5 +517,66 @@ class HttpTransport extends BaseTransport
     public function isConnected(): bool
     {
         return parent::isConnected() && $this->serverStarted;
+    }
+
+    /**
+     * Get transport statistics.
+     *
+     * @return array Statistics data
+     */
+    public function getStatistics(): array
+    {
+        return [
+            'messages_sent' => $this->messagesSent ?? 0,
+            'messages_received' => $this->messagesReceived ?? 0,
+            'bytes_sent' => $this->bytesSent ?? 0,
+            'bytes_received' => $this->bytesReceived ?? 0,
+            'started_at' => $this->startedAt ?? null,
+            'last_activity' => $this->lastActivity ?? null,
+        ];
+    }
+
+    /**
+     * Perform health check on the transport.
+     *
+     * @return array Health check results
+     */
+    public function performHealthCheck(): array
+    {
+        $checks = [];
+        $errors = [];
+        
+        // Check if transport is started
+        $checks['transport_started'] = $this->serverStarted;
+        if (!$this->serverStarted) {
+            $errors[] = 'HTTP transport not started';
+        }
+        
+        // Check if connected
+        $checks['transport_connected'] = $this->isConnected();
+        if (!$this->isConnected()) {
+            $errors[] = 'HTTP transport not connected';
+        }
+        
+        // Check if message handler is available
+        $checks['message_handler'] = $this->messageHandler !== null;
+        if ($this->messageHandler === null) {
+            $errors[] = 'No message handler configured';
+        }
+        
+        // Check configuration
+        $checks['config_valid'] = !empty($this->config);
+        if (empty($this->config)) {
+            $errors[] = 'No configuration available';
+        }
+        
+        // Overall health status
+        $healthy = empty($errors);
+        
+        return [
+            'healthy' => $healthy,
+            'checks' => $checks,
+            'errors' => $errors,
+        ];
     }
 }

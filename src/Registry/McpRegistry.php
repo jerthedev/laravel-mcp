@@ -272,25 +272,49 @@ class McpRegistry
     /**
      * Register a tool (backward compatibility).
      */
-    public function registerTool(string $name, $tool, array $metadata = []): void
+    public function registerTool($nameOrTool, $tool = null, array $metadata = []): void
     {
-        $this->register('tool', $name, $tool, $metadata);
+        // Handle when tool object is passed as first argument
+        if (is_object($nameOrTool) && method_exists($nameOrTool, 'getName')) {
+            $tool = $nameOrTool;
+            $name = $tool->getName();
+            $this->register('tool', $name, $tool, $metadata);
+        } else {
+            // Traditional usage with name as first arg
+            $this->register('tool', $nameOrTool, $tool, $metadata);
+        }
     }
 
     /**
      * Register a resource (backward compatibility).
      */
-    public function registerResource(string $name, $resource, array $metadata = []): void
+    public function registerResource($nameOrResource, $resource = null, array $metadata = []): void
     {
-        $this->register('resource', $name, $resource, $metadata);
+        // Handle when resource object is passed as first argument
+        if (is_object($nameOrResource) && method_exists($nameOrResource, 'getName')) {
+            $resource = $nameOrResource;
+            $name = $resource->getName();
+            $this->register('resource', $name, $resource, $metadata);
+        } else {
+            // Traditional usage with name as first arg
+            $this->register('resource', $nameOrResource, $resource, $metadata);
+        }
     }
 
     /**
      * Register a prompt (backward compatibility).
      */
-    public function registerPrompt(string $name, $prompt, array $metadata = []): void
+    public function registerPrompt($nameOrPrompt, $prompt = null, array $metadata = []): void
     {
-        $this->register('prompt', $name, $prompt, $metadata);
+        // Handle when prompt object is passed as first argument
+        if (is_object($nameOrPrompt) && method_exists($nameOrPrompt, 'getName')) {
+            $prompt = $nameOrPrompt;
+            $name = $prompt->getName();
+            $this->register('prompt', $name, $prompt, $metadata);
+        } else {
+            // Traditional usage with name as first arg
+            $this->register('prompt', $nameOrPrompt, $prompt, $metadata);
+        }
     }
 
     /**

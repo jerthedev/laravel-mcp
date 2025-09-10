@@ -179,7 +179,7 @@ class HandlerIntegrationTest extends TestCase
                     return ['type' => 'object'];
                 }
 
-                public function execute(array $arguments): array
+                protected function handle(array $parameters): mixed
                 {
                     return ['result' => 'ok'];
                 }
@@ -424,7 +424,7 @@ class HandlerIntegrationTest extends TestCase
                 return ['type' => 'object'];
             }
 
-            public function execute(array $arguments): array
+            protected function handle(array $parameters): mixed
             {
                 return [
                     'content' => [
@@ -454,7 +454,7 @@ class HandlerIntegrationTest extends TestCase
                 return ['type' => 'object'];
             }
 
-            public function execute(array $arguments): array
+            protected function handle(array $parameters): mixed
             {
                 return ['key' => 'value', 'count' => 42];
             }
@@ -551,7 +551,16 @@ class HandlerIntegrationTest extends TestCase
 
             public function read(array $options = []): array
             {
-                return ['data' => 'value', 'active' => true];
+                return [
+                    'contents' => [
+                        [
+                            'uri' => $this->getUri(),
+                            'mimeType' => $this->getMimeType(),
+                            'type' => 'text',
+                            'text' => json_encode(['data' => 'value', 'active' => true]),
+                        ],
+                    ],
+                ];
             }
         };
 
@@ -607,10 +616,10 @@ class HandlerIntegrationTest extends TestCase
                 ];
             }
 
-            public function execute(array $arguments): array
+            protected function handle(array $parameters): mixed
             {
-                $operation = $arguments['operation'];
-                $operands = $arguments['operands'];
+                $operation = $parameters['operation'];
+                $operands = $parameters['operands'];
 
                 $result = match ($operation) {
                     'add' => array_sum($operands),
@@ -642,7 +651,7 @@ class HandlerIntegrationTest extends TestCase
                 return ['type' => 'object'];
             }
 
-            public function execute(array $arguments): array
+            protected function handle(array $parameters): mixed
             {
                 return ['sample' => 'response'];
             }

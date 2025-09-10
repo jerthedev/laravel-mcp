@@ -63,6 +63,9 @@ abstract class TestCase extends OrchestraTestCase
 
         // Enable debug mode for commands
         $app['config']->set('app.debug', true);
+        
+        // Set app key for encryption (required for sessions/cookies)
+        $app['config']->set('app.key', 'base64:'.base64_encode('32charactersoftestingencryptkey'));
 
         // Set up test database
         $app['config']->set('database.default', 'testing');

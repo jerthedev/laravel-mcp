@@ -78,8 +78,11 @@ class McpController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
 
+            // In debug mode, include the actual error message
+            $message = config('app.debug') ? $e->getMessage() : 'Internal server error';
+
             return $this->createErrorResponse(
-                'Internal server error',
+                $message,
                 -32603,
                 null,
                 500
@@ -297,6 +300,10 @@ class McpController extends Controller
             if (! $transport instanceof HttpTransport) {
                 throw new TransportException('Invalid transport type. Expected HttpTransport.');
             }
+
+            // Set up message handler (McpServer)
+            $mcpServer = app(\JTD\LaravelMCP\Server\McpServer::class);
+            $transport->setMessageHandler($mcpServer);
 
             // Start the transport if not already started
             if (! $transport->isConnected()) {

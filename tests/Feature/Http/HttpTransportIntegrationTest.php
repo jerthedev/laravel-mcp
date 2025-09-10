@@ -48,13 +48,15 @@ class HttpTransportIntegrationTest extends TestCase
 
     protected function setupTestRoutes(): void
     {
-        Route::prefix('mcp')->group(function () {
-            Route::post('/', [McpController::class, 'handle'])->name('mcp.handle');
-            Route::options('/', [McpController::class, 'options'])->name('mcp.options');
-            Route::get('/health', [McpController::class, 'health'])->name('mcp.health');
-            Route::get('/info', [McpController::class, 'info'])->name('mcp.info');
-            Route::get('/events', [McpController::class, 'events'])->name('mcp.events');
-        });
+        Route::prefix('mcp')
+            ->middleware(\JTD\LaravelMCP\Http\Middleware\McpCorsMiddleware::class)
+            ->group(function () {
+                Route::post('/', [McpController::class, 'handle'])->name('mcp.handle');
+                Route::options('/', [McpController::class, 'options'])->name('mcp.options');
+                Route::get('/health', [McpController::class, 'health'])->name('mcp.health');
+                Route::get('/info', [McpController::class, 'info'])->name('mcp.info');
+                Route::get('/events', [McpController::class, 'events'])->name('mcp.events');
+            });
     }
 
     /**

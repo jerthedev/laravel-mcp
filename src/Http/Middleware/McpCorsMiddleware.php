@@ -22,7 +22,7 @@ class McpCorsMiddleware
 
     private function handlePreflightRequest(Request $request): SymfonyResponse
     {
-        $response = response('', 200);
+        $response = response('', 204);
 
         return $this->addCorsHeaders($request, $response);
     }
