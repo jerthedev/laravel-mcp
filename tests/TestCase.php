@@ -54,6 +54,10 @@ abstract class TestCase extends OrchestraTestCase
         putenv('MCP_ENABLED=true');
         $_ENV['MCP_ENABLED'] = 'true';
 
+        // Set encryption key for Laravel (must be exactly 32 characters for AES-256-CBC)
+        $app['config']->set('app.key', 'base64:'.base64_encode('12345678901234567890123456789012'));
+        $app['config']->set('app.cipher', 'AES-256-CBC');
+
         // Set test-specific configuration
         $app['config']->set('laravel-mcp.enabled', true);
         $app['config']->set('laravel-mcp.debug', true);
@@ -221,6 +225,23 @@ abstract class TestCase extends OrchestraTestCase
                 if (isset($config['mimeType'])) {
                     $this->mimeType = $config['mimeType'];
                 }
+                
+                parent::__construct();
+            }
+
+            public function getUri(): string
+            {
+                return $this->uri;
+            }
+
+            public function getMimeType(): string
+            {
+                return $this->mimeType;
+            }
+
+            public function getDescription(): string
+            {
+                return $this->description;
             }
 
             public function read(array $options = []): array

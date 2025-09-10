@@ -47,6 +47,8 @@ abstract class BaseTransport implements TransportInterface
     protected array $stats = [
         'messages_sent' => 0,
         'messages_received' => 0,
+        'bytes_sent' => 0,
+        'bytes_received' => 0,
         'errors_count' => 0,
         'last_activity' => null,
     ];
@@ -77,6 +79,8 @@ abstract class BaseTransport implements TransportInterface
         $this->stats = [
             'messages_sent' => 0,
             'messages_received' => 0,
+            'bytes_sent' => 0,
+            'bytes_received' => 0,
             'errors_count' => 0,
             'last_activity' => null,
         ];
@@ -175,6 +179,7 @@ abstract class BaseTransport implements TransportInterface
         try {
             $this->doSend($message);
             $this->stats['messages_sent']++;
+            $this->stats['bytes_sent'] += strlen($message);
             $this->stats['last_activity'] = time();
 
             if ($this->config['debug'] ?? false) {
@@ -211,6 +216,7 @@ abstract class BaseTransport implements TransportInterface
 
             if ($message !== null) {
                 $this->stats['messages_received']++;
+                $this->stats['bytes_received'] += strlen($message);
                 $this->stats['last_activity'] = time();
 
                 if ($this->config['debug'] ?? false) {

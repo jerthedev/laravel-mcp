@@ -9,7 +9,7 @@ use Mockery;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 /**
  * Tests for ResourceHandler class.

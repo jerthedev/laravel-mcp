@@ -39,7 +39,7 @@ class SchemaDocumenterTest extends TestCase
 
         $this->assertStringContainsString('### String Field', $documentation);
         $this->assertStringContainsString('A simple string field', $documentation);
-        $this->assertStringContainsString('**Type:** string', $documentation);
+        $this->assertStringContainsString('**Type:** `string`', $documentation);
         $this->assertStringContainsString('#### Example', $documentation);
         $this->assertStringContainsString('"example_string"', $documentation);
     }
@@ -56,7 +56,7 @@ class SchemaDocumenterTest extends TestCase
 
         $documentation = $this->documenter->documentSchema($schema);
 
-        $this->assertStringContainsString('**Type:** number', $documentation);
+        $this->assertStringContainsString('**Type:** `number`', $documentation);
         $this->assertStringContainsString('A numeric value', $documentation);
         $this->assertStringContainsString('**Validation:** Minimum: 0, Maximum: 100', $documentation);
         $this->assertStringContainsString('0', $documentation); // Example should use minimum value
@@ -74,7 +74,7 @@ class SchemaDocumenterTest extends TestCase
 
         $documentation = $this->documenter->documentSchema($schema);
 
-        $this->assertStringContainsString('**Type:** integer', $documentation);
+        $this->assertStringContainsString('**Type:** `integer`', $documentation);
         $this->assertStringContainsString('**Validation:** Minimum: 1, Maximum: 10, Multiple of: 2', $documentation);
         $this->assertStringContainsString('1', $documentation); // Example should use minimum value
     }
@@ -89,7 +89,7 @@ class SchemaDocumenterTest extends TestCase
 
         $documentation = $this->documenter->documentSchema($schema);
 
-        $this->assertStringContainsString('**Type:** boolean', $documentation);
+        $this->assertStringContainsString('**Type:** `boolean`', $documentation);
         $this->assertStringContainsString('A true/false value', $documentation);
         $this->assertStringContainsString('true', $documentation);
     }
@@ -121,7 +121,7 @@ class SchemaDocumenterTest extends TestCase
 
         $documentation = $this->documenter->documentSchema($schema);
 
-        $this->assertStringContainsString('**Type:** object', $documentation);
+        $this->assertStringContainsString('**Type:** `object`', $documentation);
         $this->assertStringContainsString('A user object', $documentation);
         $this->assertStringContainsString('#### Properties', $documentation);
         $this->assertStringContainsString('- **name** (`string`) _(required)_', $documentation);
@@ -148,11 +148,11 @@ class SchemaDocumenterTest extends TestCase
 
         $documentation = $this->documenter->documentSchema($schema);
 
-        $this->assertStringContainsString('**Type:** array', $documentation);
+        $this->assertStringContainsString('**Type:** `array`', $documentation);
         $this->assertStringContainsString('A list of tags', $documentation);
         $this->assertStringContainsString('**Validation:** Minimum items: 1, Maximum items: 10, Items must be unique', $documentation);
         $this->assertStringContainsString('#### Array Items', $documentation);
-        $this->assertStringContainsString('**Type:** string', $documentation);
+        $this->assertStringContainsString('**Type:** `string`', $documentation);
     }
 
     #[Test]
@@ -172,9 +172,9 @@ class SchemaDocumenterTest extends TestCase
 
         $documentation = $this->documenter->documentSchema($schema);
 
-        $this->assertStringContainsString('**Type:** array', $documentation);
+        $this->assertStringContainsString('**Type:** `array`', $documentation);
         $this->assertStringContainsString('#### Array Items', $documentation);
-        $this->assertStringContainsString('**Type:** object', $documentation);
+        $this->assertStringContainsString('**Type:** `object`', $documentation);
         $this->assertStringContainsString('#### Properties', $documentation);
         $this->assertStringContainsString('- **id** (`integer`) _(required)_', $documentation);
         $this->assertStringContainsString('- **title** (`string`) _(optional)_', $documentation);
@@ -536,7 +536,7 @@ class SchemaDocumenterTest extends TestCase
         $documentation = $this->documenter->documentToolSchema($metadata);
 
         $this->assertStringContainsString('### Tool Input Schema', $documentation);
-        $this->assertStringContainsString('**Type:** object', $documentation);
+        $this->assertStringContainsString('**Type:** `object`', $documentation);
         $this->assertStringContainsString('- **query** (`string`) _(optional)_', $documentation);
         $this->assertStringContainsString('Search query', $documentation);
     }
@@ -566,7 +566,7 @@ class SchemaDocumenterTest extends TestCase
         $documentation = $this->documenter->documentResourceSchema($metadata);
 
         $this->assertStringContainsString('### Resource Parameters Schema', $documentation);
-        $this->assertStringContainsString('**Type:** object', $documentation);
+        $this->assertStringContainsString('**Type:** `object`', $documentation);
         $this->assertStringContainsString('- **id** (`integer`) _(optional)_', $documentation);
         $this->assertStringContainsString('Resource ID', $documentation);
     }
@@ -596,7 +596,7 @@ class SchemaDocumenterTest extends TestCase
         $documentation = $this->documenter->documentPromptSchema($metadata);
 
         $this->assertStringContainsString('### Prompt Arguments Schema', $documentation);
-        $this->assertStringContainsString('**Type:** object', $documentation);
+        $this->assertStringContainsString('**Type:** `object`', $documentation);
         $this->assertStringContainsString('- **topic** (`string`) _(optional)_', $documentation);
         $this->assertStringContainsString('Topic to write about', $documentation);
     }
@@ -642,7 +642,7 @@ class SchemaDocumenterTest extends TestCase
     {
         $documentation = $this->documenter->documentSchema([]);
 
-        $this->assertStringContainsString('**Type:** mixed', $documentation);
+        $this->assertStringContainsString('**Type:** `mixed`', $documentation);
     }
 
     #[Test]
@@ -655,7 +655,7 @@ class SchemaDocumenterTest extends TestCase
 
         $documentation = $this->documenter->documentSchema($schema);
 
-        $this->assertStringContainsString('**Type:** unknown_type', $documentation);
+        $this->assertStringContainsString('**Type:** `unknown_type`', $documentation);
         // Should not crash and produce some output
         $this->assertNotEmpty($documentation);
     }
@@ -744,7 +744,7 @@ class SchemaDocumenterTest extends TestCase
 
         // Check for proper markdown formatting
         $this->assertStringContainsString('### Test Schema', $documentation);
-        $this->assertStringContainsString('**Type:** object', $documentation);
+        $this->assertStringContainsString('**Type:** `object`', $documentation);
         $this->assertStringContainsString('#### Properties', $documentation);
         $this->assertStringContainsString('#### Example', $documentation);
         $this->assertStringContainsString('```json', $documentation);

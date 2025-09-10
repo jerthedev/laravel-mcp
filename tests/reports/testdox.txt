@@ -1,3 +1,81 @@
-Register Command Feature (Tests\Feature\Commands\RegisterCommandFeature)
+List Command Feature (JTD\LaravelMCP\Tests\Feature\Commands\ListCommandFeature)
+ [x] List command is registered in artisan
+ [x] Command can be discovered by artisan
+ [x] Command help displays correct information
+ [x] Command handles empty registries
+ [x] Command lists all component types
+ [x] Command filters by tools type
+ [x] Command filters by resources type
+ [x] Command filters by prompts type
+ [x] Command outputs json format
+ [x] Command outputs yaml format
+ [x] Command shows detailed information
+ [x] Command shows detailed resource information
+ [x] Command shows detailed prompt information
+ [x] Command runs with debug mode
+ [x] Command validates invalid type option
+ [x] Command validates invalid format option
+ [x] Command handles metadata failures gracefully
+ [x] Command lists multiple components
+ [x] Command json format with detailed flag
+ [x] Full integration with service provider
+ [x] Command integrates with mcp facade
+ [x] Command truncates long descriptions
+ [x] Command formats class names
+
+Register Command (JTD\LaravelMCP\Tests\Feature\Commands\RegisterCommand)
+ [x] It registers claude desktop configuration
+ [x] It registers claude code configuration
+ [x] It registers chatgpt desktop configuration
+ [x] It validates invalid client type
+ [x] It prompts for server name when not provided
+ [x] It handles environment variables
+ [x] It handles additional arguments
+ [x] It prevents overwrite without force flag
+ [x] It merges with existing configuration
+ [x] It uses custom output path
+ [x] It shows next steps for claude desktop
+ [x] It shows next steps for claude code
+ [x] It shows next steps for chatgpt
+ [x] It handles custom server path
+ [x] It handles invalid environment variables with data set "no equals sign"
+ [x] It handles invalid environment variables with data set "empty value"
+ [x] It handles invalid environment variables with data set "only equals"
+
+Register Command Feature (JTD\LaravelMCP\Tests\Feature\Commands\RegisterCommandFeature)
+ [x] It can register claude desktop configuration
+ [x] It can register claude code configuration
+ [x] It can register chatgpt configuration
  [x] It validates client type
+ [x] It accepts additional arguments
+ [x] It accepts environment variables
+ [x] It uses custom server path
+ [x] It prevents overwrite without force flag
+ [x] It overwrites with force flag
+ [x] It merges with existing configuration
+ [x] It creates directory if not exists
+ [x] It provides helpful next steps
+ [x] It shows different next steps for different clients
+ [x] It handles configuration generation errors
+ [x] It validates configuration before saving
+ [x] It handles file save errors
+ [x] It falls back to current directory when default path unavailable
+ [x] It shows debug information in verbose mode
+
+Serve Command Feature (JTD\LaravelMCP\Tests\Feature\Commands\ServeCommandFeature)
+ [x] Serve command is registered in artisan
+ [x] Command can be discovered by artisan
+ [x] Command help displays correct information
+ [x] Command initializes with stdio transport
+ [x] Command initializes with http transport
+ [x] Command fails with invalid transport type
+ [x] Command fails when transport is disabled
+ [x] Command runs with debug mode enabled
+ [x] Command validates numeric options
+ [x] Command handles transport exceptions gracefully
+ [x] Command integrates with real transport manager
+ [x] Command merges configuration from options
+ [x] Command sets server info on message processor
+ [x] Command displays verbose output
+ [x] Full integration with service provider
 

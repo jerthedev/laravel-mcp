@@ -3,7 +3,7 @@
 namespace JTD\LaravelMCP\Tests\Unit\Registry;
 
 use JTD\LaravelMCP\Registry\RoutingPatterns;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 /**
  * Test suite for RoutingPatterns functionality.

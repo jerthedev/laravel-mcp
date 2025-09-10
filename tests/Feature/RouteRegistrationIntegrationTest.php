@@ -9,7 +9,7 @@ use JTD\LaravelMCP\Facades\Mcp;
 use JTD\LaravelMCP\Registry\ComponentDiscovery;
 use JTD\LaravelMCP\Registry\RoutingPatterns;
 use JTD\LaravelMCP\Registry\RouteRegistrar;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 /**
  * Feature tests for route registration integration.

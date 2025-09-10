@@ -198,8 +198,8 @@ class ResourceHandler extends BaseHandler
 
         foreach ($resources as $name => $resourceData) {
             try {
-                // Extract the resource handler from the data array
-                $resource = $resourceData['handler'] ?? $resourceData;
+                // Extract the resource handler from the data array or use directly
+                $resource = is_array($resourceData) ? ($resourceData['handler'] ?? $resourceData) : $resourceData;
 
                 $definition = [
                     'uri' => $this->getResourceUri($name, $resource),
@@ -242,8 +242,8 @@ class ResourceHandler extends BaseHandler
         $resources = $this->resourceRegistry->all();
 
         foreach ($resources as $name => $resourceData) {
-            // Extract the resource handler from the data array
-            $resource = $resourceData['handler'] ?? $resourceData;
+            // Extract the resource handler from the data array or use directly
+            $resource = is_array($resourceData) ? ($resourceData['handler'] ?? $resourceData) : $resourceData;
             $resourceUri = $this->getResourceUri($name, $resource);
             if ($resourceUri === $uri) {
                 return $resource;

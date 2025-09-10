@@ -4,7 +4,7 @@ namespace JTD\LaravelMCP\Tests\Unit\Server;
 
 use Illuminate\Support\Facades\Config;
 use JTD\LaravelMCP\Server\ServerInfo;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 class ServerInfoTest extends TestCase
 {

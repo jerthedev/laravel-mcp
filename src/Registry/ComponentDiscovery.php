@@ -11,6 +11,7 @@ use JTD\LaravelMCP\Abstracts\McpPrompt;
 use JTD\LaravelMCP\Abstracts\McpResource;
 use JTD\LaravelMCP\Abstracts\McpTool;
 use JTD\LaravelMCP\Registry\Contracts\DiscoveryInterface;
+use JTD\LaravelMCP\Registry\RoutingPatterns;
 use ReflectionClass;
 use Symfony\Component\Finder\Finder;
 
@@ -72,17 +73,16 @@ class ComponentDiscovery implements DiscoveryInterface
 
     /**
      * Routing patterns instance for route generation.
-     * 
-     * Note: This will be implemented in future iterations when routing is fully integrated
      */
-    // protected RoutingPatterns $routingPatterns;
+    protected RoutingPatterns $routingPatterns;
 
     /**
      * Create a new component discovery instance.
      */
-    public function __construct(McpRegistry $registry)
+    public function __construct(McpRegistry $registry, RoutingPatterns $routingPatterns)
     {
         $this->registry = $registry;
+        $this->routingPatterns = $routingPatterns;
 
         $this->discoveryPaths = config('laravel-mcp.discovery.paths', [
             app_path('Mcp/Tools'),
@@ -353,35 +353,38 @@ class ComponentDiscovery implements DiscoveryInterface
      */
     public function registerDiscoveredComponents(bool $registerRoutes = true): void
     {
-        $discovered = $this->discover([]);
+        foreach ($this->discoveredComponents as $component) {
+            try {
+                $this->registry->registerWithType(
+                    $component['type'],
+                    $component['name'],
+                    $component['class'],
+                    $component['options'] ?? []
+                );
 
-        foreach ($discovered as $componentType => $components) {
-            foreach ($components as $className => $metadata) {
-                try {
-                    $this->registry->register(
-                        $metadata['type'],
-                        $metadata['name'],
-                        $className,
-                        $metadata
-                    );
-
-                    Log::debug('Registered discovered component', [
-                        'type' => $metadata['type'],
-                        'name' => $metadata['name'],
-                        'class' => $className,
-                    ]);
-                } catch (\Exception $e) {
-                    Log::warning('Failed to register discovered component', [
-                        'component' => $metadata,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
+                Log::debug('Registered discovered component', [
+                    'type' => $component['type'],
+                    'name' => $component['name'],
+                    'class' => $component['class'],
+                ]);
+            } catch (\Exception $e) {
+                Log::warning('Failed to register discovered component', [
+                    'component' => $component,
+                    'error' => $e->getMessage(),
+                ]);
             }
         }
 
         // Register routes for discovered components if requested
         if ($registerRoutes) {
-            $this->registerRoutes($discovered);
+            // Group components by type for route registration
+            $groupedComponents = [];
+            foreach ($this->discoveredComponents as $component) {
+                $type = $component['type'];
+                $groupedComponents[$type.'s'] ??= [];
+                $groupedComponents[$type.'s'][$component['class']] = $component;
+            }
+            $this->registerRoutes($groupedComponents);
         }
     }
 

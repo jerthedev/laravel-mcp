@@ -9,7 +9,7 @@ use JTD\LaravelMCP\Protocol\MessageProcessor;
 use JTD\LaravelMCP\Transport\HttpTransport;
 use JTD\LaravelMCP\Transport\StdioTransport;
 use JTD\LaravelMCP\Transport\TransportManager;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 /**
  * Feature tests for the MCP ServeCommand.

@@ -84,6 +84,9 @@ class ProtocolIntegrationTest extends TestCase
             'laravel-mcp.error_handling.retry_attempts' => 3,
         ]);
 
+        // Clear the MessageProcessor singleton to ensure clean state for each test
+        $this->app->forgetInstance(MessageProcessor::class);
+        
         $this->messageProcessor = app(MessageProcessor::class);
         $this->transportManager = app(TransportManager::class);
         $this->httpTransport = $this->transportManager->createTransport('http');
@@ -254,18 +257,14 @@ class ProtocolIntegrationTest extends TestCase
 
         // Verify tool was registered
         $registry = app('mcp.registry');
-        dump('Tools registered:', $registry->getTools());
-        
-        // Also verify the MessageProcessor is properly configured
-        $messageProcessor = app(\JTD\LaravelMCP\Protocol\MessageProcessor::class);
-        dump('MessageProcessor initialized:', $messageProcessor->isInitialized());
+        $this->assertGreaterThan(0, count($registry->getTools()), 'No tools registered');
         
         // Initialize server first
         $this->initializeServer();
         
         // Verify initialization took effect
         $messageProcessor = app(\JTD\LaravelMCP\Protocol\MessageProcessor::class);
-        dump('MessageProcessor initialized after init:', $messageProcessor->isInitialized());
+        $this->assertTrue($messageProcessor->isInitialized(), 'MessageProcessor should be initialized after server init');
 
         // Step 1: List available tools
         $listResponse = $this->postJson('/mcp', [
@@ -276,19 +275,6 @@ class ProtocolIntegrationTest extends TestCase
 
         $listResponse->assertStatus(200);
         $listData = $listResponse->json();
-        
-        // Debug output if there's an error
-        if (!isset($listData['result']) && isset($listData['error'])) {
-            dump('List tools response:', $listData);
-            
-            // Let's also try to get the actual error by examining logs or trying a simpler request
-            $simpleResponse = $this->postJson('/mcp', [
-                'jsonrpc' => '2.0',
-                'method' => 'ping',
-                'id' => 'ping-test',
-            ]);
-            dump('Ping response:', $simpleResponse->json());
-        }
         
         $this->assertArrayHasKey('result', $listData, 'Expected result key in response: ' . json_encode($listData));
         $this->assertArrayHasKey('tools', $listData['result']);
@@ -991,7 +977,7 @@ class ProtocolIntegrationTest extends TestCase
     protected function initializeServer(): void
     {
         // Send initialize request
-        $this->postJson('/mcp', [
+        $initResponse = $this->postJson('/mcp', [
             'jsonrpc' => '2.0',
             'method' => 'initialize',
             'params' => [
@@ -1006,12 +992,19 @@ class ProtocolIntegrationTest extends TestCase
             'id' => 'init',
         ]);
 
+        $initResponse->assertStatus(200);
+        $initData = $initResponse->json();
+        $this->assertArrayHasKey('result', $initData, 'Initialize request should return result');
+
         // Send initialized notification
-        $this->postJson('/mcp', [
+        $initializedResponse = $this->postJson('/mcp', [
             'jsonrpc' => '2.0',
             'method' => 'initialized',
             'params' => [],
         ]);
+
+        // Notifications should return 204 No Content (no response expected)
+        $initializedResponse->assertStatus(204);
     }
 
     protected function registerComplexCalculatorTool(): void

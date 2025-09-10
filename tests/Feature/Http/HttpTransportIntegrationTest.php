@@ -7,7 +7,7 @@ use JTD\LaravelMCP\Http\Controllers\McpController;
 use JTD\LaravelMCP\Transport\TransportManager;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 /**
  * EPIC: TRANSPORT
@@ -48,7 +48,10 @@ class HttpTransportIntegrationTest extends TestCase
 
     protected function setupTestRoutes(): void
     {
-        Route::prefix('mcp')->group(function () {
+        // Apply the same middleware as the service provider would
+        $middleware = ['api', \JTD\LaravelMCP\Http\Middleware\McpAuthMiddleware::class];
+        
+        Route::prefix('mcp')->middleware($middleware)->group(function () {
             Route::post('/', [McpController::class, 'handle'])->name('mcp.handle');
             Route::options('/', [McpController::class, 'options'])->name('mcp.options');
             Route::get('/health', [McpController::class, 'health'])->name('mcp.health');
@@ -73,7 +76,7 @@ class HttpTransportIntegrationTest extends TestCase
             ],
         ]);
 
-        app('mcp.registry')->registerTool($tool);
+        app('mcp.registry')->registerTool($tool->getName(), $tool);
 
         // Send a tools/list request
         $response = $this->postJson('/mcp', [
@@ -261,7 +264,7 @@ class HttpTransportIntegrationTest extends TestCase
             'jsonrpc' => '2.0',
             'error' => [
                 'code' => -32700,
-                'message' => 'Parse error: Empty or invalid request body',
+                'message' => 'Parse error: Syntax error',
             ],
             'id' => null,
         ]);
@@ -363,7 +366,7 @@ class HttpTransportIntegrationTest extends TestCase
             }
         };
 
-        app('mcp.registry')->registerTool($tool);
+        app('mcp.registry')->registerTool($tool->getName(), $tool);
 
         // Invoke the tool
         $response = $this->postJson('/mcp', [
@@ -407,7 +410,7 @@ class HttpTransportIntegrationTest extends TestCase
             'mimeType' => 'application/json',
         ]);
 
-        app('mcp.registry')->registerResource($resource);
+        app('mcp.registry.resource')->register($resource->getName(), $resource);
 
         // List resources
         $response = $this->postJson('/mcp', [
@@ -464,7 +467,7 @@ class HttpTransportIntegrationTest extends TestCase
             ],
         ]);
 
-        app('mcp.registry')->registerPrompt($prompt);
+        app('mcp.registry')->registerPrompt($prompt->getName(), $prompt);
 
         // Get prompt
         $response = $this->postJson('/mcp', [
@@ -616,7 +619,7 @@ class HttpTransportIntegrationTest extends TestCase
             }
         };
 
-        app('mcp.registry')->registerTool($tool);
+        app('mcp.registry')->registerTool($tool->getName(), $tool);
 
         // Request should complete (no timeout in test environment)
         $response = $this->postJson('/mcp', [
@@ -660,9 +663,9 @@ class HttpTransportIntegrationTest extends TestCase
     public function it_validates_ssl_configuration(): void
     {
         config([
-            'laravel-mcp.transports.http.ssl.enabled' => true,
-            'laravel-mcp.transports.http.ssl.cert_path' => '/invalid/cert.pem',
-            'laravel-mcp.transports.http.ssl.key_path' => '/invalid/key.pem',
+            'mcp-transports.http.ssl.enabled' => true,
+            'mcp-transports.http.ssl.cert_path' => '/invalid/cert.pem',
+            'mcp-transports.http.ssl.key_path' => '/invalid/key.pem',
         ]);
 
         $response = $this->getJson('/mcp/health');

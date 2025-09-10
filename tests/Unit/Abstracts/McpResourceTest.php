@@ -20,7 +20,7 @@ use Mockery;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 #[Group('base-classes')]
 #[Group('mcp-resource')]

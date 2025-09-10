@@ -9,7 +9,7 @@ use JTD\LaravelMCP\Traits\ManagesCapabilities;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\LogLevel;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 /**
  * Test file header as per standards.

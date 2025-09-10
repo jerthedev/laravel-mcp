@@ -30,7 +30,7 @@ use Mockery;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\Process\Process;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 #[Group('transport')]
 #[Group('stdio')]

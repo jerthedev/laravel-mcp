@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Config;
 use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Server\CapabilityManager;
 use Mockery;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 class CapabilityManagerTest extends TestCase
 {

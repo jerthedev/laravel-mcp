@@ -5,7 +5,7 @@ namespace JTD\LaravelMCP\Tests\Unit\Abstracts;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use JTD\LaravelMCP\Abstracts\BaseComponent;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 class BaseComponentTest extends TestCase
 {

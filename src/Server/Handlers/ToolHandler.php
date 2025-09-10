@@ -159,8 +159,8 @@ class ToolHandler extends BaseHandler
             // Get the tool data from registry
             $toolData = $this->toolRegistry->get($toolName);
 
-            // Extract the tool handler from the data array
-            $tool = $toolData['handler'] ?? $toolData;
+            // Extract the tool handler from the data array or use directly
+            $tool = is_array($toolData) ? ($toolData['handler'] ?? $toolData) : $toolData;
 
             // Validate tool arguments if the tool supports it
             try {
@@ -259,8 +259,8 @@ class ToolHandler extends BaseHandler
 
         foreach ($tools as $name => $toolData) {
             try {
-                // Extract the tool handler from the data array
-                $tool = $toolData['handler'] ?? $toolData;
+                // Extract the tool handler from the data array or use directly
+                $tool = is_array($toolData) ? ($toolData['handler'] ?? $toolData) : $toolData;
 
                 $definition = [
                     'name' => $name,

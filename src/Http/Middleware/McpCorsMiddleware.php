@@ -41,8 +41,10 @@ class McpCorsMiddleware
 
         // Determine the allowed origin
         $origin = $request->header('Origin');
-        if (in_array('*', $allowedOrigins) || in_array($origin, $allowedOrigins)) {
+        if (in_array('*', $allowedOrigins)) {
             $response->headers->set('Access-Control-Allow-Origin', $origin ?? '*');
+        } elseif (in_array($origin, $allowedOrigins)) {
+            $response->headers->set('Access-Control-Allow-Origin', $origin);
         }
 
         $response->headers->set('Access-Control-Allow-Methods', implode(', ', $allowedMethods));

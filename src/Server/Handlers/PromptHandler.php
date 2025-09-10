@@ -159,8 +159,8 @@ class PromptHandler extends BaseHandler
             // Get the prompt data from registry
             $promptData = $this->promptRegistry->get($promptName);
 
-            // Extract the prompt handler from the data array
-            $prompt = $promptData['handler'] ?? $promptData;
+            // Extract the prompt handler from the data array or use directly
+            $prompt = is_array($promptData) ? ($promptData['handler'] ?? $promptData) : $promptData;
 
             // Validate prompt arguments if the prompt supports it
             try {
@@ -221,8 +221,8 @@ class PromptHandler extends BaseHandler
 
         foreach ($prompts as $name => $promptData) {
             try {
-                // Extract the prompt handler from the data array
-                $prompt = $promptData['handler'] ?? $promptData;
+                // Extract the prompt handler from the data array or use directly
+                $prompt = is_array($promptData) ? ($promptData['handler'] ?? $promptData) : $promptData;
 
                 $definition = [
                     'name' => $name,
@@ -235,6 +235,11 @@ class PromptHandler extends BaseHandler
                 $this->logWarning("Failed to get definition for prompt: {$name}", [
                     'error' => $e->getMessage(),
                 ]);
+                
+                // In debug mode, re-throw to help with testing  
+                if ($this->debug) {
+                    throw $e;
+                }
                 // Skip prompts that can't be properly defined
             }
         }

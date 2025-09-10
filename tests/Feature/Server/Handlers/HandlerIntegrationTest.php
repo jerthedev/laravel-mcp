@@ -14,7 +14,7 @@ use JTD\LaravelMCP\Server\Handlers\ResourceHandler;
 use JTD\LaravelMCP\Server\Handlers\ToolHandler;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 /**
  * Integration tests for MCP Server Handler workflows.

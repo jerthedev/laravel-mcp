@@ -36,7 +36,8 @@ class ComponentDiscoveryTest extends TestCase
         parent::setUp();
 
         $this->registry = $this->createMock(McpRegistry::class);
-        $this->discovery = new ComponentDiscovery($this->registry);
+        $routingPatterns = $this->createMock(\JTD\LaravelMCP\Registry\RoutingPatterns::class);
+        $this->discovery = new ComponentDiscovery($this->registry, $routingPatterns);
 
         // Create test directory structure
         $this->testPath = sys_get_temp_dir().'/mcp_test_'.uniqid();

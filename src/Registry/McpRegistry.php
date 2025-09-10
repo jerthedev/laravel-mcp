@@ -32,11 +32,6 @@ class McpRegistry
     protected array $typeRegistries = [];
 
     /**
-     * Whether the registry has been initialized.
-     */
-    private bool $initialized = false;
-
-    /**
      * Lock for thread-safe operations.
      */
     private mixed $lock = null;
@@ -266,6 +261,30 @@ class McpRegistry
         return $this->typeRegistries;
     }
 
+    /**
+     * Get the tool registry.
+     */
+    public function getToolRegistry(): ToolRegistry
+    {
+        return $this->toolRegistry;
+    }
+
+    /**
+     * Get the resource registry.
+     */
+    public function getResourceRegistry(): ResourceRegistry
+    {
+        return $this->resourceRegistry;
+    }
+
+    /**
+     * Get the prompt registry.
+     */
+    public function getPromptRegistry(): PromptRegistry
+    {
+        return $this->promptRegistry;
+    }
+
     private function validateRegistration(string $type, string $name, $handler): void
     {
         if (empty($name)) {
@@ -279,25 +298,6 @@ class McpRegistry
         $this->validateHandler($type, $handler);
     }
 
-    private function validateHandler(string $type, $handler): void
-    {
-        if (is_string($handler) && ! class_exists($handler)) {
-            throw new RegistrationException("Handler class '{$handler}' does not exist");
-        }
-
-        if (is_string($handler)) {
-            $requiredInterface = match ($type) {
-                'tool' => McpTool::class,
-                'resource' => McpResource::class,
-                'prompt' => McpPrompt::class,
-                default => null
-            };
-
-            if ($requiredInterface && ! is_subclass_of($handler, $requiredInterface)) {
-                throw new RegistrationException("Handler must extend {$requiredInterface}");
-            }
-        }
-    }
 
     // Backward compatibility and facade support methods
 
@@ -339,7 +339,7 @@ class McpRegistry
      */
     public function registerTool(string $name, $tool, array $metadata = []): void
     {
-        $this->register('tool', $name, $tool, $metadata);
+        $this->registerWithType('tool', $name, $tool, $metadata);
     }
 
     /**
@@ -347,7 +347,7 @@ class McpRegistry
      */
     public function registerResource(string $name, $resource, array $metadata = []): void
     {
-        $this->register('resource', $name, $resource, $metadata);
+        $this->registerWithType('resource', $name, $resource, $metadata);
     }
 
     /**
@@ -355,7 +355,7 @@ class McpRegistry
      */
     public function registerPrompt(string $name, $prompt, array $metadata = []): void
     {
-        $this->register('prompt', $name, $prompt, $metadata);
+        $this->registerWithType('prompt', $name, $prompt, $metadata);
     }
 
     /**
@@ -581,21 +581,6 @@ class McpRegistry
         });
     }
 
-    /**
-     * Validate registration parameters.
-     */
-    private function validateRegistration(string $type, string $name, $handler): void
-    {
-        if (empty($name)) {
-            throw new RegistrationException('Component name cannot be empty');
-        }
-
-        if ($this->has($name)) {
-            throw new RegistrationException("Component '{$name}' of type '{$type}' is already registered");
-        }
-
-        $this->validateHandler($type, $handler);
-    }
 
     /**
      * Validate handler for a component type.
@@ -648,17 +633,17 @@ class McpRegistry
 
     public function getTools(): array
     {
-        return $this->toolRegistry->getAll();
+        return $this->toolRegistry->all();
     }
 
     public function getResources(): array
     {
-        return $this->resourceRegistry->getAll();
+        return $this->resourceRegistry->all();
     }
 
     public function getPrompts(): array
     {
-        return $this->promptRegistry->getAll();
+        return $this->promptRegistry->all();
     }
 
     /**

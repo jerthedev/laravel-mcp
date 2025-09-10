@@ -4,7 +4,7 @@ namespace Tests\Unit\Protocol\Contracts;
 
 use JTD\LaravelMCP\Protocol\Contracts\ProtocolHandlerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 /**
  * Unit tests for ProtocolHandlerInterface contract.

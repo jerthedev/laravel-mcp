@@ -20,7 +20,7 @@ use JTD\LaravelMCP\Abstracts\McpTool;
 use JTD\LaravelMCP\Traits\ManagesCapabilities;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 #[Group('base-classes')]
 #[Group('manages-capabilities')]

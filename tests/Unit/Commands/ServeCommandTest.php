@@ -11,7 +11,7 @@ use JTD\LaravelMCP\Transport\TransportManager;
 use Mockery;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 /**
  * Test file for the ServeCommand class.
@@ -362,8 +362,8 @@ class ServeCommandTest extends TestCase
         // Create stdio transport mock
         $stdioTransport = Mockery::mock(StdioTransport::class);
         $stdioTransport->shouldReceive('setMessageHandler')->once();
-        $stdioTransport->shouldReceive('listen')->once();
-        $stdioTransport->shouldReceive('close')->once();
+        $stdioTransport->shouldReceive('start')->once();
+        $stdioTransport->shouldReceive('stop')->once();
 
         $this->transportManager->shouldReceive('hasDriver')
             ->with('stdio')
@@ -414,10 +414,10 @@ class ServeCommandTest extends TestCase
     {
         $stdioTransport = Mockery::mock(StdioTransport::class);
         $stdioTransport->shouldReceive('setMessageHandler')->once();
-        $stdioTransport->shouldReceive('listen')
+        $stdioTransport->shouldReceive('start')
             ->once()
             ->andThrow(new \RuntimeException('Connection lost'));
-        $stdioTransport->shouldReceive('close')->once();
+        $stdioTransport->shouldReceive('stop')->once();
 
         $this->transportManager->shouldReceive('hasDriver')
             ->with('stdio')
@@ -528,15 +528,15 @@ class ServeCommandTest extends TestCase
     {
         $stdioTransport = Mockery::mock(StdioTransport::class);
         $stdioTransport->shouldReceive('setMessageHandler')->once();
-        $stdioTransport->shouldReceive('listen')
+        $stdioTransport->shouldReceive('start')
             ->once()
             ->andReturnUsing(function () {
                 // Simulate receiving SIGINT
                 posix_kill(posix_getpid(), SIGINT);
                 sleep(1);
             });
-        // Close will be called twice: once from signal handler, once from finally block
-        $stdioTransport->shouldReceive('close')->twice();
+        // Stop will be called twice: once from signal handler, once from finally block
+        $stdioTransport->shouldReceive('stop')->twice();
 
         $this->transportManager->shouldReceive('hasDriver')->andReturn(true);
         $this->transportManager->shouldReceive('createCustomTransport')->andReturn($stdioTransport);
@@ -560,8 +560,8 @@ class ServeCommandTest extends TestCase
 
         $stdioTransport = Mockery::mock(StdioTransport::class);
         $stdioTransport->shouldReceive('setMessageHandler')->once();
-        $stdioTransport->shouldReceive('listen')->once();
-        $stdioTransport->shouldReceive('close')->once();
+        $stdioTransport->shouldReceive('start')->once();
+        $stdioTransport->shouldReceive('stop')->once();
 
         $this->transportManager->shouldReceive('hasDriver')->andReturn(true);
         $this->transportManager->shouldReceive('createCustomTransport')->andReturn($stdioTransport);
@@ -589,8 +589,8 @@ class ServeCommandTest extends TestCase
     {
         $stdioTransport = Mockery::mock(StdioTransport::class);
         $stdioTransport->shouldReceive('setMessageHandler')->once();
-        $stdioTransport->shouldReceive('listen')->once();
-        $stdioTransport->shouldReceive('close')->once();
+        $stdioTransport->shouldReceive('start')->once();
+        $stdioTransport->shouldReceive('stop')->once();
         $stdioTransport->shouldReceive('getStats')
             ->andReturn([
                 'messages_received' => 10,

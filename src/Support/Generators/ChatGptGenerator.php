@@ -36,7 +36,7 @@ class ChatGptGenerator implements ClientGeneratorInterface
      */
     public function generate(array $options = []): array
     {
-        $serverName = $options['name'] ?? $this->getDefaultServerName();
+        $serverName = $options['server_name'] ?? $options['name'] ?? $this->getDefaultServerName();
         $transport = $options['transport'] ?? 'stdio';
 
         $config = $this->loadExistingConfig($options['config_path'] ?? null);
@@ -67,6 +67,10 @@ class ChatGptGenerator implements ClientGeneratorInterface
     {
         $appName = config('app.name', 'Laravel');
 
+        if ($appName === 'Laravel') {
+            return 'laravel-mcp';
+        }
+
         return $appName.' MCP';
     }
 
@@ -77,13 +81,17 @@ class ChatGptGenerator implements ClientGeneratorInterface
      */
     public function getDefaultDescription(): string
     {
-        $toolCount = $this->registry->getTypeRegistry('tools')?->count() ?? 0;
-        $resourceCount = $this->registry->getTypeRegistry('resources')?->count() ?? 0;
-        $promptCount = $this->registry->getTypeRegistry('prompts')?->count() ?? 0;
+        $tools = $this->registry->getTools() ?? [];
+        $resources = $this->registry->getResources() ?? [];
+        $prompts = $this->registry->getPrompts() ?? [];
+        
+        $toolCount = count($tools);
+        $resourceCount = count($resources);
+        $promptCount = count($prompts);
 
         $total = $toolCount + $resourceCount + $promptCount;
         if ($total === 0) {
-            return 'Laravel MCP Server providing tools, resources, and prompts';
+            return 'Laravel MCP Server';
         }
 
         $components = [];
@@ -167,16 +175,22 @@ class ChatGptGenerator implements ClientGeneratorInterface
      */
     protected function generateStdioConfig(array $options): array
     {
-        $command = $options['command'] ?? 'php';
+        $command = $options['command'] ?? ['php'];
         $args = $options['args'] ?? ['artisan', 'mcp:serve'];
         $cwd = $options['cwd'] ?? base_path();
-        $env = array_merge($this->getDefaultEnvVars(), $options['env'] ?? []);
+        $env = $options['env'] ?? [];
+
+        // Ensure command is an array, and merge with args
+        if (is_string($command)) {
+            $command = [$command];
+        }
+        
+        $fullCommand = array_merge($command, $args);
 
         return [
-            'executable' => $command,
-            'args' => $args,
+            'command' => $fullCommand,
             'working_directory' => $cwd,
-            'environment' => $env,
+            'env' => $env,
             'timeout' => $options['timeout'] ?? 30,
         ];
     }

@@ -16,7 +16,7 @@ use Mockery;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\DataProvider;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 /**
  * Comprehensive tests for MessageProcessor class.
@@ -329,9 +329,9 @@ class MessageProcessorTest extends TestCase
 
         $this->jsonRpcHandler
             ->shouldReceive('createErrorResponse')
-            ->with(-32603, 'Internal error', null, 1)
+            ->with(-32603, 'Internal error: Test exception', null, 1)
             ->once()
-            ->andReturn(['error' => ['code' => -32603, 'message' => 'Internal error']]);
+            ->andReturn(['error' => ['code' => -32603, 'message' => 'Internal error: Test exception']]);
 
         $response = $this->processor->handle($message, $this->transport);
 
@@ -511,17 +511,28 @@ class MessageProcessorTest extends TestCase
     }
 
     #[Test]
-    public function handler_methods_check_initialization_status(): void
+    public function handler_methods_auto_initialize_when_not_initialized(): void
     {
-        // Don't initialize the processor - should throw ProtocolException
+        // Set up capability negotiator mock for auto-initialization
+        $capabilityNegotiator = Mockery::mock(CapabilityNegotiator::class);
+        $capabilityNegotiator->shouldReceive('negotiate')
+            ->once()
+            ->with(
+                ['tools' => [], 'resources' => [], 'prompts' => []],
+                Mockery::type('array')
+            )
+            ->andReturn([
+                'tools' => ['listChanged' => false],
+                'resources' => ['subscribe' => false, 'listChanged' => false],
+                'prompts' => ['listChanged' => false],
+                'logging' => []
+            ]);
 
+        // Set up tool registry for tools list call after auto-initialization
         $this->toolRegistry
             ->shouldReceive('all')
-            ->never(); // Should not be called due to initialization check
-
-        $this->expectException(ProtocolException::class);
-        $this->expectExceptionCode(-32002);
-        $this->expectExceptionMessage('Server not initialized');
+            ->once()
+            ->andReturn([]);
 
         // Create a fresh processor that is not initialized
         $processor = new MessageProcessor(
@@ -530,17 +541,20 @@ class MessageProcessorTest extends TestCase
             $this->toolRegistry,
             $this->resourceRegistry,
             $this->promptRegistry,
-            $this->capabilityNegotiator
+            $capabilityNegotiator
         );
 
-        // Call a handler method that should check initialization
+        // Call a handler method that should auto-initialize
         // Use reflection to access the protected method
         $reflection = new \ReflectionClass($processor);
         $method = $reflection->getMethod('handleToolsList');
         $method->setAccessible(true);
 
-        // This should throw ProtocolException because not initialized
-        $method->invoke($processor, [], []);
+        // This should auto-initialize and return tools list
+        $result = $method->invoke($processor, [], []);
+        
+        $this->assertIsArray($result);
+        $this->assertTrue($processor->isInitialized());
     }
 
     private function initializeProcessor(): void
@@ -680,129 +694,259 @@ class MessageProcessorTest extends TestCase
     }
 
     /**
-     * Test tools/list request requires initialization.
+     * Test tools/list auto-initializes when not initialized.
      */
     #[Test]
-    public function tools_list_requires_initialization(): void
+    public function tools_list_auto_initializes_when_not_initialized(): void
     {
-        $this->expectException(ProtocolException::class);
-        $this->expectExceptionCode(-32002);
-        $this->expectExceptionMessage('Server not initialized');
+        // Set up mock expectation for negotiate method to handle auto-initialization
+        $this->capabilityNegotiator->shouldReceive('negotiate')
+            ->once()
+            ->with(
+                ['tools' => [], 'resources' => [], 'prompts' => []],
+                Mockery::type('array')
+            )
+            ->andReturn([
+                'tools' => ['listChanged' => false],
+                'resources' => ['subscribe' => false, 'listChanged' => false],
+                'prompts' => ['listChanged' => false],
+                'logging' => []
+            ]);
+
+        // Set up tool registry mock expectation for tools/list
+        $this->toolRegistry->shouldReceive('all')->once()->andReturn([]);
 
         // Use reflection to access protected method
         $reflection = new \ReflectionClass($this->processor);
         $method = $reflection->getMethod('handleToolsList');
         $method->setAccessible(true);
 
-        $method->invoke($this->processor, [], []);
+        $result = $method->invoke($this->processor, [], []);
+
+        // Should auto-initialize and return tools list (empty in this case)
+        $this->assertIsArray($result);
+        $this->assertTrue($this->processor->isInitialized());
     }
 
     /**
-     * Test tools/call request requires initialization.
+     * Test tools/call auto-initializes when not initialized.
      */
     #[Test]
-    public function tools_call_requires_initialization(): void
+    public function tools_call_auto_initializes_when_not_initialized(): void
     {
-        $this->expectException(ProtocolException::class);
-        $this->expectExceptionCode(-32002);
-        $this->expectExceptionMessage('Server not initialized');
+        // Set up mock expectation for negotiate method to handle auto-initialization
+        $this->capabilityNegotiator->shouldReceive('negotiate')
+            ->once()
+            ->with(
+                ['tools' => [], 'resources' => [], 'prompts' => []],
+                Mockery::type('array')
+            )
+            ->andReturn([
+                'tools' => ['listChanged' => false],
+                'resources' => ['subscribe' => false, 'listChanged' => false],
+                'prompts' => ['listChanged' => false],
+                'logging' => []
+            ]);
+
+        // Set up tool registry mock expectation - tools/call needs a tool to call
+        $this->toolRegistry->shouldReceive('has')
+            ->once()
+            ->with('test_tool')
+            ->andReturn(false); // Tool not found
 
         // Use reflection to access protected method
         $reflection = new \ReflectionClass($this->processor);
         $method = $reflection->getMethod('handleToolsCall');
         $method->setAccessible(true);
 
-        $method->invoke($this->processor, [], []);
+        // This should auto-initialize and then try to call the tool (which will fail with tool not found)
+        $this->expectException(ProtocolException::class);
+        $this->expectExceptionCode(-32601);
+        $this->expectExceptionMessage('Tool not found: test_tool');
+
+        $method->invoke($this->processor, ['name' => 'test_tool'], []);
     }
 
     /**
-     * Test resources/list request requires initialization.
+     * Test resources/list auto-initializes when not initialized.
      */
     #[Test]
-    public function resources_list_requires_initialization(): void
+    public function resources_list_auto_initializes_when_not_initialized(): void
     {
-        $this->expectException(ProtocolException::class);
-        $this->expectExceptionCode(-32002);
-        $this->expectExceptionMessage('Server not initialized');
+        // Set up mock expectation for negotiate method to handle auto-initialization
+        $this->capabilityNegotiator->shouldReceive('negotiate')
+            ->once()
+            ->with(
+                ['tools' => [], 'resources' => [], 'prompts' => []],
+                Mockery::type('array')
+            )
+            ->andReturn([
+                'tools' => ['listChanged' => false],
+                'resources' => ['subscribe' => false, 'listChanged' => false],
+                'prompts' => ['listChanged' => false],
+                'logging' => []
+            ]);
+
+        // Set up resource registry mock expectation for resources/list
+        $this->resourceRegistry->shouldReceive('all')->once()->andReturn([]);
 
         // Use reflection to access protected method
         $reflection = new \ReflectionClass($this->processor);
         $method = $reflection->getMethod('handleResourcesList');
         $method->setAccessible(true);
 
-        $method->invoke($this->processor, [], []);
+        $result = $method->invoke($this->processor, [], []);
+
+        // Should auto-initialize and return resources list (empty in this case)
+        $this->assertIsArray($result);
+        $this->assertTrue($this->processor->isInitialized());
     }
 
     /**
-     * Test resources/read request requires initialization.
+     * Test resources/read auto-initializes when not initialized.
      */
     #[Test]
-    public function resources_read_requires_initialization(): void
+    public function resources_read_auto_initializes_when_not_initialized(): void
     {
-        $this->expectException(ProtocolException::class);
-        $this->expectExceptionCode(-32002);
-        $this->expectExceptionMessage('Server not initialized');
+        // Set up mock expectation for negotiate method to handle auto-initialization
+        $this->capabilityNegotiator->shouldReceive('negotiate')
+            ->once()
+            ->with(
+                ['tools' => [], 'resources' => [], 'prompts' => []],
+                Mockery::type('array')
+            )
+            ->andReturn([
+                'tools' => ['listChanged' => false],
+                'resources' => ['subscribe' => false, 'listChanged' => false],
+                'prompts' => ['listChanged' => false],
+                'logging' => []
+            ]);
+
+        // Set up resource registry mock expectation - resources/read needs a resource to read
+        $this->resourceRegistry->shouldReceive('all')
+            ->once()
+            ->andReturn([]); // No resources found
 
         // Use reflection to access protected method
         $reflection = new \ReflectionClass($this->processor);
         $method = $reflection->getMethod('handleResourcesRead');
         $method->setAccessible(true);
 
-        $method->invoke($this->processor, [], []);
+        // This should auto-initialize and then try to read the resource (which will fail with resource not found)
+        $this->expectException(ProtocolException::class);
+        $this->expectExceptionCode(-32601);
+        $this->expectExceptionMessage('Resource not found: test://resource');
+
+        $method->invoke($this->processor, ['uri' => 'test://resource'], []);
     }
 
     /**
-     * Test resources/templates/list request requires initialization.
+     * Test resources/templates/list auto-initializes when not initialized.
      */
     #[Test]
-    public function resources_templates_list_requires_initialization(): void
+    public function resources_templates_list_auto_initializes_when_not_initialized(): void
     {
-        $this->expectException(ProtocolException::class);
-        $this->expectExceptionCode(-32002);
-        $this->expectExceptionMessage('Server not initialized');
+        // Set up mock expectation for negotiate method to handle auto-initialization
+        $this->capabilityNegotiator->shouldReceive('negotiate')
+            ->once()
+            ->with(
+                ['tools' => [], 'resources' => [], 'prompts' => []],
+                Mockery::type('array')
+            )
+            ->andReturn([
+                'tools' => ['listChanged' => false],
+                'resources' => ['subscribe' => false, 'listChanged' => false],
+                'prompts' => ['listChanged' => false],
+                'logging' => []
+            ]);
+
+        // Set up resource registry mock expectation for resources/templates/list
+        $this->resourceRegistry->shouldReceive('getResourceTemplates')->once()->andReturn([]);
 
         // Use reflection to access protected method
         $reflection = new \ReflectionClass($this->processor);
         $method = $reflection->getMethod('handleResourceTemplatesList');
         $method->setAccessible(true);
 
-        $method->invoke($this->processor, []);
+        $result = $method->invoke($this->processor, []);
+
+        // Should auto-initialize and return resource templates list (empty in this case)
+        $this->assertIsArray($result);
+        $this->assertTrue($this->processor->isInitialized());
     }
 
     /**
-     * Test prompts/list request requires initialization.
+     * Test prompts/list auto-initializes when not initialized.
      */
     #[Test]
-    public function prompts_list_requires_initialization(): void
+    public function prompts_list_auto_initializes_when_not_initialized(): void
     {
-        $this->expectException(ProtocolException::class);
-        $this->expectExceptionCode(-32002);
-        $this->expectExceptionMessage('Server not initialized');
+        // Set up mock expectation for negotiate method to handle auto-initialization
+        $this->capabilityNegotiator->shouldReceive('negotiate')
+            ->once()
+            ->with(
+                ['tools' => [], 'resources' => [], 'prompts' => []],
+                Mockery::type('array')
+            )
+            ->andReturn([
+                'tools' => ['listChanged' => false],
+                'resources' => ['subscribe' => false, 'listChanged' => false],
+                'prompts' => ['listChanged' => false],
+                'logging' => []
+            ]);
+
+        // Set up prompt registry mock expectation for prompts/list
+        $this->promptRegistry->shouldReceive('all')->once()->andReturn([]);
 
         // Use reflection to access protected method
         $reflection = new \ReflectionClass($this->processor);
         $method = $reflection->getMethod('handlePromptsList');
         $method->setAccessible(true);
 
-        $method->invoke($this->processor, [], []);
+        $result = $method->invoke($this->processor, [], []);
+
+        // Should auto-initialize and return prompts list (empty in this case)
+        $this->assertIsArray($result);
+        $this->assertTrue($this->processor->isInitialized());
     }
 
     /**
-     * Test prompts/get request requires initialization.
+     * Test prompts/get auto-initializes when not initialized.
      */
     #[Test]
-    public function prompts_get_requires_initialization(): void
+    public function prompts_get_auto_initializes_when_not_initialized(): void
     {
-        $this->expectException(ProtocolException::class);
-        $this->expectExceptionCode(-32002);
-        $this->expectExceptionMessage('Server not initialized');
+        // Set up mock expectation for negotiate method to handle auto-initialization
+        $this->capabilityNegotiator->shouldReceive('negotiate')
+            ->once()
+            ->with(
+                ['tools' => [], 'resources' => [], 'prompts' => []],
+                Mockery::type('array')
+            )
+            ->andReturn([
+                'tools' => ['listChanged' => false],
+                'resources' => ['subscribe' => false, 'listChanged' => false],
+                'prompts' => ['listChanged' => false],
+                'logging' => []
+            ]);
+
+        // Set up prompt registry mock expectation - prompts/get needs a prompt to get
+        $this->promptRegistry->shouldReceive('has')
+            ->once()
+            ->with('test_prompt')
+            ->andReturn(false); // Prompt not found
 
         // Use reflection to access protected method
         $reflection = new \ReflectionClass($this->processor);
         $method = $reflection->getMethod('handlePromptsGet');
         $method->setAccessible(true);
 
-        $method->invoke($this->processor, [], []);
+        // This should auto-initialize and then try to get the prompt (which will fail with prompt not found)
+        $this->expectException(ProtocolException::class);
+        $this->expectExceptionCode(-32601);
+        $this->expectExceptionMessage('Prompt not found: test_prompt');
+
+        $method->invoke($this->processor, ['name' => 'test_prompt'], []);
     }
 
     /**
@@ -1018,9 +1162,9 @@ class MessageProcessorTest extends TestCase
 
             $this->jsonRpcHandler
                 ->shouldReceive('createErrorResponse')
-                ->with(-32603, 'Internal error', null, $message['id'] ?? null)
+                ->with(-32603, 'Internal error: Validation failed', null, $message['id'] ?? null)
                 ->once()
-                ->andReturn(['error' => ['code' => -32603, 'message' => 'Internal error']]);
+                ->andReturn(['error' => ['code' => -32603, 'message' => 'Internal error: Validation failed']]);
 
             Log::shouldReceive('error')
                 ->once()

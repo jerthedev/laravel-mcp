@@ -115,7 +115,6 @@ class McpController extends Controller
 
             // Return basic CORS response even on error
             $response = new Response('', 204);
-            $this->addCorsHeaders($response);
 
             return $response;
         }
@@ -193,7 +192,7 @@ class McpController extends Controller
     {
         try {
             $transport = $this->getHttpTransport();
-            $healthInfo = $transport->performHealthCheck();
+            $healthInfo = $transport->healthCheck();
 
             $status = $healthInfo['healthy'] ? 'healthy' : 'unhealthy';
             $httpStatus = $healthInfo['healthy'] ? 200 : 503;
@@ -206,7 +205,7 @@ class McpController extends Controller
                 'transport' => [
                     'type' => 'http',
                     'connected' => $transport->isConnected(),
-                    'stats' => $transport->getStatistics(),
+                    'stats' => $transport->getStats(),
                 ],
             ], $httpStatus);
 
@@ -297,7 +296,7 @@ class McpController extends Controller
     {
         if ($this->httpTransport === null) {
             // Get HTTP transport configuration
-            $config = config('laravel-mcp.transports.http', []);
+            $config = config('mcp-transports.http', []);
 
             // Create HTTP transport via manager
             $transport = $this->transportManager->createTransport('http', $config);
@@ -373,7 +372,7 @@ class McpController extends Controller
             ['Content-Type' => 'application/json']
         );
 
-        return $this->addCorsHeaders($response);
+        return $response;
     }
 
     /**

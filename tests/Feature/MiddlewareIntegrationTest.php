@@ -11,7 +11,7 @@ use JTD\LaravelMCP\Http\Middleware\McpAuthMiddleware;
 use JTD\LaravelMCP\Http\Middleware\McpCorsMiddleware;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 /**
  * EPIC: SERVICEPROVIDER

@@ -145,6 +145,18 @@ class ToolRegistry implements RegistryInterface
     }
 
     /**
+     * Set metadata for a registered tool.
+     */
+    public function setMetadata(string $name, array $metadata): void
+    {
+        if (! $this->has($name)) {
+            throw new RegistrationException("Tool '{$name}' is not registered");
+        }
+
+        $this->metadata[$name] = array_merge($this->metadata[$name], $metadata);
+    }
+
+    /**
      * Filter tools by metadata criteria.
      */
     public function filter(array $criteria): array

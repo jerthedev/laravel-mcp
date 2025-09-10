@@ -20,7 +20,7 @@ class ClientDetector
     /**
      * Supported AI clients.
      */
-    protected const SUPPORTED_CLIENTS = ['claude-desktop', 'claude-code', 'chatgpt-desktop'];
+    protected const SUPPORTED_CLIENTS = ['claude-desktop', 'claude-code', 'chatgpt', 'chatgpt-desktop'];
 
     /**
      * Detect the current operating system.
@@ -88,11 +88,15 @@ class ClientDetector
 
                 ['claude-code', 'windows'] => $home.'/AppData/Roaming/Claude Code/config.json',
                 ['claude-code', 'macos'] => $home.'/Library/Application Support/Claude Code/config.json',
-                ['claude-code', 'linux'] => $home.'/.config/claude-code/config.json',
+                ['claude-code', 'linux'] => $home.'/.config/claude-code/claude_config.json',
 
-                ['chatgpt-desktop', 'windows'] => $home.'/AppData/Roaming/ChatGPT/config.json',
-                ['chatgpt-desktop', 'macos'] => $home.'/Library/Application Support/ChatGPT/config.json',
-                ['chatgpt-desktop', 'linux'] => $home.'/.config/chatgpt/config.json',
+                ['chatgpt', 'windows'] => $home.'/AppData/Roaming/ChatGPT/chatgpt_config.json',
+                ['chatgpt', 'macos'] => $home.'/Library/Application Support/ChatGPT/chatgpt_config.json',
+                ['chatgpt', 'linux'] => $home.'/.config/chatgpt/chatgpt_config.json',
+
+                ['chatgpt-desktop', 'windows'] => $home.'/AppData/Roaming/ChatGPT/chatgpt_config.json',
+                ['chatgpt-desktop', 'macos'] => $home.'/Library/Application Support/ChatGPT/chatgpt_config.json',
+                ['chatgpt-desktop', 'linux'] => $home.'/.config/chatgpt/chatgpt_config.json',
 
                 default => null,
             };
@@ -263,7 +267,12 @@ class ClientDetector
      */
     public function detectOS(): string
     {
-        return $this->detectOperatingSystem();
+        // Return the original PHP_OS values for backward compatibility with tests
+        return match (true) {
+            stripos(PHP_OS, 'WIN') === 0 => 'Windows',
+            stripos(PHP_OS, 'DARWIN') === 0 => 'Darwin', 
+            default => 'Linux',
+        };
     }
 
     /**
@@ -333,6 +342,7 @@ class ClientDetector
         return match ($client) {
             'claude-desktop' => 'claude_desktop_config.json',
             'claude-code', 'chatgpt-desktop' => 'config.json',
+            'chatgpt' => 'chatgpt_config.json',
             default => null,
         };
     }

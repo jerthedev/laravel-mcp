@@ -11,7 +11,7 @@ use JTD\LaravelMCP\Transport\TransportManager;
 use Mockery;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 /**
  * EPIC: SERVICEPROVIDER

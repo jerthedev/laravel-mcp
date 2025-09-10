@@ -11,7 +11,7 @@ use JTD\LaravelMCP\Server\McpServer;
 use JTD\LaravelMCP\Server\ServerInfo;
 use JTD\LaravelMCP\Transport\TransportManager;
 use Mockery;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 class McpServerTest extends TestCase
 {

@@ -111,42 +111,13 @@ class MessageProcessor implements MessageHandlerInterface
      */
     public function handle(array $message, TransportInterface $transport): ?array
     {
-        try {
-            if (! $this->jsonRpcHandler->validateMessage($message)) {
-                Log::warning('Invalid JSON-RPC message received', ['message' => $message]);
-
-                return $this->jsonRpcHandler->createErrorResponse(-32600, 'Invalid request', null, $message['id'] ?? null);
-            }
-
-            if ($this->jsonRpcHandler->isRequest($message)) {
-                return $this->jsonRpcHandler->handleRequest($message);
-            }
-
-            if ($this->jsonRpcHandler->isNotification($message)) {
-                $this->jsonRpcHandler->handleNotification($message);
-
-                return null; // Notifications don't require responses
-            }
-
-            if ($this->jsonRpcHandler->isResponse($message)) {
-                $this->jsonRpcHandler->handleResponse($message);
-
-                return null; // Responses don't require responses
-            }
-
-            return $this->jsonRpcHandler->createErrorResponse(-32600, 'Invalid request', null, $message['id'] ?? null);
-
-        } catch (\Throwable $e) {
-            Log::error('Message processing error', [
-                'error' => $e->getMessage(),
-                'message' => $message,
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            // Log more detailed error in debug mode
-            $errorMessage = config('app.debug') ? 'Internal error: ' . $e->getMessage() : 'Internal error';
-            return $this->jsonRpcHandler->createErrorResponse(-32603, $errorMessage, null, $message['id'] ?? null);
+        // Check if this is a batch request (array of messages)
+        if ($this->isBatchRequest($message)) {
+            return $this->handleBatchRequest($message, $transport);
         }
+
+        // Handle single message
+        return $this->handleSingleMessage($message, $transport);
     }
 
     /**
@@ -432,8 +403,34 @@ class MessageProcessor implements MessageHandlerInterface
     protected function checkInitialized(): void
     {
         if (! $this->initialized) {
-            throw new ProtocolException('Server not initialized', -32002);
+            // Auto-initialize for HTTP context with default capabilities
+            $this->autoInitializeForHttp();
         }
+    }
+
+    /**
+     * Auto-initialize server for HTTP context when not explicitly initialized.
+     */
+    protected function autoInitializeForHttp(): void
+    {
+        // Simulate an initialize request with basic capabilities
+        $this->handleInitialize([
+            'protocolVersion' => '2024-11-05',
+            'capabilities' => [
+                'tools' => [],
+                'resources' => [],
+                'prompts' => [],
+            ],
+            'clientInfo' => [
+                'name' => 'HTTP Client',
+                'version' => '1.0.0',
+            ],
+        ]);
+
+        // Mark as initialized
+        $this->handleInitialized([]);
+
+        Log::info('MCP server auto-initialized for HTTP request');
     }
 
     /**
@@ -474,5 +471,104 @@ class MessageProcessor implements MessageHandlerInterface
     public function getServerInfo(): array
     {
         return $this->serverInfo;
+    }
+
+    /**
+     * Check if the message is a batch request.
+     */
+    protected function isBatchRequest(array $message): bool
+    {
+        // Check if this is a numerically indexed array (batch)
+        return array_keys($message) === range(0, count($message) - 1);
+    }
+
+    /**
+     * Handle a batch request.
+     */
+    protected function handleBatchRequest(array $batchRequest, TransportInterface $transport): ?array
+    {
+        $responses = [];
+
+        foreach ($batchRequest as $singleRequest) {
+            if (!is_array($singleRequest)) {
+                $responses[] = $this->jsonRpcHandler->createErrorResponse(
+                    -32600,
+                    'Invalid request',
+                    null,
+                    null
+                );
+                continue;
+            }
+
+            // Process individual request directly without recursive call
+            $response = $this->handleSingleMessage($singleRequest, $transport);
+            
+            // Only add response if it's not null (notifications return null)
+            if ($response !== null) {
+                $responses[] = $response;
+            }
+        }
+
+        // Return the responses array or null if all were notifications
+        return empty($responses) ? null : $responses;
+    }
+
+    /**
+     * Handle a single message (non-batch).
+     */
+    protected function handleSingleMessage(array $message, TransportInterface $transport): ?array
+    {
+        try {
+            if (! $this->jsonRpcHandler->validateMessage($message)) {
+                Log::warning('Invalid JSON-RPC message received', ['message' => $message]);
+
+                return $this->jsonRpcHandler->createErrorResponse(-32600, 'Invalid request', null, $message['id'] ?? null);
+            }
+
+            if ($this->jsonRpcHandler->isRequest($message)) {
+                return $this->jsonRpcHandler->handleRequest($message);
+            }
+
+            if ($this->jsonRpcHandler->isNotification($message)) {
+                $this->jsonRpcHandler->handleNotification($message);
+
+                return null; // Notifications don't require responses
+            }
+
+            if ($this->jsonRpcHandler->isResponse($message)) {
+                $this->jsonRpcHandler->handleResponse($message);
+
+                return null; // Responses don't require responses
+            }
+
+            return $this->jsonRpcHandler->createErrorResponse(-32600, 'Invalid request', null, $message['id'] ?? null);
+
+        } catch (ProtocolException $e) {
+            // Handle protocol exceptions with their specific error codes
+            Log::warning('Protocol error', [
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'method' => $e->getMethod(),
+                'message' => $message,
+            ]);
+
+            return $this->jsonRpcHandler->createErrorResponse(
+                $e->getCode(),
+                $e->getMessage(),
+                $e->getData(),
+                $message['id'] ?? null
+            );
+
+        } catch (\Throwable $e) {
+            Log::error('Message processing error', [
+                'error' => $e->getMessage(),
+                'message' => $message,
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            // Log more detailed error in debug mode
+            $errorMessage = config('app.debug') ? 'Internal error: ' . $e->getMessage() : 'Internal error';
+            return $this->jsonRpcHandler->createErrorResponse(-32603, $errorMessage, null, $message['id'] ?? null);
+        }
     }
 }

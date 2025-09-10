@@ -51,9 +51,90 @@
         </style>
     </head>
     <body>
-        <h2>Register Command Feature (Tests\Feature\Commands\RegisterCommandFeature)</h2>
+        <h2>List Command Feature (JTD\LaravelMCP\Tests\Feature\Commands\ListCommandFeature)</h2>
         <ul>
+            <li class="success">List command is registered in artisan</li>
+            <li class="success">Command can be discovered by artisan</li>
+            <li class="success">Command help displays correct information</li>
+            <li class="success">Command handles empty registries</li>
+            <li class="success">Command lists all component types</li>
+            <li class="success">Command filters by tools type</li>
+            <li class="success">Command filters by resources type</li>
+            <li class="success">Command filters by prompts type</li>
+            <li class="success">Command outputs json format</li>
+            <li class="success">Command outputs yaml format</li>
+            <li class="success">Command shows detailed information</li>
+            <li class="success">Command shows detailed resource information</li>
+            <li class="success">Command shows detailed prompt information</li>
+            <li class="success">Command runs with debug mode</li>
+            <li class="success">Command validates invalid type option</li>
+            <li class="success">Command validates invalid format option</li>
+            <li class="success">Command handles metadata failures gracefully</li>
+            <li class="success">Command lists multiple components</li>
+            <li class="success">Command json format with detailed flag</li>
+            <li class="success">Full integration with service provider</li>
+            <li class="success">Command integrates with mcp facade</li>
+            <li class="success">Command truncates long descriptions</li>
+            <li class="success">Command formats class names</li>
+        </ul>
+        <h2>Register Command (JTD\LaravelMCP\Tests\Feature\Commands\RegisterCommand)</h2>
+        <ul>
+            <li class="success">It registers claude desktop configuration</li>
+            <li class="success">It registers claude code configuration</li>
+            <li class="success">It registers chatgpt desktop configuration</li>
+            <li class="success">It validates invalid client type</li>
+            <li class="success">It prompts for server name when not provided</li>
+            <li class="success">It handles environment variables</li>
+            <li class="success">It handles additional arguments</li>
+            <li class="success">It prevents overwrite without force flag</li>
+            <li class="success">It merges with existing configuration</li>
+            <li class="success">It uses custom output path</li>
+            <li class="success">It shows next steps for claude desktop</li>
+            <li class="success">It shows next steps for claude code</li>
+            <li class="success">It shows next steps for chatgpt</li>
+            <li class="success">It handles custom server path</li>
+            <li class="success">It handles invalid environment variables with data set "no equals sign"</li>
+            <li class="success">It handles invalid environment variables with data set "empty value"</li>
+            <li class="success">It handles invalid environment variables with data set "only equals"</li>
+        </ul>
+        <h2>Register Command Feature (JTD\LaravelMCP\Tests\Feature\Commands\RegisterCommandFeature)</h2>
+        <ul>
+            <li class="success">It can register claude desktop configuration</li>
+            <li class="success">It can register claude code configuration</li>
+            <li class="success">It can register chatgpt configuration</li>
             <li class="success">It validates client type</li>
+            <li class="success">It accepts additional arguments</li>
+            <li class="success">It accepts environment variables</li>
+            <li class="success">It uses custom server path</li>
+            <li class="success">It prevents overwrite without force flag</li>
+            <li class="success">It overwrites with force flag</li>
+            <li class="success">It merges with existing configuration</li>
+            <li class="success">It creates directory if not exists</li>
+            <li class="success">It provides helpful next steps</li>
+            <li class="success">It shows different next steps for different clients</li>
+            <li class="success">It handles configuration generation errors</li>
+            <li class="success">It validates configuration before saving</li>
+            <li class="success">It handles file save errors</li>
+            <li class="success">It falls back to current directory when default path unavailable</li>
+            <li class="success">It shows debug information in verbose mode</li>
+        </ul>
+        <h2>Serve Command Feature (JTD\LaravelMCP\Tests\Feature\Commands\ServeCommandFeature)</h2>
+        <ul>
+            <li class="success">Serve command is registered in artisan</li>
+            <li class="success">Command can be discovered by artisan</li>
+            <li class="success">Command help displays correct information</li>
+            <li class="success">Command initializes with stdio transport</li>
+            <li class="success">Command initializes with http transport</li>
+            <li class="success">Command fails with invalid transport type</li>
+            <li class="success">Command fails when transport is disabled</li>
+            <li class="success">Command runs with debug mode enabled</li>
+            <li class="success">Command validates numeric options</li>
+            <li class="success">Command handles transport exceptions gracefully</li>
+            <li class="success">Command integrates with real transport manager</li>
+            <li class="success">Command merges configuration from options</li>
+            <li class="success">Command sets server info on message processor</li>
+            <li class="success">Command displays verbose output</li>
+            <li class="success">Full integration with service provider</li>
         </ul>
     </body>
 </html>

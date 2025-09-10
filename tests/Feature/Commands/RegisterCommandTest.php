@@ -17,7 +17,7 @@ use JTD\LaravelMCP\Support\ConfigGenerator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 #[Group('feature')]
 #[Group('commands')]
@@ -35,18 +35,17 @@ class RegisterCommandTest extends TestCase
         $this->tempConfigPath = sys_get_temp_dir().'/mcp_test_'.uniqid();
         mkdir($this->tempConfigPath);
 
-        // Mock the ConfigGenerator to use our temp path
-        $this->app->bind(ConfigGenerator::class, function ($app) {
-            $generator = $this->createPartialMock(ConfigGenerator::class, ['getClientConfigPath']);
-            $generator->method('getClientConfigPath')
+        // First, forget any existing instances
+        $this->app->forgetInstance(ClientDetector::class);
+        $this->app->forgetInstance(ConfigGenerator::class);
+        
+        // Create a test-specific ClientDetector that returns our temp path
+        $this->app->singleton(ClientDetector::class, function () {
+            $detector = $this->createPartialMock(ClientDetector::class, ['getDefaultConfigPath']);
+            $detector->method('getDefaultConfigPath')
+                ->with($this->anything())  // Accept any client parameter
                 ->willReturn($this->tempConfigPath.'/test_config.json');
-
-            $generator->__construct(
-                $app->make(McpRegistry::class),
-                $app->make(ClientDetector::class)
-            );
-
-            return $generator;
+            return $detector;
         });
     }
 
@@ -153,6 +152,7 @@ class RegisterCommandTest extends TestCase
     #[Test]
     public function it_handles_environment_variables(): void
     {
+        // Use expectsOutputToContain or doesntExpectOutput to capture errors
         $this->artisan('mcp:register', [
             'client' => 'claude-desktop',
             '--name' => 'env-test',
@@ -161,6 +161,8 @@ class RegisterCommandTest extends TestCase
         ])
             ->expectsOutput('✓ MCP server registered successfully!')
             ->assertExitCode(0);
+
+        // Only check the file if the command succeeded
 
         $configFile = $this->tempConfigPath.'/test_config.json';
         $config = json_decode(file_get_contents($configFile), true);

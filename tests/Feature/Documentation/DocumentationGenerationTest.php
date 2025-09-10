@@ -57,14 +57,15 @@ class DocumentationGenerationTest extends TestCase
             '--include-examples' => true,
         ]);
 
+
         // Assert command executed successfully
         $this->assertEquals(0, $exitCode);
 
         // Assert documentation files were created
         $this->assertFileExists($this->testDocsPath.'/overview.md');
-        $this->assertFileExists($this->testDocsPath.'/usage-guide.md');
-        $this->assertFileExists($this->testDocsPath.'/configuration-guide.md');
-        $this->assertFileExists($this->testDocsPath.'/api-reference.md');
+        $this->assertFileExists($this->testDocsPath.'/usage_guide.md');
+        $this->assertFileExists($this->testDocsPath.'/configuration.md');
+        $this->assertFileExists($this->testDocsPath.'/api_reference.md');
         $this->assertFileExists($this->testDocsPath.'/examples.md');
 
         // Assert component documentation directory exists
@@ -349,8 +350,14 @@ class DocumentationGenerationTest extends TestCase
             ],
         ]);
 
-        // Test Blade template rendering
-        $viewPath = resource_path('views/docs/tool.blade.php');
+        // Publish views for testing
+        Artisan::call('vendor:publish', [
+            '--tag' => 'laravel-mcp-views',
+            '--force' => true,
+        ]);
+
+        // Test Blade template rendering 
+        $viewPath = resource_path('views/vendor/laravel-mcp/docs/tool.blade.php');
         $this->assertFileExists($viewPath);
 
         // Generate documentation
@@ -385,9 +392,9 @@ class DocumentationGenerationTest extends TestCase
         // Validate directory structure
         $expectedStructure = [
             'overview.md',
-            'api-reference.md',
-            'usage-guide.md',
-            'configuration-guide.md',
+            'api_reference.md',
+            'usage_guide.md',
+            'configuration.md',
             'examples.md',
             'components/tools.md',
             'components/resources.md',

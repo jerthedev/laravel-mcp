@@ -24,7 +24,7 @@ use JTD\LaravelMCP\Transport\TransportManager;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 /**
  * EPIC: SERVICEPROVIDER
@@ -110,9 +110,9 @@ class ServiceProviderIntegrationTest extends TestCase
         // Assert - Facade should be available
         $this->assertTrue(class_exists(Mcp::class));
 
-        // The facade should resolve to McpRegistry
+        // The facade should resolve to McpManager which proxies to McpRegistry
         $facadeRoot = Mcp::getFacadeRoot();
-        $this->assertInstanceOf(McpRegistry::class, $facadeRoot);
+        $this->assertInstanceOf(\JTD\LaravelMCP\McpManager::class, $facadeRoot);
     }
 
     /**

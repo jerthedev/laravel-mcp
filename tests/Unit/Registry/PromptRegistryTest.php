@@ -5,7 +5,7 @@ namespace JTD\LaravelMCP\Tests\Unit\Registry;
 use JTD\LaravelMCP\Abstracts\McpPrompt;
 use JTD\LaravelMCP\Exceptions\RegistrationException;
 use JTD\LaravelMCP\Registry\PromptRegistry;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 /**
  * Test suite for PromptRegistry functionality.

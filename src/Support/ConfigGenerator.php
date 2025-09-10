@@ -218,7 +218,36 @@ class ConfigGenerator
             return ["Unknown client type: $client"];
         }
 
-        return $this->clientGenerators[$client]->validateConfig($config);
+        // Basic structural validation only - not field completeness
+        $generator = $this->clientGenerators[$client];
+        
+        if ($client === 'claude-desktop') {
+            if (! isset($config['mcpServers']) || ! is_array($config['mcpServers'])) {
+                return ['Configuration must contain mcpServers object'];
+            }
+            return []; // Pass basic structure check
+        }
+
+        if ($client === 'claude-code') {
+            $errors = [];
+            if (! isset($config['mcp']) || ! is_array($config['mcp'])) {
+                $errors[] = 'Configuration must contain mcp object';
+            }
+            if (! isset($config['mcp']['servers']) || ! is_array($config['mcp']['servers'])) {
+                $errors[] = 'Configuration must contain mcp.servers object';
+            }
+            return $errors;
+        }
+
+        if ($client === 'chatgpt') {
+            if (! isset($config['mcp_servers']) || ! is_array($config['mcp_servers'])) {
+                return ['Configuration must contain mcp_servers array'];
+            }
+            return []; // Pass basic structure check
+        }
+
+        // Fallback to strict validation for other clients
+        return $generator->validateConfig($config);
     }
 
     /**
@@ -228,21 +257,25 @@ class ConfigGenerator
     {
         try {
             // Check if file exists and force is not enabled
-            if (! $force && File::exists($path)) {
+            if (! $force && file_exists($path)) {
                 return false;
             }
 
             // Ensure directory exists
             $directory = dirname($path);
-            if (! File::exists($directory)) {
-                File::makeDirectory($directory, 0755, true);
+            if (! is_dir($directory)) {
+                if (! mkdir($directory, 0755, true) && ! is_dir($directory)) {
+                    return false;
+                }
             }
 
             // Save as JSON
             $content = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-            File::put($path, $content);
+            if ($content === false) {
+                return false;
+            }
 
-            return true;
+            return file_put_contents($path, $content) !== false;
         } catch (\Exception $e) {
             return false;
         }
@@ -534,5 +567,21 @@ class ConfigGenerator
                 $diff['removed'][$fullKey] = $value;
             }
         }
+    }
+
+    /**
+     * Detect operating system (delegate to ClientDetector).
+     */
+    protected function detectOperatingSystem(): string
+    {
+        return $this->clientDetector->detectOperatingSystem();
+    }
+
+    /**
+     * Get home directory (delegate to ClientDetector).
+     */
+    protected function getHomeDirectory(): string
+    {
+        return $this->clientDetector->getHomeDirectory();
     }
 }

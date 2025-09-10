@@ -5,7 +5,7 @@ namespace JTD\LaravelMCP\Tests\Unit\Transport\Contracts;
 use JTD\LaravelMCP\Transport\Contracts\MessageHandlerInterface;
 use JTD\LaravelMCP\Transport\Contracts\TransportInterface;
 use PHPUnit\Framework\MockObject\MockObject;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 /**
  * Unit tests for TransportInterface contract.

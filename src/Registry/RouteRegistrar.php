@@ -48,14 +48,14 @@ class RouteRegistrar
         $namespace = '';
 
         foreach ($this->groupStack as $group) {
-            // Concatenate prefixes
+            // Concatenate prefixes with dot separator
             if (isset($group['prefix'])) {
-                $fullPrefix .= $group['prefix'];
+                $fullPrefix .= ($fullPrefix !== '' ? '.' : '') . $group['prefix'];
             }
 
-            // Update namespace (last one wins, or concatenate if needed)
+            // Concatenate namespaces
             if (isset($group['namespace'])) {
-                $namespace = $group['namespace'];
+                $namespace .= ($namespace !== '' ? '\\' : '') . $group['namespace'];
             }
         }
 
@@ -69,6 +69,11 @@ class RouteRegistrar
         // Apply namespace to handler if it's a string without namespace
         if ($namespace !== '' && is_string($handler) && ! str_contains($handler, '\\')) {
             $handler = rtrim($namespace, '\\').'\\'.$handler;
+        }
+
+        // Store namespace in options for metadata (only when there are prefixes or complex grouping)
+        if ($namespace !== '' && $fullPrefix !== '') {
+            $options['namespace'] = $namespace;
         }
 
         $this->registry->registerWithType('tool', $name, $handler, $options);
@@ -93,14 +98,14 @@ class RouteRegistrar
         $namespace = '';
 
         foreach ($this->groupStack as $group) {
-            // Concatenate prefixes
+            // Concatenate prefixes with dot separator
             if (isset($group['prefix'])) {
-                $fullPrefix .= $group['prefix'];
+                $fullPrefix .= ($fullPrefix !== '' ? '.' : '') . $group['prefix'];
             }
 
-            // Update namespace (last one wins, or concatenate if needed)
+            // Concatenate namespaces
             if (isset($group['namespace'])) {
-                $namespace = $group['namespace'];
+                $namespace .= ($namespace !== '' ? '\\' : '') . $group['namespace'];
             }
         }
 
@@ -114,6 +119,11 @@ class RouteRegistrar
         // Apply namespace to handler if it's a string without namespace
         if ($namespace !== '' && is_string($handler) && ! str_contains($handler, '\\')) {
             $handler = rtrim($namespace, '\\').'\\'.$handler;
+        }
+
+        // Store namespace in options for metadata (only when there are prefixes or complex grouping)
+        if ($namespace !== '' && $fullPrefix !== '') {
+            $options['namespace'] = $namespace;
         }
 
         $this->registry->registerWithType('resource', $name, $handler, $options);
@@ -138,14 +148,14 @@ class RouteRegistrar
         $namespace = '';
 
         foreach ($this->groupStack as $group) {
-            // Concatenate prefixes
+            // Concatenate prefixes with dot separator
             if (isset($group['prefix'])) {
-                $fullPrefix .= $group['prefix'];
+                $fullPrefix .= ($fullPrefix !== '' ? '.' : '') . $group['prefix'];
             }
 
-            // Update namespace (last one wins, or concatenate if needed)
+            // Concatenate namespaces
             if (isset($group['namespace'])) {
-                $namespace = $group['namespace'];
+                $namespace .= ($namespace !== '' ? '\\' : '') . $group['namespace'];
             }
         }
 
@@ -159,6 +169,11 @@ class RouteRegistrar
         // Apply namespace to handler if it's a string without namespace
         if ($namespace !== '' && is_string($handler) && ! str_contains($handler, '\\')) {
             $handler = rtrim($namespace, '\\').'\\'.$handler;
+        }
+
+        // Store namespace in options for metadata (only when there are prefixes or complex grouping)
+        if ($namespace !== '' && $fullPrefix !== '') {
+            $options['namespace'] = $namespace;
         }
 
         $this->registry->registerWithType('prompt', $name, $handler, $options);
@@ -327,5 +342,27 @@ class RouteRegistrar
             'prompt' => $this->registry->listPrompts(),
             default => []
         };
+    }
+
+    /**
+     * Batch register components of a specific type.
+     *
+     * @param  string  $type  Component type ('tool', 'resource', or 'prompt')
+     * @param  array  $components  Array of name => handler pairs
+     * @param  array  $options  Shared options for all components
+     * @return $this
+     */
+    public function batch(string $type, array $components, array $options = []): self
+    {
+        foreach ($components as $name => $handler) {
+            match ($type) {
+                'tool' => $this->tool($name, $handler, $options),
+                'resource' => $this->resource($name, $handler, $options),
+                'prompt' => $this->prompt($name, $handler, $options),
+                default => throw new \InvalidArgumentException("Invalid component type: {$type}")
+            };
+        }
+
+        return $this;
     }
 }

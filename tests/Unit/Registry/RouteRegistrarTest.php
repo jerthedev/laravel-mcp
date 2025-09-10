@@ -214,7 +214,7 @@ class RouteRegistrarTest extends TestCase
     #[Test]
     public function it_gets_a_registered_tool(): void
     {
-        $mockTool = new \stdClass;
+        $mockTool = $this->createMock(\JTD\LaravelMCP\Abstracts\McpTool::class);
 
         $this->registry->expects($this->once())
             ->method('getTool')
@@ -229,7 +229,7 @@ class RouteRegistrarTest extends TestCase
     #[Test]
     public function it_gets_a_registered_resource(): void
     {
-        $mockResource = new \stdClass;
+        $mockResource = $this->createMock(\JTD\LaravelMCP\Abstracts\McpResource::class);
 
         $this->registry->expects($this->once())
             ->method('getResource')
@@ -244,7 +244,7 @@ class RouteRegistrarTest extends TestCase
     #[Test]
     public function it_gets_a_registered_prompt(): void
     {
-        $mockPrompt = new \stdClass;
+        $mockPrompt = $this->createMock(\JTD\LaravelMCP\Abstracts\McpPrompt::class);
 
         $this->registry->expects($this->once())
             ->method('getPrompt')
@@ -361,8 +361,8 @@ class RouteRegistrarTest extends TestCase
     {
         $tool = $this->createTestTool('tool');
 
-        $this->mockRegistry->expects($this->once())
-            ->method('register')
+        $this->registry->expects($this->once())
+            ->method('registerWithType')
             ->willReturnCallback(function ($type, $name, $handler, $options) {
                 $this->assertEquals('api.v1', $options['prefix']);
                 $this->assertEquals('App\\Tools\\Api\\V1', $options['namespace']);
@@ -399,8 +399,8 @@ class RouteRegistrarTest extends TestCase
             'secure' => true,
         ];
 
-        $this->mockRegistry->expects($this->once())
-            ->method('register')
+        $this->registry->expects($this->once())
+            ->method('registerWithType')
             ->willReturnCallback(function ($type, $name, $handler, $options) use ($routeOptions) {
                 $this->assertEquals($routeOptions, $options['route_options']);
             });
@@ -415,8 +415,8 @@ class RouteRegistrarTest extends TestCase
     {
         $tool = $this->createTestTool('tool');
 
-        $this->mockRegistry->expects($this->once())
-            ->method('register')
+        $this->registry->expects($this->once())
+            ->method('registerWithType')
             ->willThrowException(new \InvalidArgumentException('Invalid tool configuration'));
 
         $this->expectException(\InvalidArgumentException::class);
@@ -434,8 +434,8 @@ class RouteRegistrarTest extends TestCase
         $resource = $this->createTestResource('resource');
         $prompt = $this->createTestPrompt('prompt');
 
-        $this->mockRegistry->expects($this->exactly(6))
-            ->method('register')
+        $this->registry->expects($this->exactly(6))
+            ->method('registerWithType')
             ->willReturnCallback(function ($type, $name, $handler, $options) {
                 $this->assertContains($type, ['tool', 'resource', 'prompt']);
                 $this->assertIsString($name);
@@ -473,8 +473,8 @@ class RouteRegistrarTest extends TestCase
             return ['messages' => ['Prompt rendered']];
         };
 
-        $this->mockRegistry->expects($this->exactly(3))
-            ->method('register')
+        $this->registry->expects($this->exactly(3))
+            ->method('registerWithType')
             ->willReturnCallback(function ($type, $name, $handler, $options) {
                 $this->assertIsCallable($handler);
             });
@@ -494,8 +494,8 @@ class RouteRegistrarTest extends TestCase
         $resourceClassName = 'App\\Resources\\UserData';
         $promptClassName = 'App\\Prompts\\EmailTemplate';
 
-        $this->mockRegistry->expects($this->exactly(3))
-            ->method('register')
+        $this->registry->expects($this->exactly(3))
+            ->method('registerWithType')
             ->willReturnCallback(function ($type, $name, $handler, $options) {
                 $this->assertIsString($handler);
                 $this->assertStringStartsWith('App\\', $handler);
@@ -512,8 +512,8 @@ class RouteRegistrarTest extends TestCase
      */
     public function test_batch_registration_with_empty_arrays(): void
     {
-        $this->mockRegistry->expects($this->never())
-            ->method('register');
+        $this->registry->expects($this->never())
+            ->method('registerWithType');
 
         $result = $this->registrar->batch('tool', [], ['common' => 'value']);
         $this->assertSame($this->registrar, $result);
@@ -526,8 +526,8 @@ class RouteRegistrarTest extends TestCase
     {
         $tool = $this->createTestTool('tool');
 
-        $this->mockRegistry->expects($this->exactly(2))
-            ->method('register')
+        $this->registry->expects($this->exactly(2))
+            ->method('registerWithType')
             ->willReturnCallback(function ($type, $name, $handler, $options) {
                 if ($name === 'nested_tool1') {
                     $this->assertEquals('api.v1.admin', $options['prefix']);
@@ -559,8 +559,8 @@ class RouteRegistrarTest extends TestCase
     {
         $tool = $this->createTestTool('tool');
 
-        $this->mockRegistry->expects($this->once())
-            ->method('register')
+        $this->registry->expects($this->once())
+            ->method('registerWithType')
             ->willReturnCallback(function ($type, $name, $handler, $options) {
                 $this->assertEquals(['cors', 'auth', 'throttle', 'component1', 'component2'], $options['middleware']);
             });
@@ -580,8 +580,8 @@ class RouteRegistrarTest extends TestCase
         $tool1 = $this->createTestTool('tool1');
         $tool2 = $this->createTestTool('tool2');
 
-        $this->mockRegistry->expects($this->exactly(2))
-            ->method('register')
+        $this->registry->expects($this->exactly(2))
+            ->method('registerWithType')
             ->willReturnCallback(function ($type, $name, $handler, $options) {
                 $this->assertEquals('duplicate_tool', $name);
             });
@@ -600,8 +600,8 @@ class RouteRegistrarTest extends TestCase
     {
         $tool = $this->createTestTool('tool');
 
-        $this->mockRegistry->expects($this->exactly(2))
-            ->method('register')
+        $this->registry->expects($this->exactly(2))
+            ->method('registerWithType')
             ->willReturnCallback(function ($type, $name, $handler, $options) {
                 if ($name === 'group1_tool') {
                     $this->assertEquals('v1', $options['version']);
@@ -633,8 +633,8 @@ class RouteRegistrarTest extends TestCase
         $prompt = $this->createTestPrompt('prompt');
 
         $registrationCount = 0;
-        $this->mockRegistry->expects($this->exactly(7))
-            ->method('register')
+        $this->registry->expects($this->exactly(7))
+            ->method('registerWithType')
             ->willReturnCallback(function () use (&$registrationCount) {
                 $registrationCount++;
             });

@@ -15,7 +15,7 @@ use Mockery;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 #[CoversClass(McpController::class)]
 class McpControllerTest extends TestCase
@@ -26,20 +26,23 @@ class McpControllerTest extends TestCase
 
     private HttpTransport $mockHttpTransport;
 
+    private \JTD\LaravelMCP\Protocol\MessageProcessor $mockMessageProcessor;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->mockTransportManager = Mockery::mock(TransportManager::class);
         $this->mockHttpTransport = Mockery::mock(HttpTransport::class);
+        $this->mockMessageProcessor = Mockery::mock(\JTD\LaravelMCP\Protocol\MessageProcessor::class);
 
-        $this->controller = new McpController($this->mockTransportManager);
+        $this->controller = new McpController($this->mockTransportManager, $this->mockMessageProcessor);
 
         // Setup routes for testing
-        Route::post('/mcp', [$this->controller, 'handle'])->name('mcp.handle');
-        Route::get('/mcp/events', [$this->controller, 'events'])->name('mcp.events');
-        Route::get('/mcp/health', [$this->controller, 'health'])->name('mcp.health');
-        Route::get('/mcp/info', [$this->controller, 'info'])->name('mcp.info');
+        Route::post('/mcp', [McpController::class, 'handle'])->name('mcp.handle');
+        Route::get('/mcp/events', [McpController::class, 'events'])->name('mcp.events');
+        Route::get('/mcp/health', [McpController::class, 'health'])->name('mcp.health');
+        Route::get('/mcp/info', [McpController::class, 'info'])->name('mcp.info');
     }
 
     protected function tearDown(): void
@@ -88,7 +91,7 @@ class McpControllerTest extends TestCase
             'CONTENT_TYPE' => 'application/json',
         ], json_encode(['jsonrpc' => '2.0', 'method' => 'test', 'id' => 1]));
 
-        $exception = new TransportException('Transport error', -32000, ['foo' => 'bar']);
+        $exception = new TransportException('Transport error', -32000, 'http', ['foo' => 'bar']);
 
         Log::shouldReceive('error')
             ->once()

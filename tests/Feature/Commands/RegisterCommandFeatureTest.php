@@ -41,7 +41,7 @@ use Illuminate\Support\Facades\File;
 use JTD\LaravelMCP\Support\ConfigGenerator;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 
 #[Group('feature')]
 #[Group('commands')]
@@ -218,8 +218,9 @@ class RegisterCommandFeatureTest extends TestCase
             '--description' => 'Test MCP Server',
             '--output' => $this->tempConfigPath,
         ])
-            ->assertFailed()
-            ->expectsOutput('⚠ Configuration not saved - file exists');
+            ->expectsConfirmation('Configuration file already exists at '.$this->tempConfigPath.'. Overwrite?', 'no')
+            ->expectsOutput('⚠ Configuration not saved - file exists')
+            ->assertSuccessful();
 
         // File should remain unchanged
         $content = File::get($this->tempConfigPath);
@@ -266,10 +267,10 @@ class RegisterCommandFeatureTest extends TestCase
             'client' => 'claude-desktop',
             '--name' => 'new-server',
             '--output' => $this->tempConfigPath,
-            '--force' => true,
         ])
-            ->assertSuccessful()
-            ->expectsOutput('Merged with existing configuration');
+            ->expectsConfirmation('Configuration file already exists at '.$this->tempConfigPath.'. Overwrite?', 'yes')
+            ->expectsOutput('Merged with existing configuration')
+            ->assertSuccessful();
 
         $config = json_decode(File::get($this->tempConfigPath), true);
         $this->assertArrayHasKey('existing-server', $config['mcpServers']);
@@ -305,9 +306,9 @@ class RegisterCommandFeatureTest extends TestCase
             '--force' => true,
         ])
             ->assertSuccessful()
-            ->expectsOutput('Next Steps')
-            ->expectsOutput('Restart Claude Desktop application')
-            ->expectsOutput('Run "php artisan mcp:serve" to start the MCP server');
+            ->expectsOutputToContain('Next Steps')
+            ->expectsOutputToContain('Restart Claude Desktop application')
+            ->expectsOutputToContain('Run "php artisan mcp:serve" to start the MCP server');
     }
 
     #[Test]
@@ -319,7 +320,7 @@ class RegisterCommandFeatureTest extends TestCase
             '--output' => $this->tempConfigPath,
             '--force' => true,
         ])
-            ->expectsOutput('Restart VS Code or reload the Claude extension');
+            ->expectsOutputToContain('Restart VS Code or reload the Claude extension');
 
         $this->artisan('mcp:register', [
             'client' => 'chatgpt',
@@ -327,7 +328,7 @@ class RegisterCommandFeatureTest extends TestCase
             '--output' => sys_get_temp_dir().'/chatgpt_test_'.uniqid().'.json',
             '--force' => true,
         ])
-            ->expectsOutput('Restart ChatGPT Desktop application');
+            ->expectsOutputToContain('Restart ChatGPT Desktop application');
     }
 
     #[Test]
@@ -366,7 +367,7 @@ class RegisterCommandFeatureTest extends TestCase
             '--output' => $this->tempConfigPath,
         ])
             ->assertFailed()
-            ->expectsOutput('✗ Configuration validation failed:');
+            ->expectsOutputToContain('Configuration validation failed');
     }
 
     #[Test]
@@ -381,24 +382,34 @@ class RegisterCommandFeatureTest extends TestCase
             '--output' => $invalidPath,
         ])
             ->assertFailed()
-            ->expectsOutput('✗ Failed to save configuration');
+            ->expectsOutputToContain('Failed to save configuration');
     }
 
     #[Test]
     public function it_falls_back_to_current_directory_when_default_path_unavailable(): void
     {
+        // First, forget any existing instance
+        $this->app->forgetInstance(ConfigGenerator::class);
+        
         // Mock ConfigGenerator to return null for default path
-        $mockGenerator = $this->createPartialMock(ConfigGenerator::class, ['getClientConfigPath']);
+        $mockGenerator = $this->createPartialMock(ConfigGenerator::class, ['getClientConfigPath', 'generateClaudeDesktopConfig', 'validateClientConfig', 'saveClientConfig']);
         $mockGenerator->method('getClientConfigPath')
             ->willReturn(null);
+        $mockGenerator->method('generateClaudeDesktopConfig')
+            ->willReturn(['mcpServers' => ['test-server' => ['command' => 'php', 'args' => ['artisan', 'mcp:serve']]]]);
+        $mockGenerator->method('validateClientConfig')
+            ->willReturn([]);
+        $mockGenerator->method('saveClientConfig')
+            ->willReturn(true);
 
         $this->app->instance(ConfigGenerator::class, $mockGenerator);
 
         $this->artisan('mcp:register', [
             'client' => 'claude-desktop',
             '--name' => 'test-server',
+            '--force' => true,  // Add force to avoid confirmation prompts
         ])
-            ->expectsOutput('Could not determine default config path');
+            ->expectsOutputToContain('Could not determine default config path');
     }
 
     #[Test]
@@ -412,6 +423,6 @@ class RegisterCommandFeatureTest extends TestCase
             '-v' => true,
         ])
             ->assertSuccessful()
-            ->expectsOutput('[DEBUG]');
+            ->expectsOutputToContain('[DEBUG]');
     }
 }

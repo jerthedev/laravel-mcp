@@ -3,6 +3,7 @@
 namespace JTD\LaravelMCP\Protocol;
 
 use Illuminate\Support\Facades\Log;
+use JTD\LaravelMCP\Exceptions\ProtocolException;
 use JTD\LaravelMCP\Protocol\Contracts\JsonRpcHandlerInterface;
 
 /**
@@ -78,6 +79,16 @@ class JsonRpcHandler implements JsonRpcHandlerInterface
             $params = $request['params'] ?? [];
             $id = $request['id'];
 
+            // Validate params structure - must be array or object (null is OK)
+            if (isset($request['params']) && !is_array($request['params']) && !is_null($request['params'])) {
+                return $this->createErrorResponse(
+                    self::ERROR_INVALID_PARAMS,
+                    'Invalid params: parameters must be structured values (array or object)',
+                    null,
+                    $id
+                );
+            }
+
             if ($this->debug) {
                 Log::debug('Processing JSON-RPC request', [
                     'method' => $method,
@@ -107,6 +118,20 @@ class JsonRpcHandler implements JsonRpcHandlerInterface
                     self::ERROR_INVALID_PARAMS,
                     $e->getMessage(),
                     null,
+                    $id
+                );
+            } catch (ProtocolException $e) {
+                // Handle protocol exceptions with their specific error codes
+                Log::warning('Protocol error in request handler', [
+                    'method' => $method,
+                    'error' => $e->getMessage(),
+                    'code' => $e->getCode(),
+                ]);
+
+                return $this->createErrorResponse(
+                    $e->getCode(),
+                    $e->getMessage(),
+                    $e->getData(),
                     $id
                 );
             } catch (\Throwable $e) {
@@ -165,6 +190,16 @@ class JsonRpcHandler implements JsonRpcHandlerInterface
             if (isset($this->notificationHandlers[$method])) {
                 $handler = $this->notificationHandlers[$method];
                 $handler($params, $notification);
+                
+                // Dispatch NotificationSent event
+                $notificationData = [
+                    'id' => uniqid('notif_', true),
+                    'type' => $method,
+                    'params' => $params,
+                    'timestamp' => now()->toISOString(),
+                ];
+                
+                event(new \JTD\LaravelMCP\Events\NotificationSent($notificationData, 'http-client'));
             } else {
                 Log::info("No handler for notification method: {$method}");
             }
