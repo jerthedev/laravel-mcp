@@ -62,7 +62,6 @@ interface NotificationHandlerInterface
      *
      * @param  string  $clientId  The client identifier
      * @param  array  $types  Notification types to stream
-     * @return StreamedResponse
      */
     public function createSseResponse(string $clientId, array $types = []): StreamedResponse;
 
@@ -70,21 +69,16 @@ interface NotificationHandlerInterface
      * Get notification delivery status.
      *
      * @param  string  $notificationId  The notification ID
-     * @return array|null
      */
     public function getDeliveryStatus(string $notificationId): ?array;
 
     /**
      * Get active subscriptions.
-     *
-     * @return array
      */
     public function getActiveSubscriptions(): array;
 
     /**
      * Get pending notifications count.
-     *
-     * @return int
      */
     public function getPendingNotificationsCount(): int;
 

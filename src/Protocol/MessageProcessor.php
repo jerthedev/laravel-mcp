@@ -490,19 +490,20 @@ class MessageProcessor implements MessageHandlerInterface
         $responses = [];
 
         foreach ($batchRequest as $singleRequest) {
-            if (!is_array($singleRequest)) {
+            if (! is_array($singleRequest)) {
                 $responses[] = $this->jsonRpcHandler->createErrorResponse(
                     -32600,
                     'Invalid request',
                     null,
                     null
                 );
+
                 continue;
             }
 
             // Process individual request directly without recursive call
             $response = $this->handleSingleMessage($singleRequest, $transport);
-            
+
             // Only add response if it's not null (notifications return null)
             if ($response !== null) {
                 $responses[] = $response;
@@ -567,7 +568,8 @@ class MessageProcessor implements MessageHandlerInterface
             ]);
 
             // Log more detailed error in debug mode
-            $errorMessage = config('app.debug') ? 'Internal error: ' . $e->getMessage() : 'Internal error';
+            $errorMessage = config('app.debug') ? 'Internal error: '.$e->getMessage() : 'Internal error';
+
             return $this->jsonRpcHandler->createErrorResponse(-32603, $errorMessage, null, $message['id'] ?? null);
         }
     }

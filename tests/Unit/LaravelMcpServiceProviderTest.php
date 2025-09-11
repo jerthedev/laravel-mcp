@@ -20,6 +20,7 @@ use JTD\LaravelMCP\Registry\ResourceRegistry;
 use JTD\LaravelMCP\Registry\ToolRegistry;
 use JTD\LaravelMCP\Support\ConfigGenerator;
 use JTD\LaravelMCP\Support\DocumentationGenerator;
+use JTD\LaravelMCP\Tests\TestCase;
 use JTD\LaravelMCP\Transport\Contracts\TransportInterface;
 use JTD\LaravelMCP\Transport\HttpTransport;
 use JTD\LaravelMCP\Transport\StdioTransport;
@@ -29,7 +30,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use JTD\LaravelMCP\Tests\TestCase;
 
 /**
  * EPIC: SERVICEPROVIDER
@@ -625,8 +625,9 @@ class LaravelMcpServiceProviderTest extends TestCase
         $router->shouldReceive('pushMiddlewareToGroup')
             ->with('api', McpCorsMiddleware::class)
             ->once();
-        $router->shouldNotReceive('pushMiddlewareToGroup')
-            ->with('api', McpAuthMiddleware::class);
+        $router->shouldReceive('pushMiddlewareToGroup')
+            ->with('api', McpAuthMiddleware::class)
+            ->once();
 
         $this->app->instance('router', $router);
 

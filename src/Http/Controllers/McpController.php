@@ -73,12 +73,14 @@ class McpController extends Controller
                 'context' => $e->getContext(),
             ]);
 
-            return $this->createErrorResponse(
+            $response = $this->createErrorResponse(
                 $e->getMessage(),
                 $e->getCode() ?: -32603,
                 null,
                 500
             );
+
+            return $this->addCorsHeaders($response);
 
         } catch (\Throwable $e) {
             Log::error('MCP Controller unexpected error', [
@@ -86,12 +88,17 @@ class McpController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return $this->createErrorResponse(
-                'Internal server error',
+            // Always return 'Internal server error' for security reasons
+            $message = 'Internal server error';
+
+            $response = $this->createErrorResponse(
+                $message,
                 -32603,
                 null,
                 500
             );
+
+            return $this->addCorsHeaders($response);
         }
     }
 
@@ -116,7 +123,7 @@ class McpController extends Controller
             // Return basic CORS response even on error
             $response = new Response('', 204);
 
-            return $response;
+            return $this->addCorsHeaders($response);
         }
     }
 
@@ -192,7 +199,7 @@ class McpController extends Controller
     {
         try {
             $transport = $this->getHttpTransport();
-            $healthInfo = $transport->healthCheck();
+            $healthInfo = $transport->performHealthCheck();
 
             $status = $healthInfo['healthy'] ? 'healthy' : 'unhealthy';
             $httpStatus = $healthInfo['healthy'] ? 200 : 503;
@@ -205,7 +212,7 @@ class McpController extends Controller
                 'transport' => [
                     'type' => 'http',
                     'connected' => $transport->isConnected(),
-                    'stats' => $transport->getStats(),
+                    'stats' => $transport->getStatistics(),
                 ],
             ], $httpStatus);
 
@@ -302,11 +309,16 @@ class McpController extends Controller
             $transport = $this->transportManager->createTransport('http', $config);
 
             if (! $transport instanceof HttpTransport) {
-                throw new TransportException('Invalid transport type. Expected HttpTransport.');
+                throw new TransportException(
+                    'Invalid transport type. Expected HttpTransport.',
+                    -32603,
+                    'http'
+                );
             }
 
-            // Set the message handler
-            $transport->setMessageHandler($this->messageProcessor);
+            // Set up message handler (McpServer)
+            $mcpServer = app(\JTD\LaravelMCP\Server\McpServer::class);
+            $transport->setMessageHandler($mcpServer);
 
             // Start the transport if not already started
             if (! $transport->isConnected()) {

@@ -11,7 +11,6 @@ use JTD\LaravelMCP\Abstracts\McpPrompt;
 use JTD\LaravelMCP\Abstracts\McpResource;
 use JTD\LaravelMCP\Abstracts\McpTool;
 use JTD\LaravelMCP\Registry\Contracts\DiscoveryInterface;
-use JTD\LaravelMCP\Registry\RoutingPatterns;
 use ReflectionClass;
 use Symfony\Component\Finder\Finder;
 
@@ -947,7 +946,7 @@ class ComponentDiscovery implements DiscoveryInterface
      */
     private function getCachedDiscovery(): ?array
     {
-        if (!$this->cacheEnabled) {
+        if (! $this->cacheEnabled) {
             return null;
         }
 
@@ -957,6 +956,7 @@ class ComponentDiscovery implements DiscoveryInterface
             logger()->warning('Failed to retrieve cached discovery results', [
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -966,7 +966,7 @@ class ComponentDiscovery implements DiscoveryInterface
      */
     private function cacheDiscovery(): void
     {
-        if (!$this->cacheEnabled || empty($this->discoveredComponents)) {
+        if (! $this->cacheEnabled || empty($this->discoveredComponents)) {
             return;
         }
 

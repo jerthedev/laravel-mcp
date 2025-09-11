@@ -79,7 +79,7 @@ class ClaudeCodeGenerator implements ClientGeneratorInterface
         $tools = $this->registry->getTools() ?? [];
         $resources = $this->registry->getResources() ?? [];
         $prompts = $this->registry->getPrompts() ?? [];
-        
+
         $toolCount = count($tools);
         $resourceCount = count($resources);
         $promptCount = count($prompts);

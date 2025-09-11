@@ -26,6 +26,7 @@ namespace JTD\LaravelMCP\Tests\Unit\Transport;
 
 use Illuminate\Support\Facades\Log;
 use JTD\LaravelMCP\Exceptions\TransportException;
+use JTD\LaravelMCP\Tests\TestCase;
 use JTD\LaravelMCP\Transport\Contracts\MessageHandlerInterface;
 use JTD\LaravelMCP\Transport\StdioTransport;
 use Mockery;
@@ -33,7 +34,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\Process\Process;
-use JTD\LaravelMCP\Tests\TestCase;
 
 #[CoversClass(StdioTransport::class)]
 #[Group('transport')]

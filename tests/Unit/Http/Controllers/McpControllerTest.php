@@ -9,13 +9,13 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use JTD\LaravelMCP\Exceptions\TransportException;
 use JTD\LaravelMCP\Http\Controllers\McpController;
+use JTD\LaravelMCP\Tests\TestCase;
 use JTD\LaravelMCP\Transport\HttpTransport;
 use JTD\LaravelMCP\Transport\TransportManager;
 use Mockery;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use JTD\LaravelMCP\Tests\TestCase;
 
 #[CoversClass(McpController::class)]
 class McpControllerTest extends TestCase
@@ -64,6 +64,10 @@ class McpControllerTest extends TestCase
             ->once()
             ->with('http', Mockery::type('array'))
             ->andReturn($this->mockHttpTransport);
+
+        $this->mockHttpTransport->shouldReceive('setMessageHandler')
+            ->once()
+            ->with(Mockery::type(\JTD\LaravelMCP\Server\McpServer::class));
 
         $this->mockHttpTransport->shouldReceive('isConnected')
             ->once()
@@ -145,6 +149,10 @@ class McpControllerTest extends TestCase
             ->once()
             ->andReturn($this->mockHttpTransport);
 
+        $this->mockHttpTransport->shouldReceive('setMessageHandler')
+            ->once()
+            ->with(Mockery::type(\JTD\LaravelMCP\Server\McpServer::class));
+
         $this->mockHttpTransport->shouldReceive('isConnected')
             ->once()
             ->andReturn(true);
@@ -201,6 +209,10 @@ class McpControllerTest extends TestCase
             ->once()
             ->andReturn($this->mockHttpTransport);
 
+        $this->mockHttpTransport->shouldReceive('setMessageHandler')
+            ->once()
+            ->with(Mockery::type(\JTD\LaravelMCP\Server\McpServer::class));
+
         $this->mockHttpTransport->shouldReceive('isConnected')
             ->twice()
             ->andReturn(true);
@@ -244,9 +256,16 @@ class McpControllerTest extends TestCase
             ->once()
             ->andReturn($this->mockHttpTransport);
 
+        $this->mockHttpTransport->shouldReceive('setMessageHandler')
+            ->once()
+            ->with(Mockery::type(\JTD\LaravelMCP\Server\McpServer::class));
+
         $this->mockHttpTransport->shouldReceive('isConnected')
             ->twice()
             ->andReturn(false);
+
+        $this->mockHttpTransport->shouldReceive('start')
+            ->once();
 
         $this->mockHttpTransport->shouldReceive('performHealthCheck')
             ->once()
@@ -313,6 +332,10 @@ class McpControllerTest extends TestCase
             ->once()
             ->andReturn($this->mockHttpTransport);
 
+        $this->mockHttpTransport->shouldReceive('setMessageHandler')
+            ->once()
+            ->with(Mockery::type(\JTD\LaravelMCP\Server\McpServer::class));
+
         $this->mockHttpTransport->shouldReceive('isConnected')
             ->once()
             ->andReturn(true);
@@ -361,14 +384,27 @@ class McpControllerTest extends TestCase
     {
         $request = Request::create('/mcp/info', 'GET');
 
-        // Force an exception by making route() function unavailable
-        Route::shouldReceive('has')->andReturn(false);
+        // Create a controller that will fail when getting transport
+        $mockTransportManager = Mockery::mock(TransportManager::class);
+        $mockTransportManager->shouldReceive('createTransport')
+            ->zeroOrMoreTimes()  // Transport creation is optional in info endpoint
+            ->andThrow(new \RuntimeException('Transport creation failed'));
+
+        $controller = new McpController($mockTransportManager, $this->mockMessageProcessor);
+        
+        // Clear named routes to cause route() function to fail
+        $originalRoutes = app('router')->getRoutes();
+        $newRouteCollection = new \Illuminate\Routing\RouteCollection();
+        app('router')->setRoutes($newRouteCollection);
 
         Log::shouldReceive('error')
             ->once()
             ->with('Server info failed', Mockery::type('array'));
 
-        $response = $this->controller->info($request);
+        $response = $controller->info($request);
+
+        // Restore routes for other tests
+        app('router')->setRoutes($originalRoutes);
 
         $this->assertEquals(500, $response->getStatusCode());
 
@@ -402,6 +438,10 @@ class McpControllerTest extends TestCase
             ->once() // Only once for both calls
             ->andReturn($this->mockHttpTransport);
 
+        $this->mockHttpTransport->shouldReceive('setMessageHandler')
+            ->once()
+            ->with(Mockery::type(\JTD\LaravelMCP\Server\McpServer::class));
+
         $this->mockHttpTransport->shouldReceive('isConnected')
             ->once()
             ->andReturn(true); // Already connected
@@ -424,16 +464,24 @@ class McpControllerTest extends TestCase
     {
         $request = Request::create('/mcp', 'POST');
 
-        $invalidTransport = Mockery::mock('InvalidTransport');
+        // Create a mock that implements TransportInterface but is not HttpTransport
+        $invalidTransport = Mockery::mock(\JTD\LaravelMCP\Transport\Contracts\TransportInterface::class);
+
+        Log::shouldReceive('error')
+            ->once()
+            ->with('MCP Controller transport error', Mockery::type('array'));
 
         $this->mockTransportManager->shouldReceive('createTransport')
             ->once()
             ->andReturn($invalidTransport);
 
-        $this->expectException(TransportException::class);
-        $this->expectExceptionMessage('Invalid transport type. Expected HttpTransport.');
+        $response = $this->controller->handle($request);
 
-        $this->controller->handle($request);
+        $this->assertEquals(500, $response->getStatusCode());
+        $content = json_decode($response->getContent(), true);
+        $this->assertArrayHasKey('error', $content);
+        $this->assertEquals(-32603, $content['error']['code']);
+        $this->assertEquals('Invalid transport type. Expected HttpTransport.', $content['error']['message']);
     }
 
     #[Test]

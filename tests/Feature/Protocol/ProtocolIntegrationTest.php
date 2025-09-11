@@ -4,20 +4,15 @@ namespace JTD\LaravelMCP\Tests\Feature\Protocol;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Queue;
 use JTD\LaravelMCP\Events\NotificationBroadcast;
 use JTD\LaravelMCP\Events\NotificationDelivered;
-use JTD\LaravelMCP\Events\NotificationFailed;
 use JTD\LaravelMCP\Events\NotificationQueued;
 use JTD\LaravelMCP\Events\NotificationSent;
 use JTD\LaravelMCP\Http\Controllers\McpController;
 use JTD\LaravelMCP\Protocol\MessageProcessor;
 use JTD\LaravelMCP\Tests\TestCase;
 use JTD\LaravelMCP\Transport\HttpTransport;
-use JTD\LaravelMCP\Transport\StdioTransport;
 use JTD\LaravelMCP\Transport\TransportManager;
-use Mockery;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\Process\Process;
@@ -38,7 +33,9 @@ use Symfony\Component\Process\Process;
 class ProtocolIntegrationTest extends TestCase
 {
     protected MessageProcessor $messageProcessor;
+
     protected TransportManager $transportManager;
+
     protected HttpTransport $httpTransport;
 
     protected function setUp(): void
@@ -86,7 +83,7 @@ class ProtocolIntegrationTest extends TestCase
 
         // Clear the MessageProcessor singleton to ensure clean state for each test
         $this->app->forgetInstance(MessageProcessor::class);
-        
+
         $this->messageProcessor = app(MessageProcessor::class);
         $this->transportManager = app(TransportManager::class);
         $this->httpTransport = $this->transportManager->createTransport('http');
@@ -258,10 +255,10 @@ class ProtocolIntegrationTest extends TestCase
         // Verify tool was registered
         $registry = app('mcp.registry');
         $this->assertGreaterThan(0, count($registry->getTools()), 'No tools registered');
-        
+
         // Initialize server first
         $this->initializeServer();
-        
+
         // Verify initialization took effect
         $messageProcessor = app(\JTD\LaravelMCP\Protocol\MessageProcessor::class);
         $this->assertTrue($messageProcessor->isInitialized(), 'MessageProcessor should be initialized after server init');
@@ -275,8 +272,8 @@ class ProtocolIntegrationTest extends TestCase
 
         $listResponse->assertStatus(200);
         $listData = $listResponse->json();
-        
-        $this->assertArrayHasKey('result', $listData, 'Expected result key in response: ' . json_encode($listData));
+
+        $this->assertArrayHasKey('result', $listData, 'Expected result key in response: '.json_encode($listData));
         $this->assertArrayHasKey('tools', $listData['result']);
         $this->assertGreaterThan(0, count($listData['result']['tools']));
 
@@ -595,7 +592,7 @@ class ProtocolIntegrationTest extends TestCase
         }
 
         // Verify request isolation - each should have unique ID
-        $ids = array_map(fn($response) => $response->json()['id'], $responses);
+        $ids = array_map(fn ($response) => $response->json()['id'], $responses);
         $this->assertCount($concurrentRequests, array_unique($ids));
     }
 
@@ -730,7 +727,7 @@ class ProtocolIntegrationTest extends TestCase
             $response = $this->postJson('/mcp', $request);
 
             if (isset($request['jsonrpc']) && $request['jsonrpc'] === '2.0' &&
-                isset($request['method']) && !empty($request['method'])) {
+                isset($request['method']) && ! empty($request['method'])) {
                 // Valid request
                 if (isset($request['id'])) {
                     // Request - should have response
@@ -1018,7 +1015,9 @@ class ProtocolIntegrationTest extends TestCase
         $tool = new class extends \JTD\LaravelMCP\Abstracts\McpTool
         {
             protected string $name = 'complex_calculator';
+
             protected string $description = 'Performs complex mathematical operations';
+
             protected array $parameterSchema = [
                 'operation' => ['type' => 'string', 'enum' => ['add', 'multiply', 'echo']],
                 'values' => ['type' => 'array', 'items' => ['type' => 'number']],
@@ -1029,7 +1028,7 @@ class ProtocolIntegrationTest extends TestCase
             protected function handle(array $parameters): mixed
             {
                 $operation = $parameters['operation'];
-                
+
                 switch ($operation) {
                     case 'add':
                         $result = array_sum($parameters['values'] ?? []);
@@ -1068,7 +1067,9 @@ class ProtocolIntegrationTest extends TestCase
         $tool = new class extends \JTD\LaravelMCP\Abstracts\McpTool
         {
             protected string $name = 'async_processor';
+
             protected string $description = 'Simulates async processing';
+
             protected array $parameterSchema = [
                 'duration' => ['type' => 'number', 'minimum' => 0, 'maximum' => 5],
             ];
@@ -1077,7 +1078,7 @@ class ProtocolIntegrationTest extends TestCase
             {
                 $duration = $parameters['duration'] ?? 0.1;
                 usleep((int) ($duration * 1000000)); // Convert to microseconds
-                
+
                 return [
                     'content' => [
                         [
@@ -1102,7 +1103,9 @@ class ProtocolIntegrationTest extends TestCase
         $tool = new class extends \JTD\LaravelMCP\Abstracts\McpTool
         {
             protected string $name = 'error_producer';
+
             protected string $description = 'Produces various types of errors for testing';
+
             protected array $parameterSchema = [
                 'error_type' => ['type' => 'string', 'enum' => ['temporary', 'permanent', 'validation']],
             ];
@@ -1110,7 +1113,7 @@ class ProtocolIntegrationTest extends TestCase
             protected function handle(array $parameters): mixed
             {
                 $errorType = $parameters['error_type'] ?? 'temporary';
-                
+
                 switch ($errorType) {
                     case 'temporary':
                         throw new \RuntimeException('Temporary error occurred');
@@ -1137,8 +1140,11 @@ class ProtocolIntegrationTest extends TestCase
         $resource = new class extends \JTD\LaravelMCP\Abstracts\McpResource
         {
             protected string $uri = 'config://dynamic';
+
             protected string $name = 'Dynamic Configuration';
+
             protected string $description = 'Dynamic application configuration';
+
             protected string $mimeType = 'application/json';
 
             public function read(array $options = []): array
@@ -1180,14 +1186,17 @@ class ProtocolIntegrationTest extends TestCase
         $resource = new class extends \JTD\LaravelMCP\Abstracts\McpResource
         {
             protected string $uri = 'data://large';
+
             protected string $name = 'Large Dataset';
+
             protected string $description = 'Large dataset for testing';
+
             protected string $mimeType = 'text/plain';
 
             public function read(array $options = []): array
             {
                 // Generate large content for testing
-                $largeContent = str_repeat("Line " . str_repeat('X', 100) . "\n", 1000);
+                $largeContent = str_repeat('Line '.str_repeat('X', 100)."\n", 1000);
 
                 return [
                     'contents' => [
@@ -1214,7 +1223,9 @@ class ProtocolIntegrationTest extends TestCase
         $prompt = new class extends \JTD\LaravelMCP\Abstracts\McpPrompt
         {
             protected string $name = 'parameterized_assistant';
+
             protected string $description = 'AI assistant with configurable parameters';
+
             protected array $argumentsSchema = [
                 'type' => 'object',
                 'properties' => [
@@ -1232,7 +1243,7 @@ class ProtocolIntegrationTest extends TestCase
                 $tone = $arguments['tone'] ?? 'professional';
 
                 $message = "You are a {$tone} AI {$role} working in the context of {$context}. ";
-                $message .= "Please provide helpful and accurate assistance.";
+                $message .= 'Please provide helpful and accurate assistance.';
 
                 return [
                     'messages' => [
@@ -1261,7 +1272,9 @@ class ProtocolIntegrationTest extends TestCase
         $prompt = new class extends \JTD\LaravelMCP\Abstracts\McpPrompt
         {
             protected string $name = 'complex_interaction';
+
             protected string $description = 'Complex multi-turn interaction prompt';
+
             protected array $argumentsSchema = [
                 'type' => 'object',
                 'properties' => [
@@ -1284,7 +1297,7 @@ class ProtocolIntegrationTest extends TestCase
                             'role' => 'system',
                             'content' => [
                                 'type' => 'text',
-                                'text' => "Scenario: {$scenario}\nParticipants: " . implode(', ', $participants) . "\nObjective: {$objective}",
+                                'text' => "Scenario: {$scenario}\nParticipants: ".implode(', ', $participants)."\nObjective: {$objective}",
                             ],
                         ],
                         [

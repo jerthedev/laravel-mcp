@@ -62,8 +62,6 @@ class ProcessNotificationDelivery implements ShouldQueue
 
     /**
      * Execute the job.
-     *
-     * @param  NotificationHandlerInterface  $notificationHandler
      */
     public function handle(NotificationHandlerInterface $notificationHandler): void
     {
@@ -106,8 +104,6 @@ class ProcessNotificationDelivery implements ShouldQueue
 
     /**
      * Handle a job failure.
-     *
-     * @param  \Throwable  $exception
      */
     public function failed(\Throwable $exception): void
     {
@@ -123,15 +119,13 @@ class ProcessNotificationDelivery implements ShouldQueue
 
     /**
      * Handle failed notification delivery.
-     *
-     * @param  \Throwable  $exception
      */
     protected function handleFailedDelivery(\Throwable $exception): void
     {
         // Here you could implement additional failure handling logic
         // such as storing failed notifications for later analysis,
         // sending alerts, or attempting alternative delivery methods
-        
+
         // For now, we just log the permanent failure
         Log::critical('MCP notification permanently failed delivery', [
             'notification' => $this->notification,
@@ -146,22 +140,18 @@ class ProcessNotificationDelivery implements ShouldQueue
 
     /**
      * Get the tags that should be assigned to the job.
-     *
-     * @return array
      */
     public function tags(): array
     {
         return [
             'mcp-notification',
-            'notification:' . $this->notification['id'],
-            'type:' . $this->notification['type'],
+            'notification:'.$this->notification['id'],
+            'type:'.$this->notification['type'],
         ];
     }
 
     /**
      * Calculate the number of seconds to wait before retrying the job.
-     *
-     * @return int
      */
     public function backoff(): int
     {

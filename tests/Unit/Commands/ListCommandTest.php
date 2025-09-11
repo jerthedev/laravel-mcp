@@ -8,8 +8,8 @@ use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Registry\PromptRegistry;
 use JTD\LaravelMCP\Registry\ResourceRegistry;
 use JTD\LaravelMCP\Registry\ToolRegistry;
-use Mockery;
 use JTD\LaravelMCP\Tests\TestCase;
+use Mockery;
 
 /**
  * Test file for the ListCommand class.

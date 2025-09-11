@@ -5,8 +5,8 @@ namespace JTD\LaravelMCP\Tests\Unit\Abstracts;
 use Illuminate\Container\Container;
 use Illuminate\View\Factory as ViewFactory;
 use JTD\LaravelMCP\Abstracts\McpPrompt;
-use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use JTD\LaravelMCP\Tests\TestCase;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class McpPromptTest extends TestCase
 {

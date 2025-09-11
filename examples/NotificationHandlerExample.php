@@ -4,7 +4,6 @@ namespace JTD\LaravelMCP\Examples;
 
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Facades\App;
-use JTD\LaravelMCP\Protocol\Contracts\JsonRpcHandlerInterface;
 use JTD\LaravelMCP\Protocol\JsonRpcHandler;
 use JTD\LaravelMCP\Protocol\NotificationHandler;
 use JTD\LaravelMCP\Transport\Contracts\TransportInterface;
@@ -24,8 +23,8 @@ class NotificationHandlerExample
     {
         // Create dependencies
         $eventDispatcher = App::make(Dispatcher::class);
-        $jsonRpcHandler = new JsonRpcHandler();
-        
+        $jsonRpcHandler = new JsonRpcHandler;
+
         // Create notification handler
         $notificationHandler = new NotificationHandler(
             $eventDispatcher,
@@ -72,7 +71,7 @@ class NotificationHandlerExample
 
         // Check delivery status
         $status = $notificationHandler->getDeliveryStatus($notificationId);
-        echo "Delivery status: " . json_encode($status, JSON_PRETTY_PRINT) . "\n";
+        echo 'Delivery status: '.json_encode($status, JSON_PRETTY_PRINT)."\n";
     }
 
     /**
@@ -81,15 +80,15 @@ class NotificationHandlerExample
     public function sseExample(): void
     {
         $eventDispatcher = App::make(Dispatcher::class);
-        $jsonRpcHandler = new JsonRpcHandler();
-        
+        $jsonRpcHandler = new JsonRpcHandler;
+
         $notificationHandler = new NotificationHandler(
             $eventDispatcher,
             $jsonRpcHandler
         );
 
         $clientId = 'sse-client-1';
-        
+
         // Create SSE response (would be returned from a Laravel route)
         $sseResponse = $notificationHandler->createSseResponse($clientId, [
             NotificationHandler::TYPE_RESOURCES_UPDATED,
@@ -98,7 +97,7 @@ class NotificationHandlerExample
 
         echo "SSE Response created for client: {$clientId}\n";
         echo "Response status: {$sseResponse->getStatusCode()}\n";
-        
+
         // In a real application, you would return this response:
         // return $sseResponse;
     }
@@ -109,8 +108,8 @@ class NotificationHandlerExample
     public function transportIntegrationExample(?TransportInterface $transport = null): void
     {
         $eventDispatcher = App::make(Dispatcher::class);
-        $jsonRpcHandler = new JsonRpcHandler();
-        
+        $jsonRpcHandler = new JsonRpcHandler;
+
         $notificationHandler = new NotificationHandler(
             $eventDispatcher,
             $jsonRpcHandler
@@ -121,7 +120,7 @@ class NotificationHandlerExample
         // Subscribe with direct transport
         if ($transport !== null) {
             $notificationHandler->subscribe($clientId, [], $transport);
-            
+
             // Send notification - will be delivered directly via transport
             $notificationId = $notificationHandler->notify(
                 $clientId,
@@ -143,18 +142,18 @@ class NotificationHandlerExample
     public function filteringExample(): void
     {
         $eventDispatcher = App::make(Dispatcher::class);
-        $jsonRpcHandler = new JsonRpcHandler();
-        
+        $jsonRpcHandler = new JsonRpcHandler;
+
         $notificationHandler = new NotificationHandler(
             $eventDispatcher,
             $jsonRpcHandler
         );
 
         $clientId = 'filtered-client';
-        
+
         // Subscribe with basic filter
         $notificationHandler->subscribe($clientId);
-        
+
         // Set filter to only receive high-priority notifications
         $notificationHandler->updateFilter($clientId, [
             'options.priority' => 'high',
@@ -186,9 +185,9 @@ class NotificationHandlerExample
     public function queuedNotificationExample(): void
     {
         $eventDispatcher = App::make(Dispatcher::class);
-        $jsonRpcHandler = new JsonRpcHandler();
+        $jsonRpcHandler = new JsonRpcHandler;
         $queue = App::make('queue');
-        
+
         $notificationHandler = new NotificationHandler(
             $eventDispatcher,
             $jsonRpcHandler,
@@ -228,8 +227,8 @@ class NotificationHandlerExample
     public function subscriptionManagementExample(): void
     {
         $eventDispatcher = App::make(Dispatcher::class);
-        $jsonRpcHandler = new JsonRpcHandler();
-        
+        $jsonRpcHandler = new JsonRpcHandler;
+
         $notificationHandler = new NotificationHandler(
             $eventDispatcher,
             $jsonRpcHandler
@@ -250,7 +249,7 @@ class NotificationHandlerExample
 
         // Check active subscriptions
         $subscriptions = $notificationHandler->getActiveSubscriptions();
-        echo "Active subscriptions: " . count($subscriptions) . "\n";
+        echo 'Active subscriptions: '.count($subscriptions)."\n";
 
         foreach ($subscriptions as $clientId => $subscription) {
             $typeCount = empty($subscription['types']) ? 'all' : count($subscription['types']);
@@ -263,6 +262,6 @@ class NotificationHandlerExample
         $notificationHandler->unsubscribe('monitoring-client');
 
         $subscriptions = $notificationHandler->getActiveSubscriptions();
-        echo "Subscriptions after cleanup: " . count($subscriptions) . "\n";
+        echo 'Subscriptions after cleanup: '.count($subscriptions)."\n";
     }
 }

@@ -3,9 +3,9 @@
 namespace JTD\LaravelMCP\Tests\Unit\Commands;
 
 use JTD\LaravelMCP\Commands\BaseCommand;
+use JTD\LaravelMCP\Tests\TestCase;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
-use JTD\LaravelMCP\Tests\TestCase;
 
 /**
  * Test implementation of BaseCommand for testing purposes.

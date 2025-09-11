@@ -2,7 +2,6 @@
 
 namespace JTD\LaravelMCP\Support\Generators;
 
-use Illuminate\Support\Str;
 use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Support\Contracts\ClientGeneratorInterface;
 
@@ -72,7 +71,7 @@ class ClaudeDesktopGenerator implements ClientGeneratorInterface
             return 'laravel-mcp';
         }
 
-        return $appName . ' MCP Server';
+        return $appName.' MCP Server';
     }
 
     /**
@@ -85,7 +84,7 @@ class ClaudeDesktopGenerator implements ClientGeneratorInterface
         $tools = $this->registry->getTools() ?? [];
         $resources = $this->registry->getResources() ?? [];
         $prompts = $this->registry->getPrompts() ?? [];
-        
+
         $toolCount = count($tools);
         $resourceCount = count($resources);
         $promptCount = count($prompts);
@@ -149,8 +148,8 @@ class ClaudeDesktopGenerator implements ClientGeneratorInterface
     protected function generateStdioConfig(string $cwd, array $options): array
     {
         $command = $options['command'] ?? 'php';
-        
-        // Handle case where command is passed as array 
+
+        // Handle case where command is passed as array
         if (is_array($command)) {
             $baseCommand = array_shift($command);
             $args = array_merge($command, $options['args'] ?? ['artisan', 'mcp:serve']);
@@ -158,7 +157,7 @@ class ClaudeDesktopGenerator implements ClientGeneratorInterface
             $baseCommand = $command;
             $args = $options['args'] ?? ['artisan', 'mcp:serve'];
         }
-        
+
         $env = $options['env'] ?? [];
 
         return [

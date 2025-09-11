@@ -11,12 +11,12 @@ use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Registry\PromptRegistry;
 use JTD\LaravelMCP\Registry\ResourceRegistry;
 use JTD\LaravelMCP\Registry\ToolRegistry;
+use JTD\LaravelMCP\Tests\TestCase;
 use JTD\LaravelMCP\Transport\Contracts\TransportInterface;
 use Mockery;
 use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\DataProvider;
-use JTD\LaravelMCP\Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 /**
  * Comprehensive tests for MessageProcessor class.
@@ -27,7 +27,7 @@ use JTD\LaravelMCP\Tests\TestCase;
  *
  * Covers:
  * - MCP protocol message handling
- * - Server initialization lifecycle  
+ * - Server initialization lifecycle
  * - Client capability negotiation
  * - Tool, resource, and prompt method handling
  * - Error handling and recovery
@@ -525,7 +525,7 @@ class MessageProcessorTest extends TestCase
                 'tools' => ['listChanged' => false],
                 'resources' => ['subscribe' => false, 'listChanged' => false],
                 'prompts' => ['listChanged' => false],
-                'logging' => []
+                'logging' => [],
             ]);
 
         // Set up tool registry for tools list call after auto-initialization
@@ -552,7 +552,7 @@ class MessageProcessorTest extends TestCase
 
         // This should auto-initialize and return tools list
         $result = $method->invoke($processor, [], []);
-        
+
         $this->assertIsArray($result);
         $this->assertTrue($processor->isInitialized());
     }
@@ -710,7 +710,7 @@ class MessageProcessorTest extends TestCase
                 'tools' => ['listChanged' => false],
                 'resources' => ['subscribe' => false, 'listChanged' => false],
                 'prompts' => ['listChanged' => false],
-                'logging' => []
+                'logging' => [],
             ]);
 
         // Set up tool registry mock expectation for tools/list
@@ -745,7 +745,7 @@ class MessageProcessorTest extends TestCase
                 'tools' => ['listChanged' => false],
                 'resources' => ['subscribe' => false, 'listChanged' => false],
                 'prompts' => ['listChanged' => false],
-                'logging' => []
+                'logging' => [],
             ]);
 
         // Set up tool registry mock expectation - tools/call needs a tool to call
@@ -784,7 +784,7 @@ class MessageProcessorTest extends TestCase
                 'tools' => ['listChanged' => false],
                 'resources' => ['subscribe' => false, 'listChanged' => false],
                 'prompts' => ['listChanged' => false],
-                'logging' => []
+                'logging' => [],
             ]);
 
         // Set up resource registry mock expectation for resources/list
@@ -819,7 +819,7 @@ class MessageProcessorTest extends TestCase
                 'tools' => ['listChanged' => false],
                 'resources' => ['subscribe' => false, 'listChanged' => false],
                 'prompts' => ['listChanged' => false],
-                'logging' => []
+                'logging' => [],
             ]);
 
         // Set up resource registry mock expectation - resources/read needs a resource to read
@@ -857,7 +857,7 @@ class MessageProcessorTest extends TestCase
                 'tools' => ['listChanged' => false],
                 'resources' => ['subscribe' => false, 'listChanged' => false],
                 'prompts' => ['listChanged' => false],
-                'logging' => []
+                'logging' => [],
             ]);
 
         // Set up resource registry mock expectation for resources/templates/list
@@ -892,7 +892,7 @@ class MessageProcessorTest extends TestCase
                 'tools' => ['listChanged' => false],
                 'resources' => ['subscribe' => false, 'listChanged' => false],
                 'prompts' => ['listChanged' => false],
-                'logging' => []
+                'logging' => [],
             ]);
 
         // Set up prompt registry mock expectation for prompts/list
@@ -927,7 +927,7 @@ class MessageProcessorTest extends TestCase
                 'tools' => ['listChanged' => false],
                 'resources' => ['subscribe' => false, 'listChanged' => false],
                 'prompts' => ['listChanged' => false],
-                'logging' => []
+                'logging' => [],
             ]);
 
         // Set up prompt registry mock expectation - prompts/get needs a prompt to get
@@ -1090,7 +1090,7 @@ class MessageProcessorTest extends TestCase
     {
         // First set up some state
         $this->initializeProcessor();
-        
+
         // Set some client capabilities
         $capabilities = ['tools' => ['listChanged' => true]];
         $reflection = new \ReflectionClass($this->processor);
@@ -1179,7 +1179,7 @@ class MessageProcessorTest extends TestCase
                 ->once()
                 ->andReturn($expectedResult);
 
-            if (!$expectedResult) {
+            if (! $expectedResult) {
                 Log::shouldReceive('warning')
                     ->once()
                     ->with('Invalid JSON-RPC message received', ['message' => $message]);
@@ -1192,8 +1192,8 @@ class MessageProcessorTest extends TestCase
             }
 
             $result = $this->processor->handle($message, $this->transport);
-            
-            if (!$expectedResult) {
+
+            if (! $expectedResult) {
                 $this->assertArrayHasKey('error', $result);
             }
         }
@@ -1217,24 +1217,24 @@ class MessageProcessorTest extends TestCase
     public function constructor_sets_up_all_handlers(): void
     {
         $jsonRpcHandler = Mockery::mock(JsonRpcHandlerInterface::class);
-        
+
         // Expect all handler registrations
         $expectedMethods = [
             'initialize', 'ping', 'tools/list', 'tools/call',
             'resources/list', 'resources/read', 'resources/templates/list',
-            'prompts/list', 'prompts/get'
+            'prompts/list', 'prompts/get',
         ];
-        
+
         foreach ($expectedMethods as $method) {
             $jsonRpcHandler->shouldReceive('onRequest')
                 ->with($method, Mockery::type('callable'))
                 ->once();
         }
-        
+
         $jsonRpcHandler->shouldReceive('onNotification')
             ->with('initialized', Mockery::type('callable'))
             ->once();
-            
+
         // Create new processor to trigger constructor
         $processor = new MessageProcessor(
             $jsonRpcHandler,
@@ -1244,8 +1244,7 @@ class MessageProcessorTest extends TestCase
             $this->promptRegistry,
             $this->capabilityNegotiator
         );
-        
+
         $this->assertInstanceOf(MessageProcessor::class, $processor);
     }
-
 }

@@ -22,6 +22,7 @@
 
 namespace JTD\LaravelMCP\Tests\Feature\Transport;
 
+use JTD\LaravelMCP\Tests\TestCase;
 use JTD\LaravelMCP\Transport\Contracts\TransportInterface;
 use JTD\LaravelMCP\Transport\MessageFramer;
 use JTD\LaravelMCP\Transport\StdioTransport;
@@ -30,7 +31,6 @@ use Mockery;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\Process\Process;
-use JTD\LaravelMCP\Tests\TestCase;
 
 #[Group('transport')]
 #[Group('stdio')]

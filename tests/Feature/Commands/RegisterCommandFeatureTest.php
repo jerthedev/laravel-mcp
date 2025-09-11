@@ -39,9 +39,9 @@ namespace JTD\LaravelMCP\Tests\Feature\Commands;
 
 use Illuminate\Support\Facades\File;
 use JTD\LaravelMCP\Support\ConfigGenerator;
+use JTD\LaravelMCP\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use JTD\LaravelMCP\Tests\TestCase;
 
 #[Group('feature')]
 #[Group('commands')]
@@ -390,7 +390,7 @@ class RegisterCommandFeatureTest extends TestCase
     {
         // First, forget any existing instance
         $this->app->forgetInstance(ConfigGenerator::class);
-        
+
         // Mock ConfigGenerator to return null for default path
         $mockGenerator = $this->createPartialMock(ConfigGenerator::class, ['getClientConfigPath', 'generateClaudeDesktopConfig', 'validateClientConfig', 'saveClientConfig']);
         $mockGenerator->method('getClientConfigPath')

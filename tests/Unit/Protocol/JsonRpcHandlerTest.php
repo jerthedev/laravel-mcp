@@ -23,7 +23,7 @@ class JsonRpcHandlerTest extends TestCase
         parent::setUp();
 
         $this->handler = new JsonRpcHandler(debug: false);
-        
+
         // Clear log expectations
         Log::shouldReceive('debug')->andReturnNull()->byDefault();
         Log::shouldReceive('info')->andReturnNull()->byDefault();
@@ -48,7 +48,7 @@ class JsonRpcHandlerTest extends TestCase
         $this->assertTrue($handlerDebugOn->isDebug());
 
         // Default should be false
-        $handlerDefault = new JsonRpcHandler();
+        $handlerDefault = new JsonRpcHandler;
         $this->assertFalse($handlerDefault->isDebug());
     }
 

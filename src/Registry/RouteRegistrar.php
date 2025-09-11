@@ -50,12 +50,12 @@ class RouteRegistrar
         foreach ($this->groupStack as $group) {
             // Concatenate prefixes with dot separator
             if (isset($group['prefix'])) {
-                $fullPrefix .= ($fullPrefix !== '' ? '.' : '') . $group['prefix'];
+                $fullPrefix .= ($fullPrefix !== '' ? '.' : '').$group['prefix'];
             }
 
             // Concatenate namespaces
             if (isset($group['namespace'])) {
-                $namespace .= ($namespace !== '' ? '\\' : '') . $group['namespace'];
+                $namespace .= ($namespace !== '' ? '\\' : '').$group['namespace'];
             }
         }
 
@@ -100,12 +100,12 @@ class RouteRegistrar
         foreach ($this->groupStack as $group) {
             // Concatenate prefixes with dot separator
             if (isset($group['prefix'])) {
-                $fullPrefix .= ($fullPrefix !== '' ? '.' : '') . $group['prefix'];
+                $fullPrefix .= ($fullPrefix !== '' ? '.' : '').$group['prefix'];
             }
 
             // Concatenate namespaces
             if (isset($group['namespace'])) {
-                $namespace .= ($namespace !== '' ? '\\' : '') . $group['namespace'];
+                $namespace .= ($namespace !== '' ? '\\' : '').$group['namespace'];
             }
         }
 
@@ -150,12 +150,12 @@ class RouteRegistrar
         foreach ($this->groupStack as $group) {
             // Concatenate prefixes with dot separator
             if (isset($group['prefix'])) {
-                $fullPrefix .= ($fullPrefix !== '' ? '.' : '') . $group['prefix'];
+                $fullPrefix .= ($fullPrefix !== '' ? '.' : '').$group['prefix'];
             }
 
             // Concatenate namespaces
             if (isset($group['namespace'])) {
-                $namespace .= ($namespace !== '' ? '\\' : '') . $group['namespace'];
+                $namespace .= ($namespace !== '' ? '\\' : '').$group['namespace'];
             }
         }
 

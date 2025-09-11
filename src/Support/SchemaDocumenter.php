@@ -84,16 +84,16 @@ class SchemaDocumenter
             $markdown[] = '#### Properties';
             $markdown[] = '';
             $markdown[] = $this->documentProperties($schema['properties'], $schema['required'] ?? []);
-            
+
             // Add validation rules section for object schemas
             if ($this->options['include_validation_rules']) {
                 $required = $schema['required'] ?? [];
-                if (!empty($required)) {
+                if (! empty($required)) {
                     $markdown[] = '';
                     $markdown[] = '### Validation Rules';
                     $markdown[] = '';
-                    $requiredFields = array_map(fn($field) => "`{$field}`", $required);
-                    $markdown[] = 'Required fields: ' . implode(', ', $requiredFields);
+                    $requiredFields = array_map(fn ($field) => "`{$field}`", $required);
+                    $markdown[] = 'Required fields: '.implode(', ', $requiredFields);
                 }
             }
         }

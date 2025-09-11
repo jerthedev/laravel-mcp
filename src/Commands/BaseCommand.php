@@ -133,11 +133,11 @@ abstract class BaseCommand extends Command
         $debugEnabled = ($this->hasOption('debug') && $this->option('debug')) || $this->output->isVerbose();
 
         if ($debugEnabled) {
-            $this->line("<fg=gray>[DEBUG]</> $message");
+            $this->line("[DEBUG] $message");
 
             if ($data !== null) {
                 $formatted = is_string($data) ? $data : json_encode($data, JSON_PRETTY_PRINT);
-                $this->line("<fg=gray>$formatted</>");
+                $this->line($formatted);
             }
         }
     }
@@ -250,11 +250,6 @@ abstract class BaseCommand extends Command
      */
     protected function isMcpEnabled(): bool
     {
-        // In testing environment, always return true to avoid config issues
-        if (app()->environment('testing')) {
-            return true;
-        }
-        
         return (bool) $this->getConfig('enabled', true);
     }
 

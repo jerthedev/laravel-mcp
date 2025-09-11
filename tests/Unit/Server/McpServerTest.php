@@ -9,9 +9,9 @@ use JTD\LaravelMCP\Server\CapabilityManager;
 use JTD\LaravelMCP\Server\Contracts\ServerInterface;
 use JTD\LaravelMCP\Server\McpServer;
 use JTD\LaravelMCP\Server\ServerInfo;
+use JTD\LaravelMCP\Tests\TestCase;
 use JTD\LaravelMCP\Transport\TransportManager;
 use Mockery;
-use JTD\LaravelMCP\Tests\TestCase;
 
 class McpServerTest extends TestCase
 {

@@ -12,8 +12,6 @@ use JTD\LaravelMCP\Events\NotificationBroadcast;
 use JTD\LaravelMCP\Events\NotificationDelivered;
 use JTD\LaravelMCP\Events\NotificationFailed;
 use JTD\LaravelMCP\Events\NotificationQueued;
-use JTD\LaravelMCP\Events\NotificationSent;
-use JTD\LaravelMCP\Exceptions\ProtocolException;
 use JTD\LaravelMCP\Protocol\Contracts\JsonRpcHandlerInterface;
 use JTD\LaravelMCP\Protocol\Contracts\NotificationHandlerInterface;
 use JTD\LaravelMCP\Transport\Contracts\TransportInterface;
@@ -132,7 +130,7 @@ class NotificationHandler implements NotificationHandlerInterface
         $this->jsonRpcHandler = $jsonRpcHandler;
         $this->queue = $queue;
         $this->config = array_merge($this->config, $config);
-        $this->pendingNotifications = new Collection();
+        $this->pendingNotifications = new Collection;
 
         $this->setupEventListeners();
     }
@@ -242,7 +240,7 @@ class NotificationHandler implements NotificationHandlerInterface
 
         $this->subscriptions[$clientId] = $subscription;
 
-        if (!empty($filter)) {
+        if (! empty($filter)) {
             $this->filters[$clientId] = $filter;
         }
 
@@ -255,7 +253,7 @@ class NotificationHandler implements NotificationHandlerInterface
                 'client_id' => $clientId,
                 'types' => $types,
                 'has_transport' => $transport !== null,
-                'has_filter' => !empty($filter),
+                'has_filter' => ! empty($filter),
             ]);
         }
     }
@@ -286,7 +284,6 @@ class NotificationHandler implements NotificationHandlerInterface
      *
      * @param  string  $clientId  The client identifier
      * @param  array  $types  Notification types to stream
-     * @return StreamedResponse
      */
     public function createSseResponse(string $clientId, array $types = []): StreamedResponse
     {
@@ -346,7 +343,6 @@ class NotificationHandler implements NotificationHandlerInterface
      * Get notification delivery status.
      *
      * @param  string  $notificationId  The notification ID
-     * @return array|null
      */
     public function getDeliveryStatus(string $notificationId): ?array
     {
@@ -470,7 +466,7 @@ class NotificationHandler implements NotificationHandlerInterface
     {
         try {
             // Check if client should receive this notification
-            if (!$this->shouldDeliverToClient($clientId, $notification)) {
+            if (! $this->shouldDeliverToClient($clientId, $notification)) {
                 return;
             }
 
@@ -487,6 +483,7 @@ class NotificationHandler implements NotificationHandlerInterface
                 if ($transport->isConnected()) {
                     $transport->send(json_encode($message));
                     $this->markDelivered($notification['id'], $clientId);
+
                     return;
                 }
             }
@@ -494,6 +491,7 @@ class NotificationHandler implements NotificationHandlerInterface
             // For SSE connections, add to pending notifications
             if (isset($this->sseConnections[$clientId])) {
                 $this->addToPendingNotifications($clientId, $message);
+
                 return;
             }
 
@@ -528,13 +526,14 @@ class NotificationHandler implements NotificationHandlerInterface
         // For broadcast notifications, filter by type subscription
         $eligibleClients = [];
         foreach ($this->subscriptions as $id => $subscription) {
-            if (!$subscription['active']) {
+            if (! $subscription['active']) {
                 continue;
             }
 
             // If no types specified, client gets all notifications
             if (empty($subscription['types'])) {
                 $eligibleClients[] = $id;
+
                 continue;
             }
 
@@ -553,7 +552,7 @@ class NotificationHandler implements NotificationHandlerInterface
     protected function shouldDeliverToClient(string $clientId, array $notification): bool
     {
         // Check if client is subscribed
-        if (!isset($this->subscriptions[$clientId]) || !$this->subscriptions[$clientId]['active']) {
+        if (! isset($this->subscriptions[$clientId]) || ! $this->subscriptions[$clientId]['active']) {
             return false;
         }
 
@@ -575,17 +574,19 @@ class NotificationHandler implements NotificationHandlerInterface
 
             // Handle array values (e.g., checking if value is in array)
             if (is_array($value)) {
-                if (!in_array($notificationValue, $value)) {
+                if (! in_array($notificationValue, $value)) {
                     return false;
                 }
+
                 continue;
             }
 
             // Handle callback filters
             if ($value instanceof Closure) {
-                if (!$value($notificationValue, $notification)) {
+                if (! $value($notificationValue, $notification)) {
                     return false;
                 }
+
                 continue;
             }
 
@@ -640,7 +641,7 @@ class NotificationHandler implements NotificationHandlerInterface
     protected function sendSseEvent(string $event, array $data): void
     {
         echo "event: {$event}\n";
-        echo "data: " . json_encode($data) . "\n\n";
+        echo 'data: '.json_encode($data)."\n\n";
     }
 
     /**
@@ -658,11 +659,11 @@ class NotificationHandler implements NotificationHandlerInterface
      */
     protected function updateDeliveryTracking(string $notificationId, string $status): void
     {
-        if (!$this->config['enable_delivery_tracking']) {
+        if (! $this->config['enable_delivery_tracking']) {
             return;
         }
 
-        if (!isset($this->deliveryTracking[$notificationId])) {
+        if (! isset($this->deliveryTracking[$notificationId])) {
             $this->deliveryTracking[$notificationId] = [
                 'id' => $notificationId,
                 'status' => $status,
@@ -681,11 +682,11 @@ class NotificationHandler implements NotificationHandlerInterface
      */
     protected function markDelivered(string $notificationId, string $clientId): void
     {
-        if (!$this->config['enable_delivery_tracking']) {
+        if (! $this->config['enable_delivery_tracking']) {
             return;
         }
 
-        if (!isset($this->deliveryTracking[$notificationId])) {
+        if (! isset($this->deliveryTracking[$notificationId])) {
             $this->updateDeliveryTracking($notificationId, self::STATUS_DELIVERED);
         }
 
@@ -704,11 +705,11 @@ class NotificationHandler implements NotificationHandlerInterface
      */
     protected function markFailed(string $notificationId, string $clientId, string $error): void
     {
-        if (!$this->config['enable_delivery_tracking']) {
+        if (! $this->config['enable_delivery_tracking']) {
             return;
         }
 
-        if (!isset($this->deliveryTracking[$notificationId])) {
+        if (! isset($this->deliveryTracking[$notificationId])) {
             $this->updateDeliveryTracking($notificationId, self::STATUS_FAILED);
         }
 
@@ -724,6 +725,6 @@ class NotificationHandler implements NotificationHandlerInterface
      */
     protected function generateNotificationId(): string
     {
-        return 'mcp_' . Str::uuid()->toString();
+        return 'mcp_'.Str::uuid()->toString();
     }
 }

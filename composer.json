@@ -58,8 +58,15 @@
         }
     },
     "scripts": {
-        "test": "vendor/bin/phpunit",
+        "test": "php -d memory_limit=2G vendor/bin/phpunit -c phpunit-full.xml",
+        "test:fast": "vendor/bin/phpunit --testsuite=fast",
+        "test:comprehensive": "php -d memory_limit=1G vendor/bin/phpunit --testsuite=comprehensive",
+        "test:unit": "vendor/bin/phpunit --testsuite=Unit",
+        "test:feature": "php -d memory_limit=2G vendor/bin/phpunit --testsuite=Feature", 
+        "test:full": "php -d memory_limit=2G vendor/bin/phpunit -c phpunit-full.xml",
+        "test:ci": "vendor/bin/phpunit --testsuite=fast --stop-on-failure",
         "test-coverage": "vendor/bin/phpunit --coverage-html coverage",
+        "test-coverage:fast": "vendor/bin/phpunit --testsuite=fast --coverage-html coverage-fast",
         "pint": "vendor/bin/pint",
         "analyse": "vendor/bin/phpstan analyse --memory-limit=2G"
     },

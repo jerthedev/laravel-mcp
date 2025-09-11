@@ -6,9 +6,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 use JTD\LaravelMCP\Facades\Mcp;
-use JTD\LaravelMCP\Registry\ComponentDiscovery;
-use JTD\LaravelMCP\Registry\RoutingPatterns;
 use JTD\LaravelMCP\Registry\RouteRegistrar;
+use JTD\LaravelMCP\Registry\RoutingPatterns;
 use JTD\LaravelMCP\Tests\TestCase;
 
 /**
@@ -25,7 +24,7 @@ class RouteRegistrationIntegrationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Enable route registration for tests
         $this->app['config']->set('laravel-mcp.routes.enabled', true);
         $this->app['config']->set('laravel-mcp.routes.prefix', 'mcp');
@@ -39,7 +38,7 @@ class RouteRegistrationIntegrationTest extends TestCase
     {
         // Create and register a tool
         $tool = $this->createTestTool('Calculator', ['description' => 'Math calculator']);
-        
+
         Mcp::registerTool('calculator', $tool);
 
         // Check that the tool is registered
@@ -57,7 +56,7 @@ class RouteRegistrationIntegrationTest extends TestCase
     {
         // Create and register a resource
         $resource = $this->createTestResource('UserProfile', ['uri' => 'user://profile/{id}']);
-        
+
         Mcp::registerResource('user_profile', $resource);
 
         // Check that the resource is registered
@@ -74,7 +73,7 @@ class RouteRegistrationIntegrationTest extends TestCase
     {
         // Create and register a prompt
         $prompt = $this->createTestPrompt('EmailTemplate', ['description' => 'Email template generator']);
-        
+
         Mcp::registerPrompt('email_template', $prompt);
 
         // Check that the prompt is registered
@@ -113,7 +112,7 @@ class RouteRegistrationIntegrationTest extends TestCase
     public function test_route_registration_with_middleware(): void
     {
         $tool = $this->createTestTool('SecureTool');
-        
+
         // Register tool with middleware
         Mcp::registerTool('secure_tool', $tool, [
             'middleware' => ['auth', 'throttle'],
@@ -121,7 +120,7 @@ class RouteRegistrationIntegrationTest extends TestCase
 
         // Verify the tool is registered
         $this->assertTrue(Mcp::hasTool('secure_tool'));
-        
+
         // For now, just verify registration works with middleware options
         $this->assertTrue(true);
     }
@@ -166,7 +165,7 @@ class RouteRegistrationIntegrationTest extends TestCase
 
         // Verify tool registration works (route caching would be handled by framework)
         $this->assertTrue(Mcp::hasTool('cacheable_tool'));
-        
+
         // Test that RoutingPatterns supports caching
         $patterns = $this->app->make(RoutingPatterns::class);
         $this->assertTrue($patterns->isCacheEnabled());
@@ -260,7 +259,7 @@ class RouteRegistrationIntegrationTest extends TestCase
     public function test_route_registration_with_custom_controller(): void
     {
         $tool = $this->createTestTool('CustomControllerTool');
-        
+
         Mcp::registerTool('custom_controller_tool', $tool, [
             'controller' => 'CustomMcpController@handleTool',
         ]);
@@ -277,23 +276,23 @@ class RouteRegistrationIntegrationTest extends TestCase
         // This would test error scenarios like invalid route patterns,
         // conflicting route names, etc.
         // For now, we test that invalid component names are handled gracefully
-        
+
         $tool = $this->createTestTool('InvalidTool');
-        
+
         try {
             Mcp::registerTool('invalid@tool#name', $tool);
-            
+
             // The system should either sanitize the name or handle the error gracefully
             $routes = Route::getRoutes();
             $hasInvalidRoute = false;
-            
+
             foreach ($routes as $route) {
                 if (str_contains($route->getName() ?? '', 'invalid')) {
                     $hasInvalidRoute = true;
                     break;
                 }
             }
-            
+
             // Either the route should be created with a sanitized name,
             // or no route should be created (depending on implementation)
             $this->assertTrue(true); // Test passes if no exception is thrown
@@ -350,7 +349,7 @@ class RouteRegistrationIntegrationTest extends TestCase
     public function test_batch_route_registration_performance(): void
     {
         $startTime = microtime(true);
-        
+
         // Register a large number of components
         for ($i = 1; $i <= 50; $i++) {
             $tool = $this->createTestTool("BatchTool{$i}");
@@ -407,7 +406,7 @@ class RouteRegistrationIntegrationTest extends TestCase
     protected function getRoute(string $method, string $uri): ?\Illuminate\Routing\Route
     {
         $routes = Route::getRoutes();
-        
+
         foreach ($routes as $route) {
             if (in_array($method, $route->methods()) && $route->uri() === $uri) {
                 return $route;
@@ -423,7 +422,7 @@ class RouteRegistrationIntegrationTest extends TestCase
     protected function createTemporaryComponentFile(string $type, string $className, string $content): void
     {
         $directory = app_path("Mcp/{$type}");
-        if (!is_dir($directory)) {
+        if (! is_dir($directory)) {
             mkdir($directory, 0755, true);
         }
 

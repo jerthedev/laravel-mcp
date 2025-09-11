@@ -235,8 +235,8 @@ class PromptHandler extends BaseHandler
                 $this->logWarning("Failed to get definition for prompt: {$name}", [
                     'error' => $e->getMessage(),
                 ]);
-                
-                // In debug mode, re-throw to help with testing  
+
+                // In debug mode, re-throw to help with testing
                 if ($this->debug) {
                     throw $e;
                 }

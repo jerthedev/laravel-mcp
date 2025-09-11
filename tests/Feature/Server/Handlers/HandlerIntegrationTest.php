@@ -566,7 +566,16 @@ class HandlerIntegrationTest extends TestCase
 
             public function read(array $options = []): array
             {
-                return ['data' => 'value', 'active' => true];
+                return [
+                    'contents' => [
+                        [
+                            'uri' => $this->getUri(),
+                            'mimeType' => $this->getMimeType(),
+                            'type' => 'text',
+                            'text' => json_encode(['data' => 'value', 'active' => true]),
+                        ],
+                    ],
+                ];
             }
         };
 

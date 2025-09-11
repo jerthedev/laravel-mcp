@@ -5,8 +5,8 @@ namespace JTD\LaravelMCP\Tests\Unit\Server;
 use Illuminate\Support\Facades\Config;
 use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Server\CapabilityManager;
-use Mockery;
 use JTD\LaravelMCP\Tests\TestCase;
+use Mockery;
 
 class CapabilityManagerTest extends TestCase
 {

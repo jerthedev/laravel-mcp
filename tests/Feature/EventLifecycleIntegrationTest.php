@@ -7,11 +7,11 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use JTD\LaravelMCP\LaravelMcpServiceProvider;
 use JTD\LaravelMCP\Registry\ComponentDiscovery;
+use JTD\LaravelMCP\Tests\TestCase;
 use JTD\LaravelMCP\Transport\TransportManager;
 use Mockery;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use JTD\LaravelMCP\Tests\TestCase;
 
 /**
  * EPIC: SERVICEPROVIDER

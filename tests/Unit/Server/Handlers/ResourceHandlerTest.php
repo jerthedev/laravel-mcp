@@ -5,11 +5,11 @@ namespace JTD\LaravelMCP\Tests\Unit\Server\Handlers;
 use JTD\LaravelMCP\Exceptions\ProtocolException;
 use JTD\LaravelMCP\Registry\ResourceRegistry;
 use JTD\LaravelMCP\Server\Handlers\ResourceHandler;
+use JTD\LaravelMCP\Tests\TestCase;
 use Mockery;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
-use JTD\LaravelMCP\Tests\TestCase;
 
 /**
  * Tests for ResourceHandler class.

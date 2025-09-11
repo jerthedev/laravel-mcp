@@ -5,10 +5,10 @@ namespace JTD\LaravelMCP\Tests\Unit\Http\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use JTD\LaravelMCP\Http\Middleware\McpCorsMiddleware;
+use JTD\LaravelMCP\Tests\TestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use JTD\LaravelMCP\Tests\TestCase;
 
 /**
  * EPIC: SERVICEPROVIDER
@@ -85,7 +85,7 @@ class McpCorsMiddlewareTest extends TestCase
         $response = $this->middleware->handle($request, $next);
 
         // Assert
-        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(204, $response->getStatusCode());
         $this->assertEquals('', $response->getContent());
         $this->assertEquals('http://example.com', $response->headers->get('Access-Control-Allow-Origin'));
         $this->assertEquals('GET, POST, OPTIONS', $response->headers->get('Access-Control-Allow-Methods'));

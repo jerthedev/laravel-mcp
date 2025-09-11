@@ -11,13 +11,12 @@
 namespace JTD\LaravelMCP\Tests\Feature\Commands;
 
 use Illuminate\Support\Facades\File;
-use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Support\ClientDetector;
 use JTD\LaravelMCP\Support\ConfigGenerator;
+use JTD\LaravelMCP\Tests\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use JTD\LaravelMCP\Tests\TestCase;
 
 #[Group('feature')]
 #[Group('commands')]
@@ -38,13 +37,14 @@ class RegisterCommandTest extends TestCase
         // First, forget any existing instances
         $this->app->forgetInstance(ClientDetector::class);
         $this->app->forgetInstance(ConfigGenerator::class);
-        
+
         // Create a test-specific ClientDetector that returns our temp path
         $this->app->singleton(ClientDetector::class, function () {
             $detector = $this->createPartialMock(ClientDetector::class, ['getDefaultConfigPath']);
             $detector->method('getDefaultConfigPath')
                 ->with($this->anything())  // Accept any client parameter
                 ->willReturn($this->tempConfigPath.'/test_config.json');
+
             return $detector;
         });
     }

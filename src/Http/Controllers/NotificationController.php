@@ -32,15 +32,12 @@ class NotificationController extends Controller
 
     /**
      * Create a Server-Sent Events stream for real-time notifications.
-     *
-     * @param  Request  $request
-     * @return StreamedResponse
      */
     public function stream(Request $request): StreamedResponse
     {
-        $clientId = $request->input('client_id', $request->ip() . '_' . time());
+        $clientId = $request->input('client_id', $request->ip().'_'.time());
         $types = $request->input('types', []);
-        
+
         if (is_string($types)) {
             $types = explode(',', $types);
         }
@@ -53,9 +50,6 @@ class NotificationController extends Controller
 
     /**
      * Subscribe a client to notifications.
-     *
-     * @param  Request  $request
-     * @return JsonResponse
      */
     public function subscribe(Request $request): JsonResponse
     {
@@ -72,7 +66,7 @@ class NotificationController extends Controller
 
         $this->notificationHandler->subscribe($clientId, $types);
 
-        if (!empty($filter)) {
+        if (! empty($filter)) {
             $this->notificationHandler->updateFilter($clientId, $filter);
         }
 
@@ -87,9 +81,6 @@ class NotificationController extends Controller
 
     /**
      * Unsubscribe a client from notifications.
-     *
-     * @param  Request  $request
-     * @return JsonResponse
      */
     public function unsubscribe(Request $request): JsonResponse
     {
@@ -110,9 +101,6 @@ class NotificationController extends Controller
 
     /**
      * Send a notification to a specific client.
-     *
-     * @param  Request  $request
-     * @return JsonResponse
      */
     public function notify(Request $request): JsonResponse
     {
@@ -141,9 +129,6 @@ class NotificationController extends Controller
 
     /**
      * Broadcast a notification to all subscribers.
-     *
-     * @param  Request  $request
-     * @return JsonResponse
      */
     public function broadcast(Request $request): JsonResponse
     {
@@ -170,10 +155,6 @@ class NotificationController extends Controller
 
     /**
      * Get delivery status for a notification.
-     *
-     * @param  Request  $request
-     * @param  string  $notificationId
-     * @return JsonResponse
      */
     public function status(Request $request, string $notificationId): JsonResponse
     {
@@ -196,9 +177,6 @@ class NotificationController extends Controller
 
     /**
      * Get active subscriptions.
-     *
-     * @param  Request  $request
-     * @return JsonResponse
      */
     public function subscriptions(Request $request): JsonResponse
     {
@@ -225,9 +203,6 @@ class NotificationController extends Controller
 
     /**
      * Update notification filter for a client.
-     *
-     * @param  Request  $request
-     * @return JsonResponse
      */
     public function updateFilter(Request $request): JsonResponse
     {
@@ -251,9 +226,6 @@ class NotificationController extends Controller
 
     /**
      * Clear pending notifications for a client.
-     *
-     * @param  Request  $request
-     * @return JsonResponse
      */
     public function clearPending(Request $request): JsonResponse
     {
@@ -274,9 +246,6 @@ class NotificationController extends Controller
 
     /**
      * Get system statistics about notifications.
-     *
-     * @param  Request  $request
-     * @return JsonResponse
      */
     public function stats(Request $request): JsonResponse
     {

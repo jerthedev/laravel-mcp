@@ -20,7 +20,7 @@ class RoutingPatternsTest extends TestCase
     {
         parent::setUp();
 
-        $this->patterns = new RoutingPatterns();
+        $this->patterns = new RoutingPatterns;
     }
 
     /**
@@ -68,12 +68,12 @@ class RoutingPatternsTest extends TestCase
     public function test_get_all_patterns(): void
     {
         $allPatterns = $this->patterns->getAllPatterns();
-        
+
         $this->assertIsArray($allPatterns);
         $this->assertArrayHasKey('tools', $allPatterns);
         $this->assertArrayHasKey('resources', $allPatterns);
         $this->assertArrayHasKey('prompts', $allPatterns);
-        
+
         $this->assertCount(3, $allPatterns);
     }
 
@@ -254,7 +254,7 @@ class RoutingPatternsTest extends TestCase
     public function test_get_all_constraints(): void
     {
         $constraints = $this->patterns->getAllConstraints();
-        
+
         $this->assertIsArray($constraints);
         $this->assertArrayHasKey('tool', $constraints);
         $this->assertArrayHasKey('resource', $constraints);
@@ -270,7 +270,7 @@ class RoutingPatternsTest extends TestCase
     public function test_cache_configuration(): void
     {
         $this->assertTrue($this->patterns->isCacheEnabled());
-        
+
         $config = $this->patterns->getCacheConfig();
         $this->assertIsArray($config);
         $this->assertTrue($config['enabled']);

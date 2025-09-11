@@ -17,8 +17,6 @@ class HandleSseRequest
     /**
      * Handle an incoming request for SSE.
      *
-     * @param  Request  $request
-     * @param  Closure  $next
      * @return mixed
      */
     public function handle(Request $request, Closure $next)
@@ -27,15 +25,15 @@ class HandleSseRequest
         if ($this->isSseRequest($request)) {
             // Set up environment for SSE
             $this->setupSseEnvironment();
-            
+
             // Process the request
             $response = $next($request);
-            
+
             // Ensure proper SSE headers
             if ($response instanceof Response) {
                 $this->setSseHeaders($response);
             }
-            
+
             return $response;
         }
 
@@ -44,9 +42,6 @@ class HandleSseRequest
 
     /**
      * Check if the request is for Server-Sent Events.
-     *
-     * @param  Request  $request
-     * @return bool
      */
     protected function isSseRequest(Request $request): bool
     {
@@ -81,8 +76,6 @@ class HandleSseRequest
 
     /**
      * Set proper SSE headers on the response.
-     *
-     * @param  Response  $response
      */
     protected function setSseHeaders(Response $response): void
     {
@@ -92,7 +85,7 @@ class HandleSseRequest
         $response->headers->set('Expires', '0');
         $response->headers->set('Connection', 'keep-alive');
         $response->headers->set('X-Accel-Buffering', 'no'); // Disable Nginx buffering
-        
+
         // CORS headers for cross-origin SSE requests
         $response->headers->set('Access-Control-Allow-Origin', '*');
         $response->headers->set('Access-Control-Allow-Headers', 'Cache-Control');

@@ -10,6 +10,7 @@ use JTD\LaravelMCP\Registry\ComponentDiscovery;
 use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Registry\PromptRegistry;
 use JTD\LaravelMCP\Registry\ResourceRegistry;
+use JTD\LaravelMCP\Registry\RoutingPatterns;
 use JTD\LaravelMCP\Registry\ToolRegistry;
 use JTD\LaravelMCP\Tests\TestCase;
 
@@ -50,11 +51,12 @@ class RegistrationSystemTest extends TestCase
             $this->promptRegistry
         );
 
+        // Create RoutingPatterns instance for ComponentDiscovery
+        $routingPatterns = new RoutingPatterns();
+
         $this->discovery = new ComponentDiscovery(
             $this->registry,
-            $this->toolRegistry,
-            $this->resourceRegistry,
-            $this->promptRegistry
+            $routingPatterns
         );
     }
 
@@ -74,8 +76,8 @@ class RegistrationSystemTest extends TestCase
             {
                 $this->name = $name;
             }
-
-            public function execute(array $arguments): array
+            
+            public function handle(array $arguments): array
             {
                 $operation = $arguments['operation'] ?? 'add';
                 $a = $arguments['a'] ?? 0;
@@ -92,26 +94,26 @@ class RegistrationSystemTest extends TestCase
         };
 
         // Register the tool
-        $this->registry->register('tool', 'calculator', $tool, [
+        $this->registry->register('tool', 'test_calculator', $tool, [
             'description' => 'Calculator for basic math operations',
             'version' => '1.0.0',
         ]);
 
         // Verify registration
-        $this->assertTrue($this->registry->has('tool', 'calculator'));
+        $this->assertTrue($this->registry->has('tool', 'test_calculator'));
         $this->assertEquals(1, $this->registry->count('tool'));
 
         // Retrieve and verify metadata
-        $metadata = $this->registry->getMetadata('tool', 'calculator');
+        $metadata = $this->registry->getMetadata('tool', 'test_calculator');
         $this->assertEquals('Calculator for basic math operations', $metadata['description']);
         $this->assertEquals('1.0.0', $metadata['version']);
         $this->assertArrayHasKey('registered_at', $metadata);
 
         // Test tool execution
-        $retrievedTool = $this->registry->get('tool', 'calculator');
+        $retrievedTool = $this->registry->get('tool', 'test_calculator');
         $this->assertInstanceOf(McpTool::class, $retrievedTool);
 
-        $result = $this->toolRegistry->executeTool('calculator', [
+        $result = $this->toolRegistry->executeTool('test_calculator', [
             'operation' => 'add',
             'a' => 5,
             'b' => 3,
@@ -119,8 +121,8 @@ class RegistrationSystemTest extends TestCase
         $this->assertEquals(['result' => 8], $result);
 
         // Test unregistration
-        $this->assertTrue($this->registry->unregister('tool', 'calculator'));
-        $this->assertFalse($this->registry->has('tool', 'calculator'));
+        $this->assertTrue($this->registry->unregister('tool', 'test_calculator'));
+        $this->assertFalse($this->registry->has('tool', 'test_calculator'));
         $this->assertEquals(0, $this->registry->count('tool'));
     }
 
@@ -310,6 +312,9 @@ class RegistrationSystemTest extends TestCase
      */
     public function test_invalid_handler_validation(): void
     {
+        // Enable handler validation for this test
+        config(['laravel-mcp.validation.validate_handlers' => true]);
+        
         // Test with non-existent class
         $this->expectException(RegistrationException::class);
         $this->expectExceptionMessage("Handler class 'NonExistentClass' does not exist");
@@ -321,6 +326,9 @@ class RegistrationSystemTest extends TestCase
      */
     public function test_invalid_handler_type_validation(): void
     {
+        // Enable handler validation for this test
+        config(['laravel-mcp.validation.validate_handlers' => true]);
+        
         // Create a class that doesn't extend the required base class
         $invalidHandler = new class
         {
@@ -436,9 +444,9 @@ class RegistrationSystemTest extends TestCase
         // Invalid type should return null
         $this->assertNull($this->registry->getTypeRegistry('invalid'));
 
-        // Get all type registries
+        // Get all type registries (includes both singular and plural forms)
         $registries = $this->registry->getTypeRegistries();
-        $this->assertCount(3, $registries);
+        $this->assertCount(6, $registries);  // 3 types x 2 forms (singular + plural)
         $this->assertArrayHasKey('tool', $registries);
         $this->assertArrayHasKey('resource', $registries);
         $this->assertArrayHasKey('prompt', $registries);
@@ -598,5 +606,100 @@ class RegistrationSystemTest extends TestCase
         $this->assertArrayHasKey('tool1', $all);
         $this->assertArrayHasKey('resource1', $all);
         $this->assertArrayHasKey('prompt1', $all);
+    }
+
+    /**
+     * Helper method to create a test tool.
+     */
+    protected function createTestTool(string $name, array $config = [])
+    {
+        return new class($name, $config) extends McpTool
+        {
+            protected string $name;
+
+            protected string $description = 'Test tool';
+
+            public function __construct(string $name, array $config = [])
+            {
+                $this->name = $name;
+                if (isset($config['description'])) {
+                    $this->description = $config['description'];
+                }
+                parent::__construct();
+            }
+
+            public function handle(array $arguments): array
+            {
+                return ['success' => true, 'name' => $this->name];
+            }
+        };
+    }
+
+    /**
+     * Helper method to create a test resource.
+     */
+    protected function createTestResource(string $name, array $config = [])
+    {
+        return new class($name, $config) extends McpResource
+        {
+            protected string $uri = 'test://resource';
+
+            protected string $name;
+
+            protected string $description = 'Test resource';
+
+            protected string $mimeType = 'application/json';
+
+            public function __construct(string $name)
+            {
+                $this->name = $name;
+            }
+
+            public function read(array $options = []): array
+            {
+                return [
+                    'contents' => [
+                        [
+                            'uri' => $this->uri,
+                            'mimeType' => $this->mimeType,
+                            'text' => json_encode(['name' => $this->name]),
+                        ],
+                    ],
+                ];
+            }
+        };
+    }
+
+    /**
+     * Helper method to create a test prompt.
+     */
+    protected function createTestPrompt(string $name, array $config = [])
+    {
+        return new class($name, $config) extends McpPrompt
+        {
+            protected string $name;
+
+            protected string $description = 'Test prompt';
+
+            public function __construct(string $name)
+            {
+                $this->name = $name;
+            }
+
+            public function getMessages(array $arguments): array
+            {
+                return [
+                    'messages' => [
+                        [
+                            'role' => 'system',
+                            'content' => [
+                                'type' => 'text',
+                                'text' => 'Test prompt: '.$this->name,
+                            ],
+                        ],
+                    ],
+                ];
+            }
+        };
     }
 }

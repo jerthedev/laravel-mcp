@@ -6,12 +6,12 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use JTD\LaravelMCP\Exceptions\TransportException;
+use JTD\LaravelMCP\Tests\TestCase;
 use JTD\LaravelMCP\Transport\Contracts\MessageHandlerInterface;
 use JTD\LaravelMCP\Transport\HttpTransport;
 use Mockery;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
-use JTD\LaravelMCP\Tests\TestCase;
 
 #[CoversClass(HttpTransport::class)]
 class HttpTransportTest extends TestCase
@@ -490,7 +490,7 @@ class HttpTransportTest extends TestCase
         $this->transport->setMessageHandler($this->mockHandler);
         $this->mockHandler->shouldReceive('onConnect')->once();
         $this->transport->start();
-        
+
         // Verify that the transport is connected after start
         $this->assertTrue($this->transport->isConnected());
     }

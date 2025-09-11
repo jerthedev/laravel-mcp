@@ -61,18 +61,23 @@ class McpRegistry
      * Register a component with the registry.
      * This method supports both the interface signature and spec signature.
      */
-    public function register(string $name, $component, array $metadata = []): void
+    public function register(string $name, $component, $metadata = []): void
     {
         // Support spec signature: register(type, name, handler, options)
         if (func_num_args() >= 3 && in_array($name, ['tool', 'resource', 'prompt'])) {
             $type = $name;
             $name = $component;
             $handler = $metadata;
-            $options = func_get_arg(3) ?? [];
+            $options = func_num_args() >= 4 ? func_get_arg(3) : [];
 
             $this->registerWithType($type, $name, $handler, $options);
 
             return;
+        }
+        
+        // Ensure metadata is an array for standard interface signature
+        if (! is_array($metadata)) {
+            $metadata = [];
         }
 
         // Standard interface signature
@@ -112,6 +117,13 @@ class McpRegistry
             };
 
             $registry->register($name, $handler, $options);
+
+            // Store in internal registry for metadata retrieval
+            $this->registered[$type][$name] = [
+                'handler' => $handler,
+                'options' => $options,
+                'registered_at' => time(),
+            ];
 
             $this->components[$name] = $handler;
             $this->metadata[$name] = array_merge([

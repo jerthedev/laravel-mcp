@@ -4,10 +4,8 @@ namespace Tests\Unit\Protocol;
 
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Queue\Queue;
-use Illuminate\Support\Collection;
 use JTD\LaravelMCP\Events\NotificationBroadcast;
 use JTD\LaravelMCP\Events\NotificationDelivered;
-use JTD\LaravelMCP\Events\NotificationFailed;
 use JTD\LaravelMCP\Events\NotificationQueued;
 use JTD\LaravelMCP\Protocol\Contracts\JsonRpcHandlerInterface;
 use JTD\LaravelMCP\Protocol\NotificationHandler;
@@ -64,7 +62,7 @@ class NotificationHandlerTest extends TestCase
         parent::tearDown();
     }
 
-    public function testBroadcastNotificationFiresEvents(): void
+    public function test_broadcast_notification_fires_events(): void
     {
         // Arrange
         $this->eventDispatcher->shouldReceive('dispatch')
@@ -79,7 +77,7 @@ class NotificationHandlerTest extends TestCase
         $this->assertStringStartsWith('mcp_', $notificationId);
     }
 
-    public function testSubscribeAndUnsubscribe(): void
+    public function test_subscribe_and_unsubscribe(): void
     {
         // Arrange
         $clientId = 'test-client';
@@ -102,7 +100,7 @@ class NotificationHandlerTest extends TestCase
         $this->assertArrayNotHasKey($clientId, $subscriptions);
     }
 
-    public function testNotificationFiltering(): void
+    public function test_notification_filtering(): void
     {
         // Arrange
         $clientId = 'test-client';
@@ -134,7 +132,7 @@ class NotificationHandlerTest extends TestCase
         // The transport should receive the notification (verified by mock expectations)
     }
 
-    public function testQueuedNotificationDelivery(): void
+    public function test_queued_notification_delivery(): void
     {
         // Arrange - Create a separate handler with queueing enabled
         // We need to set up the listen expectations again for this new handler instance
@@ -188,7 +186,7 @@ class NotificationHandlerTest extends TestCase
         $this->assertNotEmpty($notificationId);
     }
 
-    public function testSseResponseCreation(): void
+    public function test_sse_response_creation(): void
     {
         // Arrange
         $clientId = 'sse-client';
@@ -202,7 +200,7 @@ class NotificationHandlerTest extends TestCase
         $this->assertEquals(200, $response->getStatusCode());
     }
 
-    public function testDeliveryStatusTracking(): void
+    public function test_delivery_status_tracking(): void
     {
         // Arrange
         $this->eventDispatcher->shouldReceive('dispatch')->andReturn(null);
@@ -227,13 +225,13 @@ class NotificationHandlerTest extends TestCase
         $this->assertArrayHasKey('clients', $status);
     }
 
-    public function testPendingNotificationsManagement(): void
+    public function test_pending_notifications_management(): void
     {
         // Arrange
         $this->eventDispatcher->shouldReceive('dispatch')->andReturn(null);
 
         $clientId = 'pending-client';
-        
+
         // Subscribe without transport (will create pending notifications)
         $this->handler->subscribe($clientId);
 
@@ -254,11 +252,11 @@ class NotificationHandlerTest extends TestCase
         $this->assertEquals(0, $this->handler->getPendingNotificationsCount());
     }
 
-    public function testFilterUpdate(): void
+    public function test_filter_update(): void
     {
         // Arrange
         $clientId = 'filtered-client';
-        
+
         $this->handler->subscribe($clientId);
 
         // Act - Set filter
@@ -272,7 +270,7 @@ class NotificationHandlerTest extends TestCase
         $this->assertTrue(true);
     }
 
-    public function testNotificationTypes(): void
+    public function test_notification_types(): void
     {
         // Test that all notification type constants are defined
         $this->assertEquals('notifications/tools/list_changed', NotificationHandler::TYPE_TOOLS_LIST_CHANGED);

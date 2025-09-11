@@ -60,6 +60,6 @@ class NotificationQueued
      */
     public function isBroadcast(): bool
     {
-        return !isset($this->notification['client_id']);
+        return ! isset($this->notification['client_id']);
     }
 }

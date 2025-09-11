@@ -17,10 +17,10 @@ namespace JTD\LaravelMCP\Tests\Unit\Traits;
 use JTD\LaravelMCP\Abstracts\McpPrompt;
 use JTD\LaravelMCP\Abstracts\McpResource;
 use JTD\LaravelMCP\Abstracts\McpTool;
+use JTD\LaravelMCP\Tests\TestCase;
 use JTD\LaravelMCP\Traits\ManagesCapabilities;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use JTD\LaravelMCP\Tests\TestCase;
 
 #[Group('base-classes')]
 #[Group('manages-capabilities')]

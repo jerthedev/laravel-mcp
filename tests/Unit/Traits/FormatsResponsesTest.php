@@ -4,11 +4,11 @@ namespace JTD\LaravelMCP\Tests\Unit\Traits;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Config;
+use JTD\LaravelMCP\Tests\TestCase;
 use JTD\LaravelMCP\Traits\FormatsResponses;
 use JTD\LaravelMCP\Traits\ManagesCapabilities;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use JTD\LaravelMCP\Tests\TestCase;
 
 /**
  * Test file header as per standards.

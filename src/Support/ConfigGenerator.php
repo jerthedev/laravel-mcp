@@ -220,11 +220,12 @@ class ConfigGenerator
 
         // Basic structural validation only - not field completeness
         $generator = $this->clientGenerators[$client];
-        
+
         if ($client === 'claude-desktop') {
             if (! isset($config['mcpServers']) || ! is_array($config['mcpServers'])) {
                 return ['Configuration must contain mcpServers object'];
             }
+
             return []; // Pass basic structure check
         }
 
@@ -236,6 +237,7 @@ class ConfigGenerator
             if (! isset($config['mcp']['servers']) || ! is_array($config['mcp']['servers'])) {
                 $errors[] = 'Configuration must contain mcp.servers object';
             }
+
             return $errors;
         }
 
@@ -243,6 +245,7 @@ class ConfigGenerator
             if (! isset($config['mcp_servers']) || ! is_array($config['mcp_servers'])) {
                 return ['Configuration must contain mcp_servers array'];
             }
+
             return []; // Pass basic structure check
         }
 

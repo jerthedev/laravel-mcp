@@ -270,7 +270,7 @@ class ClientDetector
         // Return the original PHP_OS values for backward compatibility with tests
         return match (true) {
             stripos(PHP_OS, 'WIN') === 0 => 'Windows',
-            stripos(PHP_OS, 'DARWIN') === 0 => 'Darwin', 
+            stripos(PHP_OS, 'DARWIN') === 0 => 'Darwin',
             default => 'Linux',
         };
     }

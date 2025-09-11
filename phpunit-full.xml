@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         processIsolation="false"
+         stopOnFailure="false"
+         executionOrder="depends,defects"
+         failOnWarning="false"
+         failOnRisky="false"
+         failOnEmptyTestSuite="false"
+         beStrictAboutOutputDuringTests="false"
+         timeoutForSmallTests="5"
+         timeoutForMediumTests="30"
+         timeoutForLargeTests="120">
+    <testsuites>
+        <testsuite name="Laravel MCP Full Test Suite">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>src</directory>
+        </include>
+        <exclude>
+            <directory>src/Console/Commands</directory>
+            <file>src/LaravelMcpServiceProvider.php</file>
+        </exclude>
+    </source>
+    <coverage>
+        <report>
+            <html outputDirectory="coverage-html" lowUpperBound="50" highLowerBound="90"/>
+            <text outputFile="coverage.txt" showUncoveredFiles="false" showOnlySummary="true"/>
+            <clover outputFile="coverage.xml"/>
+        </report>
+    </coverage>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="APP_KEY" value="AckfSECXIvnK5r28GVIWUAxmbBbUPABnLaZm6O+be0y="/>
+        <env name="APP_DEBUG" value="false"/>
+        <env name="DB_CONNECTION" value="testing"/>
+        <env name="DB_DATABASE" value=":memory:"/>
+        <env name="CACHE_DRIVER" value="array"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="QUEUE_DRIVER" value="sync"/>
+        <env name="MAIL_DRIVER" value="array"/>
+        <env name="MCP_DEBUG" value="false"/>
+        <env name="MCP_LOG_LEVEL" value="error"/>
+        <env name="LOG_LEVEL" value="error"/>
+        <ini name="memory_limit" value="2G"/>
+        <ini name="max_execution_time" value="0"/>
+    </php>
+    <logging>
+        <junit outputFile="tests/reports/junit-full.xml"/>
+        <testdoxHtml outputFile="tests/reports/testdox-full.html"/>
+        <testdoxText outputFile="tests/reports/testdox-full.txt"/>
+    </logging>
+</phpunit>

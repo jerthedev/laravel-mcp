@@ -12,11 +12,16 @@ composer install
 # Run code style fixes
 composer pint
 
-# Run tests (when implemented)
-./vendor/bin/phpunit
+# Run tests - Tiered Testing Strategy
+composer test:fast         # 743 tests, ~6s (CI-friendly)
+composer test:ci           # Same as fast but stops on first failure
+composer test:comprehensive # 1,624 tests, ~20s (recommended for development)
+composer test:unit         # 1,355 unit tests, ~15s
+composer test:feature      # Feature tests only
+composer test:full         # Complete test suite (memory intensive)
 
-# Run static analysis (when implemented)  
-./vendor/bin/phpstan analyse
+# Run static analysis
+composer analyse
 
 # Run specific test file
 ./vendor/bin/phpunit tests/Unit/SomeTest.php
@@ -112,8 +117,31 @@ Key namespaces:
 - `Http\`: Controllers and middleware
 - `Support\`: Utilities for config generation and documentation
 
+## Testing Strategy
+
+This package implements a **tiered testing strategy** to provide both fast CI/CD feedback and comprehensive development validation:
+
+### Test Tiers
+- **Fast Suite**: 743 core unit tests (~6 seconds) - excludes Transport/Server/Protocol heavy tests
+- **Unit Suite**: 1,355 comprehensive unit tests (~15 seconds) - full unit test coverage
+- **Feature Suite**: Feature and integration tests - full application testing
+- **Full Suite**: Complete test coverage - all tests combined
+
+### GitHub Actions CI
+The CI workflow (`.github/workflows/tests.yml`) uses the fast test suite for optimal performance:
+- **Matrix Testing**: PHP 8.2, 8.3 with Laravel 11.x
+- **Parallel Jobs**: Fast tests, code style, and static analysis run concurrently  
+- **Quick Feedback**: ~6 second test execution for rapid development cycles
+- **Dependency Strategies**: Tests both `prefer-lowest` and `prefer-stable` scenarios
+
+### Usage Guidelines
+- **Development**: Use `composer test:fast` for quick validation
+- **Pre-commit**: Run `composer test:unit` for thorough unit testing
+- **Pre-release**: Execute `composer test:full` for complete coverage
+- **CI/CD**: GitHub Actions automatically runs fast suite on PR/push
+
 ## Development Status
 
-**Current State**: Foundational skeleton with basic service provider and configuration
+**Current State**: Production-ready testing infrastructure with comprehensive CI/CD pipeline
 **Next Steps**: Follow sequential ticket implementation starting with `003-ServiceProviderCore`
 **Target**: Production-ready Laravel package for MCP server implementation

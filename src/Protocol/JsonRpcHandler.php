@@ -80,7 +80,7 @@ class JsonRpcHandler implements JsonRpcHandlerInterface
             $id = $request['id'];
 
             // Validate params structure - must be array or object (null is OK)
-            if (isset($request['params']) && !is_array($request['params']) && !is_null($request['params'])) {
+            if (isset($request['params']) && ! is_array($request['params']) && ! is_null($request['params'])) {
                 return $this->createErrorResponse(
                     self::ERROR_INVALID_PARAMS,
                     'Invalid params: parameters must be structured values (array or object)',
@@ -190,7 +190,7 @@ class JsonRpcHandler implements JsonRpcHandlerInterface
             if (isset($this->notificationHandlers[$method])) {
                 $handler = $this->notificationHandlers[$method];
                 $handler($params, $notification);
-                
+
                 // Dispatch NotificationSent event
                 $notificationData = [
                     'id' => uniqid('notif_', true),
@@ -198,7 +198,7 @@ class JsonRpcHandler implements JsonRpcHandlerInterface
                     'params' => $params,
                     'timestamp' => now()->toISOString(),
                 ];
-                
+
                 event(new \JTD\LaravelMCP\Events\NotificationSent($notificationData, 'http-client'));
             } else {
                 Log::info("No handler for notification method: {$method}");

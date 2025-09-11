@@ -84,7 +84,7 @@ class ChatGptGenerator implements ClientGeneratorInterface
         $tools = $this->registry->getTools() ?? [];
         $resources = $this->registry->getResources() ?? [];
         $prompts = $this->registry->getPrompts() ?? [];
-        
+
         $toolCount = count($tools);
         $resourceCount = count($resources);
         $promptCount = count($prompts);
@@ -184,7 +184,7 @@ class ChatGptGenerator implements ClientGeneratorInterface
         if (is_string($command)) {
             $command = [$command];
         }
-        
+
         $fullCommand = array_merge($command, $args);
 
         return [

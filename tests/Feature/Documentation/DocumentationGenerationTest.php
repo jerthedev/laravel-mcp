@@ -57,7 +57,6 @@ class DocumentationGenerationTest extends TestCase
             '--include-examples' => true,
         ]);
 
-
         // Assert command executed successfully
         $this->assertEquals(0, $exitCode);
 
@@ -356,7 +355,7 @@ class DocumentationGenerationTest extends TestCase
             '--force' => true,
         ]);
 
-        // Test Blade template rendering 
+        // Test Blade template rendering
         $viewPath = resource_path('views/vendor/laravel-mcp/docs/tool.blade.php');
         $this->assertFileExists($viewPath);
 

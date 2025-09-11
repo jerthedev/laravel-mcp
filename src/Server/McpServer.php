@@ -8,10 +8,11 @@ use JTD\LaravelMCP\Exceptions\McpException;
 use JTD\LaravelMCP\Protocol\MessageProcessor;
 use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Server\Contracts\ServerInterface;
+use JTD\LaravelMCP\Transport\Contracts\MessageHandlerInterface;
 use JTD\LaravelMCP\Transport\Contracts\TransportInterface;
 use JTD\LaravelMCP\Transport\TransportManager;
 
-class McpServer implements ServerInterface
+class McpServer implements ServerInterface, MessageHandlerInterface
 {
     private ServerInfo $serverInfo;
 
@@ -588,4 +589,126 @@ class McpServer implements ServerInterface
             'configuration' => $this->configuration,
         ];
     }
+
+    // MessageHandlerInterface implementation
+
+    /**
+     * Handle an incoming MCP message.
+     *
+     * @param  array  $message  The received MCP message
+     * @param  TransportInterface  $transport  The transport that received the message
+     * @return array|null Response message to send back, or null for no response
+     */
+    public function handle(array $message, TransportInterface $transport): ?array
+    {
+        try {
+            // Process the message through the message processor
+            return $this->messageProcessor->processMessage($message);
+        } catch (\Throwable $e) {
+            Log::error('Error handling message', [
+                'message' => $message,
+                'error' => $e->getMessage(),
+            ]);
+            
+            // Return JSON-RPC error response
+            return [
+                'jsonrpc' => '2.0',
+                'error' => [
+                    'code' => -32603,
+                    'message' => 'Internal error: ' . $e->getMessage(),
+                ],
+                'id' => $message['id'] ?? null,
+            ];
+        }
+    }
+
+    /**
+     * Handle a transport error.
+     *
+     * @param  \Throwable  $error  The error that occurred
+     * @param  TransportInterface  $transport  The transport where the error occurred
+     */
+    public function handleError(\Throwable $error, TransportInterface $transport): void
+    {
+        Log::error('Transport error occurred', [
+            'transport' => get_class($transport),
+            'error' => $error->getMessage(),
+            'trace' => $error->getTraceAsString(),
+        ]);
+        
+        $this->incrementErrorCount();
+    }
+
+    /**
+     * Handle transport connection establishment.
+     *
+     * @param  TransportInterface  $transport  The transport that connected
+     */
+    public function onConnect(TransportInterface $transport): void
+    {
+        Log::info('Transport connected', [
+            'transport' => get_class($transport),
+        ]);
+        
+        // Register the transport
+        $transportName = spl_object_hash($transport);
+        $this->registerTransport($transportName, $transport);
+    }
+
+    /**
+     * Handle transport connection closure.
+     *
+     * @param  TransportInterface  $transport  The transport that disconnected
+     */
+    public function onDisconnect(TransportInterface $transport): void
+    {
+        Log::info('Transport disconnected', [
+            'transport' => get_class($transport),
+        ]);
+        
+        // Remove the transport
+        $transportName = spl_object_hash($transport);
+        $this->removeTransport($transportName);
+    }
+
+    /**
+     * Check if the handler can process a specific message type.
+     *
+     * @param  array  $message  The message to check
+     */
+    public function canHandle(array $message): bool
+    {
+        // McpServer can handle all JSON-RPC messages
+        return isset($message['jsonrpc']) && $message['jsonrpc'] === '2.0';
+    }
+
+    /**
+     * Get supported message types by this handler.
+     *
+     * @return array Array of supported message types
+     */
+    public function getSupportedMessageTypes(): array
+    {
+        // Return all MCP protocol methods
+        return [
+            'initialize',
+            'initialized',
+            'shutdown',
+            'ping',
+            'tools/list',
+            'tools/call',
+            'resources/list',
+            'resources/read',
+            'resources/subscribe',
+            'resources/unsubscribe',
+            'prompts/list',
+            'prompts/get',
+            'logging/setLevel',
+            'logging/getLevels',
+            'sampling/createMessage',
+            'completion/complete',
+            'roots/list',
+        ];
+    }
+
 }
