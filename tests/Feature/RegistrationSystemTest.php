@@ -52,7 +52,7 @@ class RegistrationSystemTest extends TestCase
         );
 
         // Create RoutingPatterns instance for ComponentDiscovery
-        $routingPatterns = new RoutingPatterns();
+        $routingPatterns = new RoutingPatterns;
 
         $this->discovery = new ComponentDiscovery(
             $this->registry,
@@ -76,7 +76,7 @@ class RegistrationSystemTest extends TestCase
             {
                 $this->name = $name;
             }
-            
+
             public function handle(array $arguments): array
             {
                 $operation = $arguments['operation'] ?? 'add';
@@ -314,7 +314,7 @@ class RegistrationSystemTest extends TestCase
     {
         // Enable handler validation for this test
         config(['laravel-mcp.validation.validate_handlers' => true]);
-        
+
         // Test with non-existent class
         $this->expectException(RegistrationException::class);
         $this->expectExceptionMessage("Handler class 'NonExistentClass' does not exist");
@@ -328,7 +328,7 @@ class RegistrationSystemTest extends TestCase
     {
         // Enable handler validation for this test
         config(['laravel-mcp.validation.validate_handlers' => true]);
-        
+
         // Create a class that doesn't extend the required base class
         $invalidHandler = new class
         {

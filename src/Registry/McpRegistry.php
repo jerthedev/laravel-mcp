@@ -74,7 +74,7 @@ class McpRegistry
 
             return;
         }
-        
+
         // Ensure metadata is an array for standard interface signature
         if (! is_array($metadata)) {
             $metadata = [];
@@ -309,7 +309,6 @@ class McpRegistry
 
         $this->validateHandler($type, $handler);
     }
-
 
     // Backward compatibility and facade support methods
 
@@ -592,7 +591,6 @@ class McpRegistry
             $this->initialized = true;
         });
     }
-
 
     /**
      * Validate handler for a component type.

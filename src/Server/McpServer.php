@@ -12,7 +12,7 @@ use JTD\LaravelMCP\Transport\Contracts\MessageHandlerInterface;
 use JTD\LaravelMCP\Transport\Contracts\TransportInterface;
 use JTD\LaravelMCP\Transport\TransportManager;
 
-class McpServer implements ServerInterface, MessageHandlerInterface
+class McpServer implements MessageHandlerInterface, ServerInterface
 {
     private ServerInfo $serverInfo;
 
@@ -609,13 +609,13 @@ class McpServer implements ServerInterface, MessageHandlerInterface
                 'message' => $message,
                 'error' => $e->getMessage(),
             ]);
-            
+
             // Return JSON-RPC error response
             return [
                 'jsonrpc' => '2.0',
                 'error' => [
                     'code' => -32603,
-                    'message' => 'Internal error: ' . $e->getMessage(),
+                    'message' => 'Internal error: '.$e->getMessage(),
                 ],
                 'id' => $message['id'] ?? null,
             ];
@@ -635,7 +635,7 @@ class McpServer implements ServerInterface, MessageHandlerInterface
             'error' => $error->getMessage(),
             'trace' => $error->getTraceAsString(),
         ]);
-        
+
         $this->incrementErrorCount();
     }
 
@@ -649,7 +649,7 @@ class McpServer implements ServerInterface, MessageHandlerInterface
         Log::info('Transport connected', [
             'transport' => get_class($transport),
         ]);
-        
+
         // Register the transport
         $transportName = spl_object_hash($transport);
         $this->registerTransport($transportName, $transport);
@@ -665,7 +665,7 @@ class McpServer implements ServerInterface, MessageHandlerInterface
         Log::info('Transport disconnected', [
             'transport' => get_class($transport),
         ]);
-        
+
         // Remove the transport
         $transportName = spl_object_hash($transport);
         $this->removeTransport($transportName);
@@ -710,5 +710,4 @@ class McpServer implements ServerInterface, MessageHandlerInterface
             'roots/list',
         ];
     }
-
 }

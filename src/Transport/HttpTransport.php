@@ -34,10 +34,15 @@ class HttpTransport extends BaseTransport
      * Statistics tracking properties.
      */
     protected int $messagesSent = 0;
+
     protected int $messagesReceived = 0;
+
     protected int $bytesSent = 0;
+
     protected int $bytesReceived = 0;
+
     protected ?int $startedAt = null;
+
     protected ?int $lastActivity = null;
 
     /**
@@ -217,7 +222,7 @@ class HttpTransport extends BaseTransport
             $messageData = json_decode($content, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 return $this->createErrorResponse(
-                    'Parse error: ' . json_last_error_msg(),
+                    'Parse error: '.json_last_error_msg(),
                     -32700,
                     null,
                     400
@@ -250,7 +255,7 @@ class HttpTransport extends BaseTransport
             }
 
             // Validate JSON-RPC structure before processing (only for structural issues)
-            if (!isset($messageData['jsonrpc']) || $messageData['jsonrpc'] !== '2.0') {
+            if (! isset($messageData['jsonrpc']) || $messageData['jsonrpc'] !== '2.0') {
                 return $this->createErrorResponse(
                     'Invalid Request: Missing or invalid jsonrpc version',
                     -32600,
@@ -259,7 +264,7 @@ class HttpTransport extends BaseTransport
                 );
             }
 
-            if (!isset($messageData['method']) || !is_string($messageData['method']) || $messageData['method'] === '') {
+            if (! isset($messageData['method']) || ! is_string($messageData['method']) || $messageData['method'] === '') {
                 return $this->createErrorResponse(
                     'Invalid Request: Missing or invalid method',
                     -32600,
@@ -301,12 +306,12 @@ class HttpTransport extends BaseTransport
             }
 
             $requestId = $this->extractRequestId($request);
-            
+
             // Determine appropriate HTTP status based on error type
             $httpStatus = 500; // Default internal error
             $errorCode = -32603; // Default internal error
             $errorMessage = 'Internal error';
-            
+
             // Check if this looks like a client error
             $content = $request->getContent();
             if (empty($content)) {
@@ -316,11 +321,11 @@ class HttpTransport extends BaseTransport
             } elseif (json_decode($content, true) === null && json_last_error() !== JSON_ERROR_NONE) {
                 $httpStatus = 400;
                 $errorCode = -32700;
-                $errorMessage = 'Parse error: ' . json_last_error_msg();
+                $errorMessage = 'Parse error: '.json_last_error_msg();
             } elseif ($e instanceof \InvalidArgumentException) {
                 $httpStatus = 400;
                 $errorCode = -32600;
-                $errorMessage = 'Invalid Request: ' . $e->getMessage();
+                $errorMessage = 'Invalid Request: '.$e->getMessage();
             }
 
             return $this->createErrorResponse(
@@ -417,7 +422,7 @@ class HttpTransport extends BaseTransport
 
             // Determine the appropriate Access-Control-Allow-Origin value
             $origin = $this->currentRequest ? $this->currentRequest->header('Origin') : null;
-            
+
             if (in_array('*', $allowedOrigins)) {
                 // If wildcard is allowed, reflect the actual origin header
                 $response->headers->set('Access-Control-Allow-Origin', $origin ?? '*');
@@ -511,7 +516,7 @@ class HttpTransport extends BaseTransport
         if (app()->environment('testing')) {
             $checks['server_started'] = true;
             // Continue with SSL checks if SSL is enabled
-            if (!($this->config['ssl']['enabled'] ?? false)) {
+            if (! ($this->config['ssl']['enabled'] ?? false)) {
                 return [
                     'checks' => $checks,
                     'errors' => $errors,
@@ -610,8 +615,7 @@ class HttpTransport extends BaseTransport
     /**
      * Handle batch JSON-RPC requests.
      *
-     * @param array $batch Array of JSON-RPC requests
-     * @return Response
+     * @param  array  $batch  Array of JSON-RPC requests
      */
     protected function handleBatchRequest(array $batch): Response
     {
@@ -634,10 +638,11 @@ class HttpTransport extends BaseTransport
                     'jsonrpc' => '2.0',
                     'error' => [
                         'code' => -32600,
-                        'message' => 'Invalid Request: Batch item must be an object'
+                        'message' => 'Invalid Request: Batch item must be an object',
                     ],
-                    'id' => null
+                    'id' => null,
                 ];
+
                 continue;
             }
 
@@ -651,9 +656,9 @@ class HttpTransport extends BaseTransport
                     'jsonrpc' => '2.0',
                     'error' => [
                         'code' => -32603,
-                        'message' => 'Internal error: ' . $e->getMessage()
+                        'message' => 'Internal error: '.$e->getMessage(),
                     ],
-                    'id' => $request['id'] ?? null
+                    'id' => $request['id'] ?? null,
                 ];
             }
         }
@@ -668,13 +673,13 @@ class HttpTransport extends BaseTransport
 
         // Return batch response
         $responseJson = json_encode(array_values($responses), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
         return $this->createResponse($responseJson, 200);
     }
 
     /**
      * Extract request ID from HTTP request for error handling.
      *
-     * @param Request $request
      * @return mixed
      */
     protected function extractRequestId(Request $request)
@@ -683,11 +688,13 @@ class HttpTransport extends BaseTransport
             $content = $request->getContent();
             if (! empty($content)) {
                 $decoded = json_decode($content, true);
+
                 return $decoded['id'] ?? null;
             }
         } catch (\Throwable $e) {
             // Ignore errors when extracting ID
         }
+
         return null;
     }
 
@@ -717,34 +724,34 @@ class HttpTransport extends BaseTransport
     {
         $checks = [];
         $errors = [];
-        
+
         // Check if transport is started
         $checks['transport_started'] = $this->serverStarted;
-        if (!$this->serverStarted) {
+        if (! $this->serverStarted) {
             $errors[] = 'HTTP transport not started';
         }
-        
+
         // Check if connected
         $checks['transport_connected'] = $this->isConnected();
-        if (!$this->isConnected()) {
+        if (! $this->isConnected()) {
             $errors[] = 'HTTP transport not connected';
         }
-        
+
         // Check if message handler is available
         $checks['message_handler'] = $this->messageHandler !== null;
         if ($this->messageHandler === null) {
             $errors[] = 'No message handler configured';
         }
-        
+
         // Check configuration
-        $checks['config_valid'] = !empty($this->config);
+        $checks['config_valid'] = ! empty($this->config);
         if (empty($this->config)) {
             $errors[] = 'No configuration available';
         }
-        
+
         // Overall health status
         $healthy = empty($errors);
-        
+
         return [
             'healthy' => $healthy,
             'checks' => $checks,

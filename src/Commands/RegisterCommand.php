@@ -61,7 +61,6 @@ class RegisterCommand extends BaseCommand
     {
         $client = $this->argument('client');
 
-
         // Validate client type
         if (! $this->validateClient($client)) {
             return self::EXIT_INVALID_INPUT;
@@ -71,10 +70,9 @@ class RegisterCommand extends BaseCommand
 
         // Gather configuration options
         $options = $this->gatherConfigurationOptions($client);
-        
+
         // Debug output for verbose mode
         $this->debug('Configuration options gathered', $options);
-
 
         try {
             // Generate configuration
@@ -85,7 +83,7 @@ class RegisterCommand extends BaseCommand
 
             // Save configuration
             $saveResult = $this->saveConfiguration($config, $outputPath, $client);
-            
+
             if ($saveResult === true) {
                 $this->success('MCP server registered successfully!', [
                     'Client' => $client,
@@ -101,6 +99,7 @@ class RegisterCommand extends BaseCommand
                 if (app()->environment('testing')) {
                     $this->debug('User chose not to save configuration');
                 }
+
                 // Return success as the command executed properly and respected user's choice
                 return self::EXIT_SUCCESS;
             } else {
@@ -108,12 +107,13 @@ class RegisterCommand extends BaseCommand
                 if (app()->environment('testing')) {
                     $this->debug('Save configuration failed with error');
                 }
+
                 return self::EXIT_ERROR;
             }
         } catch (\Throwable $e) {
             if (app()->environment('testing')) {
-                $this->error('Exception caught: ' . $e->getMessage());
-                $this->error('Stack trace: ' . $e->getTraceAsString());
+                $this->error('Exception caught: '.$e->getMessage());
+                $this->error('Stack trace: '.$e->getTraceAsString());
             }
             throw $e;
         }
@@ -198,7 +198,7 @@ class RegisterCommand extends BaseCommand
 
         if (! $description) {
             $default = 'Laravel MCP Server - providing tools, resources, and prompts';
-            
+
             // In testing mode, check if the output is mocked (PendingCommand)
             // If so, allow normal prompting, otherwise use default
             if (app()->environment('testing') && ! $this->input->isInteractive()) {
@@ -273,9 +273,9 @@ class RegisterCommand extends BaseCommand
                 [$key, $value] = explode('=', $envVar, 2);
                 $key = trim($key);
                 $value = trim($value);
-                
+
                 // Skip invalid environment variables but don't fail
-                if (!empty($key)) {
+                if (! empty($key)) {
                     $env[$key] = $value; // Allow empty values
                 }
             }
@@ -290,6 +290,7 @@ class RegisterCommand extends BaseCommand
         }
 
         $this->debug('getEnvironmentVariables returning', $env);
+
         return $env;
     }
 
@@ -328,7 +329,7 @@ class RegisterCommand extends BaseCommand
     {
         $this->status("Generating $client configuration...");
 
-        // Map RegisterCommand options to generator options  
+        // Map RegisterCommand options to generator options
         $generatorOptions = [
             'name' => $options['server_name'],
             'description' => $options['description'],
@@ -340,10 +341,10 @@ class RegisterCommand extends BaseCommand
         ];
 
         // Add any additional args
-        if (!empty($options['args'])) {
+        if (! empty($options['args'])) {
             $this->debug('Merging additional args', [
                 'existing_args' => $generatorOptions['args'],
-                'additional_args' => $options['args']
+                'additional_args' => $options['args'],
             ]);
             $generatorOptions['args'] = array_merge($generatorOptions['args'], $options['args']);
         }
@@ -384,21 +385,23 @@ class RegisterCommand extends BaseCommand
             if (app()->environment('testing')) {
                 $this->line("DEBUG: Using custom output path: $customOutput");
             }
+
             return $customOutput;
         }
 
         // Try to get default client config path
         $defaultPath = $this->configGenerator->getClientConfigPath($client);
-        
+
         // Always show debug in testing
         if (app()->environment('testing')) {
-            $this->line("DEBUG: ConfigGenerator returned path: " . ($defaultPath ?: 'NULL'));
+            $this->line('DEBUG: ConfigGenerator returned path: '.($defaultPath ?: 'NULL'));
         }
 
         if ($defaultPath) {
             if (app()->environment('testing')) {
                 $this->line("DEBUG: Using default path from ConfigGenerator: $defaultPath");
             }
+
             return $defaultPath;
         }
 
@@ -415,28 +418,29 @@ class RegisterCommand extends BaseCommand
 
     /**
      * Save configuration to file.
-     * 
+     *
      * @return bool|null True if saved, false if validation failed, null if user chose not to save
      */
     protected function saveConfiguration(array $config, string $path, string $client): ?bool
     {
         $this->status("Saving configuration to: $path");
-        
+
         // Debug: Check what path we're getting and if file exists
         if (app()->environment('testing')) {
             $exists = file_exists($path);
             $this->line("DEBUG: Checking path: $path");
-            $this->line("DEBUG: File exists: " . ($exists ? 'YES' : 'NO'));
+            $this->line('DEBUG: File exists: '.($exists ? 'YES' : 'NO'));
             if ($exists) {
-                $this->line("DEBUG: File size: " . filesize($path) . " bytes");
+                $this->line('DEBUG: File size: '.filesize($path).' bytes');
             }
-            $this->line("DEBUG: Force option: " . ($this->option('force') ? 'YES' : 'NO'));
+            $this->line('DEBUG: Force option: '.($this->option('force') ? 'YES' : 'NO'));
         }
 
         // Check if file exists and handle overwrite (outside try-catch for test expectations)
         if (file_exists($path) && ! $this->option('force')) {
             if (! $this->confirmOverwrite($path)) {
                 $this->warning('Configuration not saved - file exists');
+
                 return null; // User chose not to overwrite
             }
         }
@@ -447,6 +451,7 @@ class RegisterCommand extends BaseCommand
             $errors = $this->configGenerator->validateClientConfig($client, $config);
             if (! empty($errors)) {
                 $this->displayError('Configuration validation failed:', $errors);
+
                 return false;
             }
 
@@ -472,8 +477,9 @@ class RegisterCommand extends BaseCommand
             if (! $result) {
                 $this->displayError('Failed to save configuration file', [
                     'Path' => $path,
-                    'Reason' => 'ConfigGenerator::saveClientConfig returned false'
+                    'Reason' => 'ConfigGenerator::saveClientConfig returned false',
                 ]);
+
                 return false;
             }
 
@@ -484,6 +490,7 @@ class RegisterCommand extends BaseCommand
                 'Error' => $e->getMessage(),
                 'Class' => get_class($e),
             ]);
+
             return false;
         }
     }

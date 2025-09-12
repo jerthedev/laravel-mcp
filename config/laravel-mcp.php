@@ -94,4 +94,34 @@ return [
         'validate_handlers' => env('MCP_VALIDATE_HANDLERS', true),
         'strict_mode' => env('MCP_STRICT_MODE', false),
     ],
+
+    'events' => [
+        'enabled' => env('MCP_EVENTS_ENABLED', true),
+        'listeners' => [
+            // Event listeners will be registered here
+        ],
+    ],
+
+    'queue' => [
+        'enabled' => env('MCP_QUEUE_ENABLED', false),
+        'default' => env('MCP_QUEUE_NAME', 'mcp'),
+        'connection' => env('MCP_QUEUE_CONNECTION', null),
+        'retry_after' => env('MCP_QUEUE_RETRY_AFTER', 90),
+        'timeout' => env('MCP_QUEUE_TIMEOUT', 300),
+    ],
+
+    'notifications' => [
+        'enabled' => env('MCP_NOTIFICATIONS_ENABLED', true),
+        'channels' => ['database'],
+        'notifiable' => null, // Class that should receive notifications
+        'admin_email' => env('MCP_ADMIN_EMAIL'),
+        'severity_threshold' => env('MCP_NOTIFICATION_SEVERITY', 'error'),
+        'slack' => [
+            'enabled' => env('MCP_SLACK_ENABLED', false),
+            'webhook_url' => env('MCP_SLACK_WEBHOOK_URL'),
+            'channel' => env('MCP_SLACK_CHANNEL', '#mcp-errors'),
+            'username' => env('MCP_SLACK_USERNAME', 'MCP Error Bot'),
+        ],
+        'dashboard_url' => env('MCP_DASHBOARD_URL'),
+    ],
 ];

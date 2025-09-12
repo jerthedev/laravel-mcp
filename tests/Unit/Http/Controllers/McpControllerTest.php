@@ -391,10 +391,10 @@ class McpControllerTest extends TestCase
             ->andThrow(new \RuntimeException('Transport creation failed'));
 
         $controller = new McpController($mockTransportManager, $this->mockMessageProcessor);
-        
+
         // Clear named routes to cause route() function to fail
         $originalRoutes = app('router')->getRoutes();
-        $newRouteCollection = new \Illuminate\Routing\RouteCollection();
+        $newRouteCollection = new \Illuminate\Routing\RouteCollection;
         app('router')->setRoutes($newRouteCollection);
 
         Log::shouldReceive('error')

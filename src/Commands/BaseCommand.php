@@ -395,7 +395,7 @@ abstract class BaseCommand extends Command
             $mcpEnabled = $this->isMcpEnabled();
             if (! $mcpEnabled) {
                 $this->displayError('MCP is disabled. Enable it by setting MCP_ENABLED=true in your .env file.');
-                
+
                 return self::EXIT_ERROR;
             }
 
@@ -404,6 +404,7 @@ abstract class BaseCommand extends Command
             // Validate input
             if (! $this->validateInput()) {
                 $this->debug('Input validation failed');
+
                 return self::EXIT_INVALID_INPUT;
             }
 
@@ -424,8 +425,9 @@ abstract class BaseCommand extends Command
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return $this->handleError($e);
         }
     }

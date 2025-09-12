@@ -4,10 +4,10 @@ namespace JTD\LaravelMCP\Tests\Feature\Http;
 
 use Illuminate\Support\Facades\Route;
 use JTD\LaravelMCP\Http\Controllers\McpController;
+use JTD\LaravelMCP\Tests\TestCase;
 use JTD\LaravelMCP\Transport\TransportManager;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
-use JTD\LaravelMCP\Tests\TestCase;
 
 /**
  * EPIC: TRANSPORT
@@ -50,7 +50,7 @@ class HttpTransportIntegrationTest extends TestCase
     {
         // Apply the same middleware as the service provider would
         $middleware = ['api', \JTD\LaravelMCP\Http\Middleware\McpAuthMiddleware::class];
-        
+
         Route::prefix('mcp')->middleware($middleware)->group(function () {
             Route::post('/', [McpController::class, 'handle'])->name('mcp.handle');
             Route::options('/', [McpController::class, 'options'])->name('mcp.options');

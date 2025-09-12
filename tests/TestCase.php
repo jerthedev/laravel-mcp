@@ -4,10 +4,58 @@ namespace JTD\LaravelMCP\Tests;
 
 use JTD\LaravelMCP\Facades\Mcp;
 use JTD\LaravelMCP\LaravelMcpServiceProvider;
+use JTD\LaravelMCP\Tests\Support\TestPackageManifest;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
 abstract class TestCase extends OrchestraTestCase
 {
+    /**
+     * Get the base path for the application.
+     * Override to use a writable temp directory.
+     *
+     * @return string
+     */
+    protected function getBasePath()
+    {
+        $basePath = '/tmp/laravel-mcp-test-app';
+        
+        // Create directory structure
+        $dirs = [
+            $basePath,
+            $basePath . '/bootstrap',
+            $basePath . '/bootstrap/cache',
+            $basePath . '/storage',
+            $basePath . '/storage/framework',
+            $basePath . '/storage/framework/cache',
+            $basePath . '/storage/framework/sessions',
+            $basePath . '/storage/framework/views',
+            $basePath . '/storage/logs',
+            $basePath . '/app',
+            $basePath . '/config',
+            $basePath . '/database',
+            $basePath . '/public',
+            $basePath . '/resources',
+            $basePath . '/routes',
+        ];
+        
+        foreach ($dirs as $dir) {
+            if (!is_dir($dir)) {
+                mkdir($dir, 0777, true);
+            }
+        }
+        
+        // Create necessary cache files
+        $cacheDir = $basePath . '/bootstrap/cache';
+        if (!file_exists($cacheDir . '/packages.php')) {
+            file_put_contents($cacheDir . '/packages.php', '<?php return [];');
+        }
+        if (!file_exists($cacheDir . '/services.php')) {
+            file_put_contents($cacheDir . '/services.php', '<?php return [];');
+        }
+        
+        return $basePath;
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -67,7 +115,7 @@ abstract class TestCase extends OrchestraTestCase
 
         // Enable debug mode for commands
         $app['config']->set('app.debug', true);
-        
+
         // Set app key for encryption (required for sessions/cookies)
         $app['config']->set('app.key', 'base64:'.base64_encode('32charactersoftestingencryptkey'));
 
@@ -228,7 +276,7 @@ abstract class TestCase extends OrchestraTestCase
                 if (isset($config['mimeType'])) {
                     $this->mimeType = $config['mimeType'];
                 }
-                
+
                 parent::__construct();
             }
 

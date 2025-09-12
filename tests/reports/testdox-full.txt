@@ -1,0 +1,2070 @@
+Auto Discovery (JTD\LaravelMCP\Tests\Feature\Registry\AutoDiscovery)
+ [ ] It auto discovers components on boot
+ [ ] It discovers and registers multiple component types
+ [ ] It caches discovery results
+ [ ] It clears cache when requested
+ [ ] It validates discovered components
+ [ ] It handles discovery with namespace conflicts
+ [ ] It ignores test files during discovery
+ [ ] It supports custom discovery paths
+ [ ] It discovers components recursively
+ [ ] It handles malformed php files gracefully
+
+Base Command (JTD\LaravelMCP\Tests\Unit\Commands\BaseCommand)
+ [ ] Successful command execution
+ [ ] Command with validation failure
+ [ ] Error handling without debug
+ [ ] Error handling with debug mode
+ [ ] Output formatting methods
+ [ ] Debug output in verbose mode
+ [ ] Configuration helper methods
+ [ ] Mcp disabled check
+ [ ] Option validation methods
+
+Base Component (JTD\LaravelMCP\Tests\Unit\Abstracts\BaseComponent)
+ [ ] It initializes with container and validator
+ [ ] It returns configured name
+ [ ] It generates name from class when not set
+ [ ] It returns configured description
+ [ ] It returns default description when not set
+ [ ] It manages middleware
+ [ ] It manages auth requirement
+ [ ] It provides make helper
+ [ ] It provides resolve helper
+ [ ] It returns metadata
+ [ ] It converts to array
+ [ ] Authorize returns true when auth not required
+ [ ] Authorize returns true by default when auth required
+ [ ] Generate name from class removes suffixes
+
+Base Handler (JTD\LaravelMCP\Tests\Unit\Server\Handlers\BaseHandler)
+ [ ] Constructor sets handler name and debug mode
+ [ ] Constructor defaults to non debug mode
+ [ ] Set debug updates debug mode
+ [ ] Validate request passes with valid parameters
+ [ ] Validate request passes with empty rules
+ [ ] Validate request throws protocol exception with invalid parameters
+ [ ] Validate request throws protocol exception with missing required parameters
+ [ ] Validate request uses custom error messages
+ [ ] Validate required params passes with all required present
+ [ ] Validate required params passes with empty required list
+ [ ] Validate required params throws protocol exception with missing parameters
+ [ ] Create success response returns result without metadata
+ [ ] Create success response adds metadata when requested
+ [ ] Create error response returns proper structure
+ [ ] Create error response includes data when provided
+ [ ] Supports method returns true for supported methods
+ [ ] Supports method returns false for unsupported methods
+ [ ] Get supported methods returns expected methods
+ [ ] Sanitize for logging removes sensitive keys
+ [ ] Sanitize for logging handles empty array
+ [ ] Handle exception preserves protocol exception details
+ [ ] Handle exception converts generic exception to internal error
+ [ ] Handle exception includes debug data when debug enabled
+ [ ] Format content handles different types correctly with data set "string as text"
+ [ ] Format content handles different types correctly with data set "array as text"
+ [ ] Format content handles different types correctly with data set "string as json"
+ [ ] Format content handles different types correctly with data set "array as json"
+ [ ] Format content handles different types correctly with data set "resource type"
+ [ ] Format content handles different types correctly with data set "unknown type defaults to text"
+ [ ] Format content handles different types correctly with data set "number as text"
+ [ ] Logging methods use handler name prefix
+ [ ] Debug logging works when debug enabled
+ [ ] Constructor logs initialization when debug enabled
+ [ ] Constructor does not log when debug disabled
+
+Base Transport (JTD\LaravelMCP\Tests\Unit\Transport\BaseTransport)
+ [ ] It initializes with default configuration
+ [ ] It merges custom configuration with defaults
+ [ ] It validates configuration on initialization
+ [ ] It starts and stops correctly
+ [ ] It prevents double start
+ [ ] It gracefully handles double stop
+ [ ] It sends messages when connected
+ [ ] It throws exception when sending while disconnected
+ [ ] It receives messages when connected
+ [ ] It returns null when no messages to receive
+ [ ] It tracks statistics correctly
+ [ ] It handles errors correctly
+ [ ] It sets and uses message handler
+ [ ] It calculates uptime correctly
+ [ ] It provides connection information
+ [ ] It performs health checks
+ [ ] It fails health check when disconnected
+ [ ] It reconnects successfully
+ [ ] It handles start failure gracefully
+ [ ] It validates negative retry attempts
+ [ ] It validates negative retry delay
+ [ ] It sends with retry on failure
+ [ ] It fails after max retry attempts
+ [ ] It masks sensitive config in logs
+
+Capability Manager (JTD\LaravelMCP\Tests\Unit\Server\CapabilityManager)
+ [ ] Can create capability manager instance
+ [ ] Initializes server capabilities from config
+ [ ] Can negotiate capabilities with client
+ [ ] Adjusts capabilities for empty components
+ [ ] Can check if capability is enabled
+ [ ] Can check if feature is enabled
+ [ ] Can get capability info
+ [ ] Can update server capabilities before negotiation
+ [ ] Cannot update capabilities after negotiation
+ [ ] Can reset capabilities
+ [ ] Can lock capabilities
+ [ ] Validates tools capability
+ [ ] Validates resources capability
+ [ ] Validates logging capability
+ [ ] Gets mcp10 requirements
+ [ ] Validates mcp10 compliance
+ [ ] Creates dynamic capabilities
+ [ ] Gets detailed capability info
+ [ ] Prevents double negotiation
+ [ ] Creates minimal capabilities when empty
+
+Claude Desktop Generator (JTD\LaravelMCP\Tests\Unit\Support\Generators\ClaudeDesktopGenerator)
+ [ ] It generates stdio configuration
+ [ ] It generates http configuration
+ [ ] It uses default values when not provided
+ [ ] It validates configuration
+ [ ] It merges configurations properly
+ [ ] It loads existing configuration
+ [ ] It handles invalid transport type
+ [ ] It gets default server name
+ [ ] It gets default description with component counts
+
+Client Detector (JTD\LaravelMCP\Tests\Unit\Support\ClientDetector)
+ [ ] It detects operating system
+ [ ] It determines if client is installed
+ [ ] It gets default config path for client with data set "claude-desktop"
+ [ ] It gets default config path for client with data set "claude-code"
+ [ ] It gets default config path for client with data set "chatgpt-desktop"
+ [ ] It gets default config path for client with data set "unsupported"
+ [ ] It gets home directory
+ [ ] It detects client environment
+ [ ] It validates client compatibility
+ [ ] It gets config directory for os
+ [ ] It gets app data directory
+ [ ] It provides client specific config filename
+
+Component Discovery (JTD\LaravelMCP\Tests\Unit\Registry\ComponentDiscovery)
+ [ ] It can be instantiated
+ [ ] It discovers tools in directory
+ [ ] It discovers resources in directory
+ [ ] It discovers prompts in directory
+ [ ] It ignores non existent directories
+ [ ] It ignores abstract classes
+ [ ] It ignores interfaces
+ [ ] It ignores traits
+ [ ] It extracts class name from file
+ [ ] It returns null for file without class
+ [ ] It returns null for file without namespace
+ [ ] It registers discovered components
+ [ ] It validates discovered components
+ [ ] It supports discovery configuration
+ [ ] It supports discovery filters
+ [ ] It gets supported component types
+
+Config Generator (JTD\LaravelMCP\Tests\Unit\Support\ConfigGenerator)
+ [ ] It generates claude desktop configuration
+ [ ] It generates claude desktop configuration with defaults
+ [ ] It generates claude code configuration
+ [ ] It generates claude code configuration with defaults
+ [ ] It generates chatgpt desktop configuration
+ [ ] It generates chatgpt desktop configuration with defaults
+ [ ] It validates claude desktop configuration
+ [ ] It validates claude code configuration
+ [ ] It validates chatgpt configuration
+ [ ] It validates unknown client type
+ [ ] It merges claude desktop configurations
+ [ ] It merges claude code configurations
+ [ ] It merges chatgpt configurations
+ [ ] It returns new config when existing is empty
+ [ ] It detects operating system
+ [ ] It gets home directory
+ [ ] It gets client config path
+ [ ] It saves client configuration
+ [ ] It prevents overwrite without force
+ [ ] It creates directory if not exists
+ [ ] It handles save errors gracefully
+
+Directory Structure Validation (JTD\LaravelMCP\Tests\Feature\DirectoryStructureValidation)
+ [ ] It has all required source directories
+ [ ] It has all required configuration directories
+ [ ] It has all required test directories
+ [ ] It has all required contract interfaces
+ [ ] It has all required foundational traits
+ [ ] It has all required exception classes
+ [ ] It has the mcp facade
+ [ ] It has console utilities
+ [ ] It has all code generation stubs
+ [ ] It has debug view template
+ [ ] It has base test case
+ [ ] It has test fixtures
+ [ ] It can load all contract interfaces
+ [ ] It can load all trait classes
+ [ ] It can load all exception classes
+ [ ] It can load mcp facade
+ [ ] It can load console utilities
+ [ ] It can load test fixtures
+ [ ] It follows laravel namespace patterns
+ [ ] It supports psr4 autoloading
+
+Discovery Interface (JTD\LaravelMCP\Tests\Unit\Registry\Contracts\DiscoveryInterface)
+ [ ] Discover components in paths
+ [ ] Discover returns empty when no components
+ [ ] Discover type for tools
+ [ ] Discover type for resources
+ [ ] Discover type for prompts
+ [ ] Is valid component with valid file
+ [ ] Is valid component with invalid file
+ [ ] Is valid component with wrong type
+ [ ] Extract metadata from file
+ [ ] Extract metadata returns empty for invalid
+ [ ] Get class from file valid
+ [ ] Get class from file no class
+ [ ] Is valid component class valid tool
+ [ ] Is valid component class invalid
+ [ ] Get supported types
+ [ ] Set config
+ [ ] Get config
+ [ ] Add filter
+ [ ] Get filters
+ [ ] Full discovery workflow
+ [ ] Discover multiple paths
+ [ ] Validate component types
+ [ ] Discovery with filters
+
+Documentation Generation (JTD\LaravelMCP\Tests\Feature\Documentation\DocumentationGeneration)
+ [ ] It generates complete documentation via artisan command
+ [ ] It generates single file documentation
+ [ ] It generates api only documentation
+ [ ] It generates components only documentation
+ [ ] It enriches documentation with schemas
+ [ ] It generates documentation with examples
+ [ ] It integrates documentation generator and schema documenter
+ [ ] It handles empty registries gracefully
+ [ ] It generates documentation from blade templates
+ [ ] It validates documentation output structure
+ [ ] It handles custom output formats
+
+Documentation Generator (Tests\Unit\Support\DocumentationGenerator)
+ [x] It generates overview with default options
+ [x] It generates overview with custom options
+ [x] It generates overview with populated registries
+ [x] It generates component documentation
+ [x] It generates tools documentation when empty
+ [x] It generates tools documentation with populated registry
+ [x] It generates resources documentation when empty
+ [x] It generates resources documentation with populated registry
+ [x] It generates prompts documentation when empty
+ [x] It generates prompts documentation with populated registry
+ [x] It generates api reference
+ [x] It includes tool methods in api reference when tools exist
+ [x] It includes resource methods in api reference when resources exist
+ [x] It includes prompt methods in api reference when prompts exist
+ [x] It generates usage guide
+ [x] It generates configuration guide
+ [x] It generates examples
+ [x] It generates readme
+ [x] It generates readme with custom options
+ [x] It generates complete documentation
+ [x] It gets and sets templates
+
+Event Lifecycle Integration (JTD\LaravelMCP\Tests\Feature\EventLifecycleIntegration)
+ [ ] It finalizes component discovery on providers booted
+ [ ] It skips discovery finalization when disabled
+ [ ] It handles discovery finalization errors gracefully
+ [ ] It cleans up resources on kernel handled
+ [ ] It handles cleanup errors gracefully
+ [ ] It performs final cleanup on application terminating
+ [ ] It handles cache cleanup errors gracefully
+ [ ] It handles complete event lifecycle
+ [ ] It registers event listeners only once
+ [ ] It handles events with unbound services gracefully
+ [ ] It handles events in different environments
+ [ ] It maintains performance during event handling
+
+Facade Integration (JTD\LaravelMCP\Tests\Feature\FacadeIntegration)
+ [ ] It demonstrates route style registration via facade
+ [ ] It demonstrates group registration with middleware
+ [ ] It demonstrates nested groups with prefixes
+ [ ] It demonstrates namespace grouping
+ [ ] It demonstrates mixed facade functionality
+ [ ] It demonstrates complex middleware ordering
+ [ ] It demonstrates fluent interface
+ [ ] It verifies all critical fixes are working
+
+Formats Responses (JTD\LaravelMCP\Tests\Unit\Traits\FormatsResponses)
+ [ ] It formats success response
+ [ ] It formats success response with meta
+ [ ] It formats error response
+ [ ] It formats tool response
+ [ ] It formats resource read response
+ [ ] It formats resource list response
+ [ ] It formats prompt response
+ [ ] It formats paginated response
+ [ ] It formats json rpc response
+ [ ] It formats json rpc error response
+ [ ] It converts to json response
+ [ ] It detects mime type for json
+ [ ] It detects mime type for html
+ [ ] It detects mime type for xml
+ [ ] It detects mime type for plain text
+ [ ] It formats capabilities response
+ [ ] It formats validation errors
+ [ ] It strips sensitive data
+ [ ] It adds cors headers when enabled
+ [ ] It does not add cors headers when disabled
+ [ ] It includes timestamp when configured
+ [ ] It excludes timestamp when configured
+ [ ] It includes debug info when enabled
+ [ ] It formats batch response
+ [ ] It formats data with laravel models
+ [ ] It formats data with json serializable
+ [ ] It formats resource list item from array
+ [ ] It formats resource list item from object
+
+Handler Integration (JTD\LaravelMCP\Tests\Feature\Server\Handlers\HandlerIntegration)
+ [ ] Complete tool workflow lists and executes tools
+ [ ] Complete resource workflow lists and reads resources
+ [ ] Complete prompt workflow lists and gets prompts
+ [ ] Tool handler manages pagination correctly
+ [ ] Resource handler manages pagination correctly
+ [ ] Prompt handler manages pagination correctly
+ [ ] Handlers handle error scenarios gracefully
+ [ ] Handlers validate request parameters correctly
+ [ ] Handlers return proper mcp response format
+ [ ] Tool execution handles different result types
+ [ ] Resource reading handles different content types
+
+Handles Mcp Requests (JTD\LaravelMCP\Tests\Unit\Traits\HandlesMcpRequests)
+ [ ] Process request success
+ [ ] Process request with mcp exception
+ [ ] Process request with generic exception
+ [ ] Create success response
+ [ ] Create error response without data
+ [ ] Create error response with data
+ [ ] Validate required params all present
+ [ ] Validate required params missing
+ [ ] Extract params with required
+ [ ] Extract params missing required
+ [ ] Extract params with defaults
+ [ ] Validate param with type
+ [ ] Validate param with custom validator
+ [ ] Validate param type string
+ [ ] Validate param type integer
+ [ ] Validate param type array
+ [ ] Validate param type object
+ [ ] Get component name
+ [ ] Log request with debug enabled
+ [ ] Log request with debug disabled
+ [ ] Log response with debug enabled
+ [ ] Complex parameter extraction
+ [ ] Error response includes timestamp
+ [ ] Success response includes timestamp
+
+Http Transport (JTD\LaravelMCP\Tests\Unit\Transport\HttpTransport)
+ [ ] It initializes with default configuration
+ [ ] It starts and stops correctly
+ [ ] It handles http request successfully
+ [ ] It handles notification without response
+ [ ] It returns error for invalid content type
+ [ ] It returns error for invalid json
+ [ ] It returns error for empty request body
+ [ ] It handles options request for cors
+ [ ] It adds cors headers when enabled
+ [ ] It does not add cors headers when disabled
+ [ ] It returns error when transport is closed
+ [ ] It returns error when no handler configured
+ [ ] It handles handler exceptions
+ [ ] It generates correct base url
+ [ ] It generates correct https base url
+ [ ] It omits default ports in base url
+ [ ] It performs health checks
+ [ ] It performs health checks with ssl enabled
+ [ ] It returns connection info
+ [ ] It manages current request
+ [ ] It manages current response data
+ [ ] It validates json content in receive
+ [ ] It logs debug information when enabled
+ [ ] It logs errors during receive
+ [ ] It logs errors during request handling
+ [ ] It encodes response with proper json flags
+ [ ] It handles json encoding errors
+
+Http Transport Integration (JTD\LaravelMCP\Tests\Feature\Http\HttpTransportIntegration)
+ [ ] It handles complete http request response cycle
+ [ ] It handles cors preflight requests
+ [ ] It adds cors headers to regular requests
+ [ ] It enforces authentication when enabled
+ [ ] It provides health check endpoint
+ [ ] It provides server info endpoint
+ [ ] It handles malformed json requests
+ [ ] It rejects invalid content type
+ [ ] It handles jsonrpc notifications
+ [ ] It handles batch requests
+ [ ] It invokes tools through http
+ [ ] It reads resources through http
+ [ ] It handles prompts through http
+ [ ] It processes requests through middleware stack
+ [ ] It handles concurrent http requests
+ [ ] It recovers from transport errors
+ [ ] It handles large payloads
+ [ ] It handles request timeouts gracefully
+ [ ] It tracks transport statistics
+ [ ] It validates ssl configuration
+ [ ] It includes custom headers in responses
+
+Json Rpc Handler (Tests\Unit\Protocol\JsonRpcHandler)
+ [ ] Constructor with debug modes
+ [ ] Debug mode setting
+ [ ] Handle request valid
+ [ ] Handle request no params
+ [ ] Handle request invalid format with data set "missing jsonrpc"
+ [ ] Handle request invalid format with data set "wrong jsonrpc version"
+ [ ] Handle request invalid format with data set "missing method"
+ [ ] Handle request invalid format with data set "empty method"
+ [ ] Handle request invalid format with data set "missing id"
+ [ ] Handle request method not found
+ [ ] Handle request invalid params exception
+ [ ] Handle request internal error
+ [ ] Handle request internal error debug mode
+ [ ] Handle request global exception
+ [ ] Handle request debug logging
+ [ ] Handle notification valid
+ [ ] Handle notification no params
+ [ ] Handle notification invalid format with data set "missing jsonrpc"
+ [ ] Handle notification invalid format with data set "wrong jsonrpc version"
+ [ ] Handle notification invalid format with data set "missing method"
+ [ ] Handle notification invalid format with data set "empty method"
+ [ ] Handle notification invalid format with data set "has id (makes it request)"
+ [ ] Handle notification unregistered method
+ [ ] Handle notification handler exception
+ [ ] Handle notification debug logging
+ [ ] Handle response valid success
+ [ ] Handle response valid error
+ [ ] Handle response invalid format with data set "missing jsonrpc"
+ [ ] Handle response invalid format with data set "wrong jsonrpc version"
+ [ ] Handle response invalid format with data set "missing id"
+ [ ] Handle response invalid format with data set "missing result and error"
+ [ ] Handle response invalid format with data set "both result and error"
+ [ ] Handle response no handler
+ [ ] Handle response handler exception
+ [ ] Handle response debug logging
+ [ ] Create request with params
+ [ ] Create request no params
+ [ ] Create request notification
+ [ ] Create success response
+ [ ] Create error response no data
+ [ ] Create error response with data
+ [ ] Create error response standard codes with data set "Parse error"
+ [ ] Create error response standard codes with data set "Invalid request"
+ [ ] Create error response standard codes with data set "Method not found"
+ [ ] Create error response standard codes with data set "Invalid params"
+ [ ] Create error response standard codes with data set "Internal error"
+ [ ] Create error response standard codes with data set "Server error"
+ [ ] Create error response standard codes with data set "Custom error"
+ [ ] Validate message with data set "valid request"
+ [ ] Validate message with data set "valid notification"
+ [ ] Validate message with data set "valid success response"
+ [ ] Validate message with data set "valid error response"
+ [ ] Validate message with data set "missing jsonrpc"
+ [ ] Validate message with data set "wrong jsonrpc version"
+ [ ] Validate message with data set "empty message"
+ [ ] Validate message with data set "malformed response"
+ [ ] Is request with data set "valid request"
+ [ ] Is request with data set "request with params"
+ [ ] Is request with data set "request with string id"
+ [ ] Is request with data set "notification (no id)"
+ [ ] Is request with data set "missing method"
+ [ ] Is request with data set "empty method"
+ [ ] Is request with data set "non-string method"
+ [ ] Is request with data set "wrong jsonrpc version"
+ [ ] Is request with data set "missing jsonrpc"
+ [ ] Is notification with data set "valid notification"
+ [ ] Is notification with data set "notification with params"
+ [ ] Is notification with data set "request (has id)"
+ [ ] Is notification with data set "missing method"
+ [ ] Is notification with data set "empty method"
+ [ ] Is notification with data set "non-string method"
+ [ ] Is notification with data set "wrong jsonrpc version"
+ [ ] Is notification with data set "missing jsonrpc"
+ [ ] Is response with data set "success response"
+ [ ] Is response with data set "error response"
+ [ ] Is response with data set "both result and error"
+ [ ] Is response with data set "missing result and error"
+ [ ] Is response with data set "missing id"
+ [ ] Is response with data set "wrong jsonrpc version"
+ [ ] Is response with data set "missing jsonrpc"
+ [ ] Is response with data set "request with method"
+ [ ] Handler registration
+ [ ] Response handler registration
+ [ ] Get methods empty
+ [ ] Multiple handlers
+ [ ] Handler overriding
+
+Json Rpc Handler Interface (Tests\Unit\Protocol\Contracts\JsonRpcHandlerInterface)
+ [ ] Handle request with valid request
+ [ ] Handle request with params
+ [ ] Handle notification
+ [ ] Handle notification with params
+ [ ] Handle response success
+ [ ] Handle response error
+ [ ] Create request without params
+ [ ] Create request with params
+ [ ] Create request notification
+ [ ] Create success response
+ [ ] Create error response without data
+ [ ] Create error response with data
+ [ ] Create error response for notification
+ [ ] Validate message valid
+ [ ] Validate message invalid
+ [ ] Is request valid
+ [ ] Is request with notification
+ [ ] Is notification valid
+ [ ] Is notification with request
+ [ ] Is response success
+ [ ] Is response error
+ [ ] Is response with request
+ [ ] Handle batch request
+ [ ] Json rpc error codes
+
+Laravel Facade Components (JTD\LaravelMCP\Tests\Unit\LaravelFacadeComponents)
+ [ ] Mcp manager delegates to registry and registrar
+ [ ] Mcp manager handles magic method calls
+ [ ] Mcp manager throws exception for invalid method
+ [ ] Process mcp request generates request id
+ [ ] Process mcp request uses provided request id
+ [ ] Process mcp request merges context
+ [ ] Mcp component registered handles null user id
+ [ ] Mcp component registered uses provided user id
+ [ ] Mcp request processed component type returns null for unknown
+ [ ] Mcp request processed component name returns null for invalid
+ [ ] Mcp request processed formats time under one second
+ [ ] Mcp request processed formats time over one second
+ [ ] Mcp error notification handles null exception
+ [ ] Mcp error notification uses provided severity
+ [ ] Mcp error notification stores exception
+ [ ] Mcp error notification via returns correct channels
+ [ ] Process mcp request has correct retry settings
+ [ ] Mcp component registered get component details includes all fields
+ [ ] Mcp request processed get request details includes all fields
+ [ ] Mcp request processed performance metrics includes memory
+ [ ] Mcp manager notifiable fallback logic
+ [ ] Mcp manager dispatches events conditionally
+ [ ] Process mcp request cache keys are formatted correctly
+
+Laravel Facade Integration (JTD\LaravelMCP\Tests\Feature\LaravelFacadeIntegration)
+ [ ] It registers component and fires event
+ [ ] It dispatches async job
+ [ ] It retrieves async result from cache
+ [ ] It retrieves async status from cache
+ [ ] It sends error notification
+ [ ] It fires request processed event
+ [ ] It registers event listeners
+ [ ] It configures events jobs and notifications
+ [ ] It provides server information
+ [ ] It provides server statistics
+ [ ] It manages debug mode
+ [ ] It chains fluent methods
+ [ ] It handles error notification with exception
+
+Laravel Mcp Service Provider (JTD\LaravelMCP\Tests\Unit\LaravelMcpServiceProvider)
+ [ ] It registers all singleton services
+ [ ] It ensures singletons return same instance
+ [ ] It registers transport implementations
+ [ ] It binds interfaces to implementations
+ [ ] It binds transport interface to default transport
+ [ ] It merges laravel mcp configuration
+ [ ] It merges mcp transports configuration
+ [ ] It allows custom configuration to override defaults
+ [ ] It validates dependencies successfully when met
+ [ ] It throws exception when required dependencies are missing
+ [ ] It detects console environment
+ [ ] It detects testing environment
+ [ ] It detects web environment
+ [ ] It skips discovery when disabled
+ [ ] It runs discovery when enabled
+ [ ] It sets up publishing configurations
+ [ ] It loads routes when mcp routes file exists
+ [ ] It skips routes when mcp routes file does not exist
+ [ ] It runs console boot only in console
+ [ ] It resolves individual services with data set "McpRegistry"
+ [ ] It resolves individual services with data set "TransportManager"
+ [ ] It resolves individual services with data set "JsonRpcHandler"
+ [ ] It resolves individual services with data set "MessageProcessor"
+ [ ] It resolves individual services with data set "CapabilityNegotiator"
+ [ ] It resolves individual services with data set "ToolRegistry"
+ [ ] It resolves individual services with data set "ResourceRegistry"
+ [ ] It resolves individual services with data set "PromptRegistry"
+ [ ] It resolves individual services with data set "ComponentDiscovery"
+ [ ] It resolves all services after boot
+ [ ] It validates configuration structure
+ [ ] It handles invalid configuration gracefully
+ [ ] It registers middleware when auto register enabled
+ [ ] It registers auth middleware when auth enabled
+ [ ] It skips middleware auto registration when disabled
+ [ ] It registers event hooks
+ [ ] It has proper error handling structure
+ [ ] It handles boot failure gracefully in production
+ [ ] It registers lazy services
+ [ ] It registers caching services
+
+List Command (JTD\LaravelMCP\Tests\Unit\Commands\ListCommand)
+ [ ] It lists all components in table format
+ [ ] It filters by tool type
+ [ ] It filters by resource type
+ [ ] It filters by prompt type
+ [ ] It outputs in json format
+ [ ] It shows detailed information
+ [ ] It handles empty registries gracefully
+ [ ] It validates invalid type option
+ [ ] It validates invalid format option
+
+List Command Feature (JTD\LaravelMCP\Tests\Feature\Commands\ListCommandFeature)
+ [ ] List command is registered in artisan
+ [ ] Command can be discovered by artisan
+ [ ] Command help displays correct information
+ [ ] Command handles empty registries
+ [ ] Command lists all component types
+ [ ] Command filters by tools type
+ [ ] Command filters by resources type
+ [ ] Command filters by prompts type
+ [ ] Command outputs json format
+ [ ] Command outputs yaml format
+ [ ] Command shows detailed information
+ [ ] Command shows detailed resource information
+ [ ] Command shows detailed prompt information
+ [ ] Command runs with debug mode
+ [ ] Command validates invalid type option
+ [ ] Command validates invalid format option
+ [ ] Command handles metadata failures gracefully
+ [ ] Command lists multiple components
+ [ ] Command json format with detailed flag
+ [ ] Full integration with service provider
+ [ ] Command integrates with mcp facade
+ [ ] Command truncates long descriptions
+ [ ] Command formats class names
+
+Logs Operations (JTD\LaravelMCP\Tests\Unit\Traits\LogsOperations)
+ [ ] It logs operation when enabled
+ [ ] It does not log when disabled
+ [ ] It logs operation start
+ [ ] It logs operation complete with duration
+ [ ] It logs operation error
+ [ ] It logs request when enabled
+ [ ] It does not log request when disabled
+ [ ] It logs response when enabled
+ [ ] It logs validation failure
+ [ ] It logs authorization failure
+ [ ] It tracks performance when enabled
+ [ ] It calculates performance metrics
+ [ ] It sanitizes sensitive data for logging
+ [ ] It logs debug when enabled
+ [ ] It logs registration
+ [ ] It generates unique request id
+ [ ] It calculates data size
+ [ ] It calculates median correctly
+ [ ] It calculates percentile correctly
+ [ ] It sets custom log channel
+ [ ] It clears performance data
+ [ ] It respects log level configuration
+ [ ] It limits performance samples
+
+MCP Auth Middleware Enhanced Functionality
+ [ ] It allows request when authentication is disabled
+ [ ] It authenticates with laravel guard
+ [ ] It authenticates with api key
+ [ ] It supports multiple api keys
+ [ ] It authenticates with bearer token
+ [ ] It returns unauthorized when authentication fails
+ [ ] It adds user context when authenticated
+ [ ] It handles authentication exceptions gracefully
+ [ ] It extracts api key from multiple locations
+
+MCP Logging Middleware
+ [ ] It skips logging when disabled
+ [ ] It logs request and response
+ [ ] It redacts sensitive data from logs
+ [ ] It logs performance warning for slow requests
+ [ ] It logs exceptions as errors
+ [ ] It truncates large values in logs
+ [ ] It adds user context to logs when available
+
+Make Commands Integration (JTD\LaravelMCP\Tests\Integration\Commands\MakeCommandsIntegration)
+ [ ] It generates valid tool class that compiles
+ [ ] It generates valid resource class that compiles
+ [ ] It generates valid prompt class that compiles
+ [ ] It generates classes with proper inheritance structure
+ [ ] It handles complex nested namespace generation
+ [ ] It generates classes with proper mcp schema structure
+ [ ] It handles force overwrite correctly across all commands
+
+Make Prompt Command (JTD\LaravelMCP\Tests\Unit\Commands\MakePromptCommand)
+ [ ] It extends generator command
+ [ ] It has correct signature
+ [ ] It has correct description
+ [ ] It returns correct stub path
+ [ ] It returns correct default namespace
+ [ ] It generates correct prompt name from class
+ [ ] It creates prompt file successfully
+ [ ] It creates prompt with template integration
+ [ ] It validates variables json
+ [ ] It validates variable definitions
+ [ ] It validates invalid class names
+ [ ] It handles nonexistent template gracefully
+ [ ] It resolves template paths correctly
+ [ ] It handles nested namespaces
+ [ ] It handles force option to overwrite existing files
+ [ ] It displays success message with details
+ [ ] It generates description with template context
+ [ ] It handles empty options gracefully
+ [ ] It handles filesystem errors gracefully
+
+Make Resource Command (JTD\LaravelMCP\Tests\Unit\Commands\MakeResourceCommand)
+ [ ] It extends generator command
+ [ ] It has correct signature
+ [ ] It has correct description
+ [ ] It returns correct stub path
+ [ ] It returns correct default namespace
+ [ ] It generates correct resource name from class
+ [ ] It creates resource file successfully
+ [ ] It creates resource with model integration
+ [ ] It creates resource with custom uri template
+ [ ] It validates invalid class names
+ [ ] It validates uri template format
+ [ ] It handles nonexistent model gracefully
+ [ ] It handles nested namespaces
+ [ ] It handles force option to overwrite existing files
+ [ ] It displays success message with details
+ [ ] It generates appropriate uri for model resources
+ [ ] It qualifies model class correctly
+ [ ] It handles filesystem errors gracefully
+
+Make Tool Command (JTD\LaravelMCP\Tests\Unit\Commands\MakeToolCommand)
+ [ ] It extends generator command
+ [ ] It has correct signature
+ [ ] It has correct description
+ [ ] It returns correct stub path
+ [ ] It returns correct default namespace
+ [ ] It generates correct tool name from class
+ [ ] It creates tool file successfully
+ [ ] It creates tool with custom description
+ [ ] It validates parameters json
+ [ ] It handles invalid class names
+ [ ] It handles force option to overwrite existing files
+ [ ] It generates default description when none provided
+ [ ] It handles nested namespaces
+ [ ] It displays success message with details
+ [ ] It handles filesystem errors gracefully
+
+Manages Capabilities (JTD\LaravelMCP\Tests\Unit\Traits\ManagesCapabilities)
+ [ ] It gets default capabilities
+ [ ] It adds capability
+ [ ] It prevents duplicate capabilities
+ [ ] It removes capability
+ [ ] It sets capabilities replacing existing
+ [ ] It gets tool default capabilities
+ [ ] It gets resource default capabilities
+ [ ] It gets prompt default capabilities
+ [ ] It checks capability existence
+ [ ] It gets capabilities array
+ [ ] It gets supported operations for tool
+ [ ] It gets supported operations for resource
+ [ ] It checks operation support
+ [ ] It enables subscription capability
+ [ ] It disables subscription capability
+ [ ] It gets capability metadata
+ [ ] It detects tool component type
+ [ ] It detects resource component type
+ [ ] It detects prompt component type
+ [ ] It validates tool capabilities
+ [ ] It validates resource capabilities
+ [ ] It validates prompt capabilities
+ [ ] It handles unknown component type
+ [ ] It merges default and custom capabilities
+ [ ] It returns self for fluent interface
+
+Mcp Auth Middleware (JTD\LaravelMCP\Tests\Unit\Http\Middleware\McpAuthMiddleware)
+ [ ] It passes through when auth disabled
+ [ ] It passes through when no api key configured
+ [ ] It authenticates with valid api key in header
+ [ ] It authenticates with valid api key in query
+ [ ] It rejects invalid api key
+ [ ] It rejects request with no api key when required
+ [ ] It prioritizes header over query parameter
+
+Mcp Component Registered (JTD\LaravelMCP\Tests\Unit\Events\McpComponentRegistered)
+ [ ] It creates event with required parameters
+ [ ] It creates event with metadata
+ [ ] It creates event with user id
+ [ ] It gets component type label
+ [ ] It gets component details
+ [ ] It checks metadata existence
+ [ ] It gets metadata value
+ [ ] It serializes for broadcasting
+
+Mcp Controller (JTD\LaravelMCP\Tests\Unit\Http\Controllers\McpController)
+ [ ] It handles mcp request successfully
+ [ ] It handles transport exception
+ [ ] It handles unexpected exception
+ [ ] It handles options request
+ [ ] It handles options request with error
+ [ ] It provides health check
+ [ ] It returns unhealthy status
+ [ ] It handles health check exception
+ [ ] It provides server info
+ [ ] It handles info with transport unavailable
+ [ ] It handles info exception
+ [ ] It provides server sent events
+ [ ] It reuses existing http transport
+ [ ] It throws exception for invalid transport type
+ [ ] It adds cors headers to error response
+
+Mcp Cors Middleware (JTD\LaravelMCP\Tests\Unit\Http\Middleware\McpCorsMiddleware)
+ [ ] It adds cors headers to regular requests
+ [ ] It handles preflight options requests
+ [ ] It respects specific allowed origins
+ [ ] It rejects disallowed origins
+ [ ] It allows all origins with wildcard
+ [ ] It sets default origin when no origin header
+ [ ] It uses default configuration values
+ [ ] It includes mcp specific headers
+
+Mcp Error Handling Middleware (JTD\LaravelMCP\Tests\Unit\Http\Middleware\McpErrorHandlingMiddleware)
+ [ ] It passes through successful requests
+ [ ] It handles validation exceptions
+ [ ] It handles authentication exceptions
+ [ ] It handles authorization exceptions
+ [ ] It handles model not found exceptions
+ [ ] It handles not found http exceptions
+ [ ] It handles http exceptions with data set "Bad Request"
+ [ ] It handles http exceptions with data set "Unauthorized"
+ [ ] It handles http exceptions with data set "Forbidden"
+ [ ] It handles http exceptions with data set "Not Found"
+ [ ] It handles http exceptions with data set "Method Not Allowed"
+ [ ] It handles http exceptions with data set "Conflict"
+ [ ] It handles http exceptions with data set "Unprocessable Entity"
+ [ ] It handles http exceptions with data set "Too Many Requests"
+ [ ] It handles http exceptions with data set "Internal Server Error"
+ [ ] It handles http exceptions with data set "Service Unavailable"
+ [ ] It handles http exceptions with data set "Other Error"
+ [ ] It handles mcp specific exceptions
+ [ ] It handles mcp namespace exceptions
+ [ ] It handles generic exceptions without debug
+ [ ] It handles generic exceptions with debug
+ [ ] It does not show debug info when disabled
+ [ ] It does not log stack trace when disabled
+ [ ] It extracts request id from non json requests
+ [ ] It maps mcp error codes to http status
+ [ ] It limits stack trace to 10 frames
+ [ ] It handles validation exception with non array errors
+ [ ] It handles authentication exception with empty message
+ [ ] It handles authorization exception with empty message
+ [ ] It handles not found exception with empty message
+
+Mcp Error Notification (JTD\LaravelMCP\Tests\Unit\Notifications\McpErrorNotification)
+ [ ] It creates notification with required parameters
+ [ ] It creates notification with all parameters
+ [ ] It determines notification channels based on severity
+ [ ] It creates mail message
+ [ ] It creates array representation
+ [ ] It creates slack message
+ [ ] It determines if notification should be sent
+ [ ] It checks slack channel configuration
+ [ ] It has correct tags
+ [ ] It generates correct email subject based on severity
+ [ ] It generates correct email greeting based on severity
+ [ ] It formats slack content with correct emoji
+
+Mcp Events Edge Cases (JTD\LaravelMCP\Tests\Unit\Events\McpEventsEdgeCases)
+ [ ] Mcp component registered handles string component
+ [ ] Mcp component registered handles object component
+ [ ] Mcp component registered handles unknown component type
+ [ ] Mcp component registered metadata methods work
+ [ ] Mcp request processed handles various request ids
+ [ ] Mcp request processed handles various result types
+ [ ] Mcp request processed transport types
+ [ ] Mcp request processed execution time edge cases
+ [ ] Mcp request processed context handling
+ [ ] Mcp request processed component extraction
+ [ ] Mcp request processed error detection
+ [ ] Event timestamps are valid iso8601
+ [ ] Mcp request processed memory usage is positive
+
+Mcp Exception (JTD\LaravelMCP\Tests\Unit\Exceptions\McpException)
+ [ ] Basic exception creation
+ [ ] Exception with data
+ [ ] Exception with context
+ [ ] Exception with previous
+ [ ] Set data
+ [ ] Set context
+ [ ] Add context
+ [ ] To array
+ [ ] To array with previous
+ [ ] To json
+ [ ] Get error type json rpc
+ [ ] Is client error
+ [ ] Is server error
+ [ ] Static parse error
+ [ ] Static invalid request
+ [ ] Static method not found
+ [ ] Static invalid params
+ [ ] Static internal error
+ [ ] Static application error
+ [ ] Static from throwable
+ [ ] From throwable with custom code
+ [ ] Fluent interface
+
+Mcp Prompt (JTD\LaravelMCP\Tests\Unit\Abstracts\McpPrompt)
+ [ ] It initializes with container and view
+ [ ] It returns configured name
+ [ ] It generates name from class when not set
+ [ ] It returns configured description
+ [ ] It returns default description when not set
+ [ ] It returns configured arguments
+ [ ] It generates prompt messages
+ [ ] It handles authorization
+ [ ] It validates arguments
+ [ ] It uses template when provided
+ [ ] It converts to array
+ [ ] It creates message structure
+ [ ] It formats messages
+ [ ] It applies template variables
+ [ ] It provides container helpers
+ [ ] It uses traits
+ [ ] It throws exception for unimplemented custom content
+ [ ] It handles empty arguments
+
+Mcp Rate Limit Middleware (JTD\LaravelMCP\Tests\Unit\Http\Middleware\McpRateLimitMiddleware)
+ [ ] It skips rate limiting when disabled
+ [ ] It allows requests within rate limit
+ [ ] It blocks requests exceeding rate limit
+ [ ] It uses named limiter when provided
+ [ ] It uses method specific configuration with data set "tools category"
+ [ ] It uses method specific configuration with data set "resources category"
+ [ ] It uses method specific configuration with data set "prompts category"
+ [ ] It uses method specific configuration with data set "sampling category"
+ [ ] It uses method specific configuration with data set "completion category"
+ [ ] It generates correct key for strategy with data set "per_user strategy with mcp_user_id"
+ [ ] It generates correct key for strategy with data set "per_user strategy with auth user"
+ [ ] It generates correct key for strategy with data set "per_ip strategy"
+ [ ] It generates correct key for strategy with data set "per_user_per_ip strategy"
+ [ ] It generates correct key for strategy with data set "per_api_key strategy"
+ [ ] It generates correct key for strategy with data set "global strategy"
+ [ ] It adds custom key suffix from config
+ [ ] It adds retry after headers when limited
+ [ ] It does not log when logging disabled
+ [x] It clears rate limit for specific key
+ [ ] It resets rate limits for user
+ [ ] It returns rate limit status
+ [ ] It handles simple integer config
+ [ ] It handles non json requests
+ [ ] It handles api key from query parameter
+ [ ] It uses x api key header as fallback
+ [ ] It uses anonymous for missing api key
+
+Mcp Registry (JTD\LaravelMCP\Tests\Unit\Registry\McpRegistry)
+ [ ] It can be instantiated
+ [ ] It initializes registries
+ [ ] It registers tools with type
+ [ ] It registers resources with type
+ [ ] It registers prompts with type
+ [ ] It throws exception for invalid type
+ [ ] It validates empty component name
+ [ ] It validates non existent handler class
+ [ ] It validates handler extends correct base class
+ [ ] It gets tool from registry
+ [ ] It gets resource from registry
+ [ ] It gets prompt from registry
+ [ ] It lists all tools
+ [ ] It lists all resources
+ [ ] It lists all prompts
+ [ ] It checks if tool exists
+ [ ] It checks if resource exists
+ [ ] It checks if prompt exists
+ [ ] It unregisters tool
+ [ ] It unregisters resource
+ [ ] It unregisters prompt
+ [ ] It returns capabilities
+ [ ] It handles thread safety in registration
+
+Mcp Request Processed (JTD\LaravelMCP\Tests\Unit\Events\McpRequestProcessed)
+ [ ] It creates event with required parameters
+ [ ] It creates event with all parameters
+ [ ] It gets component type from method
+ [ ] It gets component name from method
+ [ ] It checks if request was successful
+ [ ] It gets request details
+ [ ] It gets performance metrics
+ [ ] It checks if execution time exceeded threshold
+ [ ] It formats execution time
+ [ ] It serializes for broadcasting
+
+Mcp Resource (JTD\LaravelMCP\Tests\Unit\Abstracts\McpResource)
+ [ ] It gets resource name
+ [ ] It generates name from class when not set
+ [ ] It gets resource description
+ [ ] It gets default description when not set
+ [ ] It gets uri template
+ [ ] It generates uri template when not set
+ [ ] It reads resource with custom implementation
+ [ ] It lists resources with custom implementation
+ [ ] It throws exception when authorization fails for read
+ [ ] It throws exception when authorization fails for list
+ [ ] It throws exception for unsupported subscription
+ [ ] It handles subscription when supported
+ [ ] It validates parameters for read
+ [ ] It validates parameters for list
+ [ ] It converts to array representation
+ [ ] It formats content for mcp response
+ [ ] It handles boot lifecycle
+ [ ] It does not require auth by default
+ [ ] It uses container for dependency injection
+ [ ] It throws exception when custom read not implemented
+ [ ] It throws exception when custom list not implemented
+
+Mcp Server (JTD\LaravelMCP\Tests\Unit\Server\McpServer)
+ [ ] Implements server interface
+ [ ] Can create server instance
+ [ ] Server starts uninitialized and not running
+ [ ] Can initialize server
+ [ ] Cannot initialize server twice
+ [ ] Can start server after initialization
+ [ ] Cannot start uninitialized server
+ [ ] Start is idempotent
+ [ ] Can stop running server
+ [ ] Stop is idempotent
+ [ ] Can restart server
+ [ ] Can get server status
+ [ ] Can get server health
+ [ ] Can get server info
+ [ ] Can get capabilities
+ [ ] Can set and get configuration
+ [ ] Can register transport
+ [ ] Can remove transport
+ [ ] Can get uptime
+ [ ] Can get metrics
+ [ ] Can shutdown gracefully
+ [ ] Can increment request count
+ [ ] Can increment error count
+ [ ] Can get diagnostics
+ [ ] Handles initialization errors
+ [ ] Handles start errors
+ [ ] Handles stop errors
+
+Mcp Server Integration (JTD\LaravelMCP\Tests\Feature\McpServerIntegration)
+ [ ] Can resolve server from container
+ [ ] Can resolve server info from container
+ [ ] Can resolve capability manager from container
+ [ ] Server initialization flow
+ [ ] Server lifecycle management
+ [ ] Server status and health
+ [ ] Server configuration integration
+ [ ] Capability negotiation integration
+ [ ] Server metrics tracking
+ [ ] Server info detailed information
+ [ ] Server graceful shutdown
+ [ ] Capability manager mcp10 compliance
+ [ ] Server transport integration
+ [ ] Server component integration
+ [ ] Server diagnostics
+ [ ] Server uptime tracking
+ [ ] Server protocol version
+
+Mcp Tool (JTD\LaravelMCP\Tests\Unit\Abstracts\McpTool)
+ [ ] It gets tool name
+ [ ] It generates name from class when not set
+ [ ] It gets tool description
+ [ ] It gets default description when not set
+ [ ] It gets input schema
+ [ ] It executes tool with valid parameters
+ [ ] It throws exception when authorization fails
+ [ ] It validates parameters before execution
+ [ ] It applies middleware to parameters
+ [ ] It resolves dependencies from container
+ [ ] It converts to array representation
+ [ ] It handles boot lifecycle
+ [ ] It handles empty parameter schema
+ [ ] It does not require auth by default
+ [ ] It uses validation factory for parameter validation
+ [ ] It uses container for dependency injection
+
+Mcp Validation Middleware (JTD\LaravelMCP\Tests\Unit\Http\Middleware\McpValidationMiddleware)
+ [x] It skips validation when disabled
+ [ ] It validates content type for post requests
+ [x] It allows non json content when strict mode disabled
+ [ ] It validates request size
+ [ ] It validates json rpc structure
+ [x] It validates valid json rpc request
+ [ ] It validates method format
+ [x] It allows single word methods
+ [ ] It validates params must be array
+ [ ] It validates id format
+ [ ] It enforces strict mcp methods when enabled
+ [x] It allows custom methods from config
+ [ ] It validates initialize protocol version
+ [ ] It validates capabilities configuration
+ [ ] It validates disabled capabilities
+ [x] It validates method specific parameters with data set "tools/call with valid params"
+ [ ] It validates method specific parameters with data set "tools/call without name"
+ [x] It validates method specific parameters with data set "resources/read with valid uri"
+ [ ] It validates method specific parameters with data set "resources/read without uri"
+ [x] It validates method specific parameters with data set "resources/write with valid params"
+ [ ] It validates method specific parameters with data set "resources/write without contents"
+ [x] It validates method specific parameters with data set "prompts/get with valid params"
+ [x] It validates method specific parameters with data set "logging/setLevel with valid level"
+ [ ] It validates method specific parameters with data set "logging/setLevel with invalid level"
+ [x] It validates method specific parameters with data set "sampling/createMessage with valid params"
+ [ ] It validates method specific parameters with data set "sampling/createMessage with invalid role"
+ [x] It validates method specific parameters with data set "completion/complete with valid params"
+ [ ] It applies custom validation rules from config
+ [ ] It allows custom tool methods
+ [x] It logs unknown capabilities
+ [ ] It handles validation exception properly
+ [ ] It handles generic exceptions
+ [x] It skips validation for non json requests
+ [ ] It validates nested parameters
+
+Message Framer (JTD\LaravelMCP\Tests\Unit\Transport\MessageFramer)
+ [ ] It frames json rpc request
+ [ ] It frames json rpc response
+ [ ] It frames json rpc error response
+ [ ] It frames with content length header
+ [ ] It parses line delimited messages
+ [ ] It parses partial messages
+ [ ] It parses messages with content length
+ [ ] It handles multiple content length messages
+ [ ] It throws exception for invalid json
+ [ ] It throws exception for missing jsonrpc version
+ [ ] It throws exception for invalid message structure
+ [ ] It throws exception for buffer overflow
+ [ ] It creates request messages
+ [ ] It creates notification messages
+ [ ] It creates response messages
+ [ ] It creates error response messages
+ [ ] It identifies request messages
+ [ ] It identifies response messages
+ [ ] It identifies notification messages
+ [ ] It clears buffer
+ [ ] It checks for buffered data
+ [ ] It tracks statistics
+ [ ] It resets statistics
+ [ ] It provides standard error codes with data set #0
+ [ ] It provides standard error codes with data set #1
+ [ ] It provides standard error codes with data set #2
+ [ ] It provides standard error codes with data set #3
+ [ ] It provides standard error codes with data set #4
+ [ ] It provides standard error codes with data set #5
+ [ ] It validates error object structure
+ [ ] It validates method type
+ [ ] It validates params type
+ [ ] It validates id type
+
+Message Handler Interface (JTD\LaravelMCP\Tests\Unit\Transport\Contracts\MessageHandlerInterface)
+ [ ] Handle valid message returns response
+ [ ] Handle notification returns null
+ [ ] Handle complex message
+ [ ] Handle error with exception
+ [ ] Handle error with different types
+ [ ] On connect
+ [ ] On disconnect
+ [ ] Can handle supported message
+ [ ] Can handle unsupported message
+ [ ] Can handle various formats
+ [ ] Get supported message types
+ [ ] Get supported message types empty
+ [ ] Lifecycle events sequence
+ [ ] Handle multiple messages
+ [ ] Error handling isolation
+ [ ] Check specific message type support
+
+Message Processor (JTD\LaravelMCP\Tests\Unit\Protocol\MessageProcessor)
+ [ ] Constructor initializes handlers and capabilities
+ [ ] Get supported message types returns expected methods
+ [ ] Can handle returns true for valid json rpc messages
+ [ ] Can handle returns false for invalid messages
+ [ ] Handle returns error for invalid json rpc messages
+ [ ] Handle processes valid requests
+ [ ] Handle processes notifications without response
+ [ ] Handle processes responses without response
+ [ ] Handle returns error for unrecognized message types
+ [ ] Handle catches and handles exceptions
+ [ ] Handle error logs transport errors
+ [ ] On connect logs transport connection
+ [ ] On disconnect resets initialization state
+ [ ] Set server info updates server information
+ [ ] Get server info returns current information
+ [ ] Initialization workflow works correctly
+ [ ] Tools list handler integration works
+ [ ] Resources list handler integration works
+ [ ] Prompts list handler integration works
+ [ ] Handler methods auto initialize when not initialized
+ [ ] Initialize request handles capability negotiation
+ [ ] Initialized notification sets initialization state
+ [ ] Ping request returns empty response
+ [ ] Tools list auto initializes when not initialized
+ [ ] Tools call auto initializes when not initialized
+ [ ] Resources list auto initializes when not initialized
+ [ ] Resources read auto initializes when not initialized
+ [ ] Resources templates list auto initializes when not initialized
+ [ ] Prompts list auto initializes when not initialized
+ [ ] Prompts get auto initializes when not initialized
+ [ ] Resources templates list works when initialized
+ [ ] Server info can be updated and retrieved
+ [ ] Client capabilities are tracked correctly
+ [ ] Server capabilities are set up correctly
+ [ ] On connect logs different transport configurations with data set "HTTP config"
+ [ ] On connect logs different transport configurations with data set "Stdio config"
+ [ ] On connect logs different transport configurations with data set "Empty config"
+ [ ] On connect logs different transport configurations with data set "Custom config"
+ [ ] On disconnect resets all state properly
+ [ ] Handle error logs different error types with data set "Runtime exception"
+ [ ] Handle error logs different error types with data set "Protocol exception"
+ [ ] Handle error logs different error types with data set "Invalid argument exception"
+ [ ] Handle error logs different error types with data set "Exception with no message"
+ [ ] Handle message edge cases with data set "Empty message"
+ [ ] Handle message edge cases with data set "Message with null values"
+ [ ] Handle message edge cases with data set "Message with numeric method"
+ [ ] Handle message edge cases with data set "Very large message"
+ [ ] Handle message edge cases with data set "Exception during validation"
+ [ ] Constructor sets up all handlers
+
+Middleware Integration (JTD\LaravelMCP\Tests\Feature\MiddlewareIntegration)
+ [ ] It allows valid cors requests
+ [ ] It handles cors preflight requests
+ [ ] It allows requests with valid api key
+ [ ] It rejects requests with invalid api key
+ [ ] It rejects requests without api key when required
+ [ ] It allows requests when auth disabled
+ [ ] It processes middleware stack correctly
+ [ ] It accepts api key in query parameter
+ [ ] It respects cors origin restrictions
+ [ ] It allows wildcard origins
+ [ ] It handles complex cors scenarios
+ [ ] It maintains cors headers on auth errors
+
+Middleware Stack Integration (JTD\LaravelMCP\Tests\Feature\MiddlewareStackIntegration)
+ [ ] It processes valid mcp request through full stack
+ [ ] It handles authentication failure gracefully
+ [ ] It handles validation errors with proper error format
+ [ ] It enforces rate limits across requests
+ [ ] It handles runtime errors with error middleware
+ [ ] It logs slow requests with performance warning
+ [ ] It handles preflight cors requests with full stack
+ [ ] It validates json rpc structure before processing
+ [ ] It adds user context when authenticated
+ [ ] It validates mcp protocol compliance
+ [ ] It handles multiple middleware failures correctly
+ [ ] It maintains request context through middleware stack
+ [ ] It handles different authentication methods
+ [ ] It respects capability configuration
+
+Notification Handler (Tests\Unit\Protocol\NotificationHandler)
+ [ ] Broadcast notification fires events
+ [ ] Subscribe and unsubscribe
+ [ ] Notification filtering
+ [ ] Queued notification delivery
+ [ ] Sse response creation
+ [ ] Delivery status tracking
+ [ ] Pending notifications management
+ [ ] Filter update
+ [ ] Notification types
+
+Process Mcp Request (JTD\LaravelMCP\Tests\Unit\Jobs\ProcessMcpRequest)
+ [ ] It creates job with required parameters
+ [ ] It creates job with custom request id and context
+ [ ] It has correct job properties
+ [ ] It parses method correctly
+ [ ] It throws exception for invalid method format
+ [ ] It executes tool successfully
+ [ ] It executes resource read action
+ [ ] It executes resource list action
+ [ ] It executes prompt generation
+ [ ] It handles tool not found error
+ [ ] It stores result in cache
+ [ ] It handles job failure
+ [ ] It gets correct cache keys
+ [ ] It has correct tags
+ [ ] It has correct display name
+ [ ] It sets retry until correctly
+
+Prompt Handler (JTD\LaravelMCP\Tests\Unit\Server\Handlers\PromptHandler)
+ [ ] Constructor sets dependencies and handler name
+ [ ] Get supported methods returns prompt methods
+ [ ] Supports method returns true for supported methods
+ [ ] Supports method returns false for unsupported methods
+ [ ] Handle throws protocol exception for unsupported method
+ [ ] Handle prompts list returns empty prompts array when no prompts
+ [ ] Handle prompts list returns prompt definitions
+ [ ] Handle prompts list handles prompt definition failures gracefully
+ [ ] Handle prompts list validates cursor parameter
+ [ ] Handle prompts list applies cursor pagination
+ [ ] Handle prompts list includes next cursor when more prompts available
+ [ ] Handle prompts get validates required parameters
+ [ ] Handle prompts get validates parameter types
+ [ ] Handle prompts get throws error for non existent prompt
+ [ ] Handle prompts get processes prompt with process method
+ [ ] Handle prompts get processes prompt with get method
+ [ ] Handle prompts get processes prompt with invoke method
+ [ ] Handle prompts get processes callable prompt
+ [ ] Handle prompts get throws error for non processable prompt
+ [ ] Handle prompts get validates arguments if prompt supports it
+ [ ] Handle prompts get skips validation if prompt does not support it
+ [ ] Handle prompts get handles processing failures
+ [ ] Handle prompts get uses default empty arguments when not provided
+ [ ] Get prompt description handles different description methods with data set "getDescription method"
+ [ ] Get prompt description handles different description methods with data set "description method"
+ [ ] Get prompt description handles different description methods with data set "description property"
+ [ ] Get prompt description handles different description methods with data set "no description"
+ [ ] Get prompt arguments handles different arguments methods with data set "getArguments method"
+ [ ] Get prompt arguments handles different arguments methods with data set "arguments method"
+ [ ] Get prompt arguments handles different arguments methods with data set "arguments property"
+ [ ] Get prompt arguments handles different arguments methods with data set "no arguments"
+ [ ] Format prompt messages handles different result formats with data set "array of messages"
+ [ ] Format prompt messages handles different result formats with data set "single message object"
+ [ ] Format prompt messages handles different result formats with data set "string result"
+ [ ] Format prompt messages handles different result formats with data set "array result (not messages)"
+ [ ] Format prompt messages handles different result formats with data set "object result"
+ [ ] Format prompt messages handles different result formats with data set "number result"
+ [ ] Format prompt messages handles different result formats with data set "empty array result"
+ [ ] Is message array correctly identifies message arrays with data set "valid message array"
+ [ ] Is message array correctly identifies message arrays with data set "array with content only"
+ [ ] Is message array correctly identifies message arrays with data set "array with role only"
+ [ ] Is message array correctly identifies message arrays with data set "empty array"
+ [ ] Is message array correctly identifies message arrays with data set "array of strings"
+ [ ] Is message array correctly identifies message arrays with data set "array of numbers"
+ [ ] Is message array correctly identifies message arrays with data set "mixed array"
+
+Prompt Registry (JTD\LaravelMCP\Tests\Unit\Registry\PromptRegistry)
+ [ ] Register prompt successfully
+ [ ] Register duplicate prompt throws exception
+ [ ] Get non existent prompt throws exception
+ [ ] Unregister prompt successfully
+ [ ] Unregister non existent prompt
+ [ ] Has prompt
+ [ ] Get all prompts
+ [ ] Get prompt names
+ [ ] Count prompts
+ [ ] Clear all prompts
+ [ ] Get prompt metadata
+ [ ] Get metadata for non existent prompt throws exception
+ [ ] Filter prompts by metadata
+ [ ] Search prompts by pattern
+ [ ] Get registry type
+ [ ] Get prompt definitions
+ [ ] Get prompt
+ [ ] Get prompt with class name
+ [ ] Get invalid prompt throws exception
+ [ ] List prompts
+ [ ] Validate arguments
+ [ ] Get prompts by arguments
+ [ ] Get argument schema
+ [ ] Initialize
+ [ ] Metadata defaults
+ [ ] Complex filtering
+ [ ] Prompt name edge cases
+ [ ] Argument schema with missing names
+ [ ] Message formatting
+
+Protocol Handler Interface (Tests\Unit\Protocol\Contracts\ProtocolHandlerInterface)
+ [ ] Initialize with capabilities
+ [ ] Initialize with empty capabilities
+ [ ] Handle initialize
+ [ ] Handle initialized
+ [ ] Handle ping
+ [ ] Handle tools list without params
+ [ ] Handle tools list with filters
+ [ ] Handle tools call
+ [ ] Handle resources list without params
+ [ ] Handle resources read
+ [ ] Handle resources subscribe
+ [ ] Handle resources unsubscribe
+ [ ] Handle prompts list without params
+ [ ] Handle prompts get
+ [ ] Handle logging set level
+ [ ] Get capabilities
+ [ ] Get server info
+ [ ] Can handle method supported
+ [ ] Can handle method unsupported
+ [ ] Get supported methods
+ [ ] Full initialization sequence
+ [ ] Handle all mcp methods
+ [ ] Unsupported capabilities
+
+Protocol Integration (JTD\LaravelMCP\Tests\Feature\Protocol\ProtocolIntegration)
+ [ ] It handles complete server initialization sequence
+ [ ] It negotiates capabilities based on client support
+ [ ] It handles complete tool execution flow
+ [ ] It handles complete resource reading flow
+ [ ] It handles complete prompt retrieval flow
+ [ ] It handles notification delivery flow
+ [ ] It integrates with http transport for different request types
+ [ ] It simulates stdio transport integration
+ [ ] It routes messages through different transport types
+ [ ] It handles multiple concurrent requests
+ [ ] It handles error recovery and retry scenarios
+ [ ] It manages session lifecycle correctly
+ [ ] It handles client disconnection scenarios
+ [ ] It maintains jsonrpc 2 0 compliance in real scenarios
+ [ ] It adheres to mcp 1 0 protocol specification
+ [ ] It handles errors with correct jsonrpc codes
+ [ ] It handles large messages correctly
+ [ ] It handles timeout scenarios gracefully
+ [ ] It handles invalid messages robustly
+
+Register Command (JTD\LaravelMCP\Tests\Feature\Commands\RegisterCommand)
+ [ ] It registers claude desktop configuration
+ [ ] It registers claude code configuration
+ [ ] It registers chatgpt desktop configuration
+ [ ] It validates invalid client type
+ [ ] It prompts for server name when not provided
+ [ ] It handles environment variables
+ [ ] It handles additional arguments
+ [ ] It prevents overwrite without force flag
+ [ ] It merges with existing configuration
+ [ ] It uses custom output path
+ [ ] It shows next steps for claude desktop
+ [ ] It shows next steps for claude code
+ [ ] It shows next steps for chatgpt
+ [ ] It handles custom server path
+ [ ] It handles invalid environment variables with data set "no equals sign"
+ [ ] It handles invalid environment variables with data set "empty value"
+ [ ] It handles invalid environment variables with data set "only equals"
+
+Register Command Feature (JTD\LaravelMCP\Tests\Feature\Commands\RegisterCommandFeature)
+ [ ] It can register claude desktop configuration
+ [ ] It can register claude code configuration
+ [ ] It can register chatgpt configuration
+ [ ] It validates client type
+ [ ] It accepts additional arguments
+ [ ] It accepts environment variables
+ [ ] It uses custom server path
+ [ ] It prevents overwrite without force flag
+ [ ] It overwrites with force flag
+ [ ] It merges with existing configuration
+ [ ] It creates directory if not exists
+ [ ] It provides helpful next steps
+ [ ] It shows different next steps for different clients
+ [ ] It handles configuration generation errors
+ [ ] It validates configuration before saving
+ [ ] It handles file save errors
+ [ ] It falls back to current directory when default path unavailable
+ [ ] It shows debug information in verbose mode
+
+Registration Integration (JTD\LaravelMCP\Tests\Feature\Registry\RegistrationIntegration)
+ [ ] It supports route style registration
+ [ ] It supports group registration with middleware
+ [ ] It supports namespace group registration
+ [ ] It loads routes from mcp routes file
+ [ ] It supports fluent interface registration
+ [ ] It handles complex nested groups
+ [ ] It provides list functionality
+ [ ] It integrates with service provider
+ [ ] It supports closure handlers
+ [ ] It supports instance handlers
+ [ ] It handles duplicate registrations
+ [ ] It validates empty component names
+ [ ] It validates non existent classes
+ [ ] It unregisters components
+ [ ] It counts registered components
+
+Registration System (JTD\LaravelMCP\Tests\Feature\RegistrationSystem)
+ [ ] Tool registration workflow
+ [ ] Resource registration workflow
+ [ ] Prompt registration workflow
+ [ ] Registration validation errors
+ [ ] Duplicate registration prevention
+ [ ] Invalid handler validation
+ [ ] Invalid handler type validation
+ [ ] Backward compatibility methods
+ [ ] Registry initialization
+ [ ] Registry clear
+ [ ] Get type registries
+ [ ] Server capabilities
+ [ ] Component discovery configuration
+ [ ] Component discovery filters
+ [ ] Supported component types
+ [ ] Complete registration count
+ [ ] Get all components
+ [ ] All method returns all components
+
+Registry Interface (JTD\LaravelMCP\Tests\Unit\Registry\Contracts\RegistryInterface)
+ [ ] Register component without metadata
+ [ ] Register component with metadata
+ [ ] Unregister existing component
+ [ ] Unregister non existing component
+ [ ] Has existing component
+ [ ] Has non existing component
+ [ ] Get existing component
+ [ ] Get non existing component throws exception
+ [ ] All returns all components
+ [ ] All returns empty array
+ [ ] Names returns component names
+ [ ] Count returns component count
+ [ ] Count returns zero
+ [ ] Clear removes all components
+ [ ] Get metadata returns metadata
+ [ ] Get metadata returns empty array
+ [ ] Filter with criteria
+ [ ] Filter returns empty when no matches
+ [ ] Search with pattern
+ [ ] Search with regex pattern
+ [ ] Get type returns registry type
+ [ ] Registration lifecycle
+ [ ] Multiple component operations
+ [ ] Filter multiple criteria
+ [ ] Registry types
+
+Resource Handler (JTD\LaravelMCP\Tests\Unit\Server\Handlers\ResourceHandler)
+ [ ] Constructor sets dependencies and handler name
+ [ ] Get supported methods returns resource methods
+ [ ] Supports method returns true for supported methods
+ [ ] Supports method returns false for unsupported methods
+ [ ] Handle throws protocol exception for unsupported method
+ [ ] Handle resources list returns empty resources array when no resources
+ [ ] Handle resources list returns resource definitions
+ [ ] Handle resources list handles resource definition failures gracefully
+ [ ] Handle resources list validates cursor parameter
+ [ ] Handle resources list applies cursor pagination
+ [ ] Handle resources list includes next cursor when more resources available
+ [ ] Handle resources read validates required parameters
+ [ ] Handle resources read validates parameter types
+ [ ] Handle resources read throws error for non existent resource
+ [ ] Handle resources read reads resource with read method
+ [ ] Handle resources read reads resource with get content method
+ [ ] Handle resources read reads resource with invoke method
+ [ ] Handle resources read reads callable resource
+ [ ] Handle resources read throws error for non readable resource
+ [ ] Handle resources read handles array content
+ [ ] Handle resources read handles pre formatted content
+ [ ] Handle resources read handles execution failures
+ [ ] Get resource uri handles different uri methods with data set "getUri method"
+ [ ] Get resource uri handles different uri methods with data set "uri method"
+ [ ] Get resource uri handles different uri methods with data set "uri property"
+ [ ] Get resource uri handles different uri methods with data set "no uri (default)"
+ [ ] Get resource description handles different description methods with data set "getDescription method"
+ [ ] Get resource description handles different description methods with data set "description method"
+ [ ] Get resource description handles different description methods with data set "description property"
+ [ ] Get resource description handles different description methods with data set "no description"
+ [ ] Get resource mime type handles different mime type methods with data set "getMimeType method"
+ [ ] Get resource mime type handles different mime type methods with data set "mimeType method"
+ [ ] Get resource mime type handles different mime type methods with data set "mimeType property"
+ [ ] Get resource mime type handles different mime type methods with data set "no mime type (default)"
+ [ ] Get resource metadata handles different metadata methods with data set "getMetadata method"
+ [ ] Get resource metadata handles different metadata methods with data set "metadata property"
+ [ ] Get resource metadata handles different metadata methods with data set "no metadata"
+
+Resource Registry (JTD\LaravelMCP\Tests\Unit\Registry\ResourceRegistry)
+ [ ] Register resource successfully
+ [ ] Register duplicate resource throws exception
+ [ ] Get non existent resource throws exception
+ [ ] Unregister resource successfully
+ [ ] Unregister non existent resource
+ [ ] Has resource
+ [ ] Get all resources
+ [ ] Get resource names
+ [ ] Count resources
+ [ ] Clear all resources
+ [ ] Get resource metadata
+ [ ] Get metadata for non existent resource throws exception
+ [ ] Filter resources by metadata
+ [ ] Search resources by pattern
+ [ ] Get registry type
+ [ ] Get resource templates
+ [ ] Read resource
+ [ ] Read resource with class name
+ [ ] Read invalid resource throws exception
+ [ ] Get resource content
+ [ ] List resources
+ [ ] Get resources by uri
+ [ ] Get resources by mime type
+ [ ] Has annotations
+ [ ] Initialize
+ [ ] Metadata defaults
+ [ ] Complex filtering
+ [ ] Resource name edge cases
+ [ ] Resource templates with defaults
+
+Route Registrar (JTD\LaravelMCP\Tests\Unit\Registry\RouteRegistrar)
+ [ ] It can be instantiated
+ [ ] It registers a tool
+ [ ] It registers a resource
+ [ ] It registers a prompt
+ [ ] It supports group registration
+ [ ] It supports nested groups
+ [ ] It supports namespace groups
+ [ ] It supports middleware groups
+ [ ] It supports prefix groups
+ [ ] It merges middleware in groups
+ [ ] It checks if component exists
+ [ ] It gets a registered tool
+ [ ] It gets a registered resource
+ [ ] It gets a registered prompt
+ [ ] It lists all tools
+ [ ] It lists all resources
+ [ ] It lists all prompts
+ [ ] It returns empty array for invalid type
+ [ ] It returns null for invalid type get
+ [ ] It returns false for invalid type has
+ [ ] It gets the underlying registry
+ [ ] It loads routes from file
+ [ ] It handles non existent route file
+ [ ] Route attribute merging
+ [ ] Registration with route options
+ [ ] Error handling during registration
+ [ ] Fluent api with mixed component types
+ [ ] Registration with callable handlers
+ [ ] Registration with string class names
+ [ ] Batch registration with empty arrays
+ [ ] Complex nested group scenarios
+ [ ] Middleware array handling in groups
+ [ ] Registration with duplicate names
+ [ ] Group attributes isolation
+ [ ] Registration count tracking
+
+Route Registration Integration (JTD\LaravelMCP\Tests\Feature\RouteRegistrationIntegration)
+ [ ] Full route registration flow for tools
+ [ ] Full route registration flow for resources
+ [ ] Full route registration flow for prompts
+ [ ] Component discovery with route registration
+ [ ] Route registration with middleware
+ [ ] Route registration with custom prefix
+ [ ] Route registration with constraints
+ [ ] Route caching compatibility
+ [ ] Route group registration
+ [ ] Nested route groups
+ [ ] Resource style route generation
+ [ ] Route registration with custom controller
+ [ ] Error handling during route registration
+ [ ] Route name collision handling
+ [ ] Route registration with domain constraints
+ [ ] Batch route registration performance
+ [ ] Route registration cleanup and isolation
+
+Routing Patterns (JTD\LaravelMCP\Tests\Unit\Registry\RoutingPatterns)
+ [ ] Get pattern for valid component types
+ [ ] Get pattern for invalid component type
+ [ ] Get all patterns
+ [ ] Generate route name for tools
+ [ ] Generate route name for resources
+ [ ] Generate route name for prompts
+ [ ] Generate route name with action
+ [ ] Generate route uri for tools
+ [ ] Generate route uri for resources
+ [ ] Generate route uri for prompts
+ [ ] Generate route uri with parameters
+ [ ] Get middleware for component types
+ [ ] Get middleware with additional
+ [ ] Get middleware pattern
+ [ ] Get constraint
+ [ ] Get all constraints
+ [ ] Cache configuration
+ [ ] Generate cache key
+ [ ] Normalize component name
+ [ ] Normalize action name
+ [ ] Denormalize component name
+ [ ] Is mcp route name
+ [ ] Parse route name
+ [ ] Generate resource routes
+ [ ] Get http methods
+ [ ] Get controller action
+ [ ] Set pattern
+ [ ] Set middleware pattern
+ [ ] Set constraint
+ [ ] Validate component name
+ [ ] Get route template
+ [ ] Get route template for resources
+ [ ] Get route template for prompts
+ [ ] Route name generation edge cases
+ [ ] Uri generation edge cases
+
+Schema Documenter (Tests\Unit\Support\SchemaDocumenter)
+ [x] It documents string schema
+ [x] It documents number schema
+ [x] It documents integer schema
+ [x] It documents boolean schema
+ [x] It documents object schema with properties
+ [x] It documents array schema
+ [x] It documents array schema with object items
+ [x] It documents properties with empty properties
+ [x] It documents properties with nested objects
+ [x] It documents properties with nested arrays
+ [x] It documents validation rules for string type
+ [x] It documents validation rules for number type
+ [x] It documents validation rules for array type
+ [x] It documents validation rules for object type
+ [x] It documents general validation rules
+ [x] It returns empty string for no validation rules
+ [x] It formats array type
+ [x] It formats string type
+ [x] It formats unknown type
+ [x] It generates example with const value
+ [x] It generates example with default value
+ [x] It generates example with enum value
+ [x] It generates example for string with format
+ [x] It generates example for array
+ [x] It generates example for object
+ [x] It generates empty example for null result
+ [x] It returns empty string for no example
+ [x] It extracts input schema from metadata
+ [x] It returns null for missing input schema
+ [x] It documents tool schema
+ [x] It documents tool schema with no schema
+ [x] It documents resource schema
+ [x] It documents resource schema with no schema
+ [x] It documents prompt schema
+ [x] It documents prompt schema with no schema
+ [x] It respects depth limiting for nested schemas
+ [x] It handles empty schema
+ [x] It handles invalid schema gracefully
+ [x] It gets and sets options
+ [x] It gets and sets templates
+ [x] It disables validation rules when option is false
+ [x] It disables nested schemas when option is false
+ [x] It generates markdown formatted output
+
+Schema Validator (JTD\LaravelMCP\Tests\Unit\Support\SchemaValidator)
+ [ ] It validates simple string schema
+ [ ] It throws exception for missing required field
+ [ ] It validates integer type
+ [ ] It throws exception for wrong type
+ [ ] It validates number with minimum and maximum
+ [ ] It throws exception for number below minimum
+ [ ] It validates array schema
+ [ ] It validates unique array items
+ [ ] It throws exception for non unique array items
+ [ ] It validates string with pattern
+ [ ] It validates string with enum
+ [ ] It throws exception for invalid enum value
+ [ ] It validates string with format email
+ [ ] It throws exception for invalid email format
+ [ ] It validates nested objects
+ [ ] It applies default values
+ [ ] It validates additional properties when false
+ [ ] It creates schema from laravel rules
+ [ ] It validates boolean type
+ [ ] It validates null when nullable
+ [ ] It validates string length constraints
+ [ ] It throws exception for string too short
+ [ ] It validates uuid format
+ [ ] It validates url format
+
+Serve Command (JTD\LaravelMCP\Tests\Unit\Commands\ServeCommand)
+ [ ] It has correct command signature
+ [ ] It starts stdio transport successfully
+ [ ] It starts http transport successfully
+ [ ] It validates invalid transport type
+ [ ] It validates disabled transport
+ [ ] It validates unregistered transport in manager
+ [ ] It validates timeout option
+ [ ] It validates port option for http transport
+ [ ] It enables debug mode
+ [ ] It handles transport creation failure
+ [ ] It handles stdio transport errors
+ [ ] It builds correct transport configuration
+ [ ] It handles invalid transport instance
+ [ ] It handles shutdown signals with pcntl
+ [ ] It configures server info correctly
+ [ ] It displays transport stats in verbose mode
+ [ ] It returns error when mcp is disabled
+ [ ] It attempts reconnection for http transport
+
+Serve Command Feature (JTD\LaravelMCP\Tests\Feature\Commands\ServeCommandFeature)
+ [ ] Serve command is registered in artisan
+ [ ] Command can be discovered by artisan
+ [ ] Command help displays correct information
+ [ ] Command initializes with stdio transport
+ [ ] Command initializes with http transport
+ [ ] Command fails with invalid transport type
+ [ ] Command fails when transport is disabled
+ [ ] Command runs with debug mode enabled
+ [ ] Command validates numeric options
+ [ ] Command handles transport exceptions gracefully
+ [ ] Command integrates with real transport manager
+ [ ] Command merges configuration from options
+ [ ] Command sets server info on message processor
+ [ ] Command displays verbose output
+ [ ] Full integration with service provider
+
+Server Info (JTD\LaravelMCP\Tests\Unit\Server\ServerInfo)
+ [ ] Can create server info instance
+ [ ] Has default server information
+ [ ] Can get basic info
+ [ ] Can get protocol version
+ [ ] Can get uptime
+ [ ] Can get start time
+ [ ] Can get name
+ [ ] Can get version
+ [ ] Can get description
+ [ ] Can get vendor
+ [ ] Can set name
+ [ ] Can set version
+ [ ] Can set description
+ [ ] Can set vendor
+ [ ] Can update server info
+ [ ] Can update runtime info
+ [ ] Can get status
+ [ ] Can get detailed info
+ [ ] Can get formatted uptime
+ [ ] Can reset start time
+ [ ] Can convert to json
+ [ ] Can convert to array
+ [ ] Respects configuration
+ [ ] Respects environment variables
+ [ ] Runtime info contains required fields
+ [ ] Implementation info is correct
+
+Service Provider Integration (JTD\LaravelMCP\Tests\Feature\ServiceProviderIntegration)
+ [ ] It registers service provider in laravel application
+ [ ] It resolves all services through container
+ [ ] It resolves interfaces to correct implementations
+ [ ] It provides functional mcp facade
+ [ ] It loads and merges configuration
+ [ ] It allows environment variables to override config
+ [ ] It integrates services correctly
+ [ ] It discovers components when enabled
+ [ ] It configures publishable assets
+ [ ] It loads routes when route file exists
+ [ ] It configures transport manager based on config
+ [ ] It handles missing optional dependencies gracefully
+ [ ] It resolves services using app helper
+ [ ] It supports dependency injection resolution
+ [ ] It completes full service provider lifecycle
+ [ ] It handles multiple provider instances safely
+ [ ] It recovers from invalid configuration
+ [ ] It respects disabled state configuration
+
+Stdio Transport (JTD\LaravelMCP\Tests\Unit\Transport\StdioTransport)
+ [ ] It initializes with default configuration
+ [ ] It initializes with custom configuration
+ [ ] It returns correct transport type
+ [ ] It tracks connection status
+ [ ] It sets message handler
+ [ ] It clears buffer
+ [ ] It handles symfony process integration
+ [ ] It provides connection info
+ [ ] It performs health checks
+ [ ] It gets statistics
+ [ ] It handles signal term
+ [ ] It handles signal int
+ [ ] It handles signal hup
+ [ ] It runs as command
+ [ ] It sends error response
+ [ ] It validates configuration
+ [ ] It validates retry attempts
+ [ ] It validates retry delay
+ [ ] It handles reconnection
+ [ ] It tracks uptime
+ [ ] It handles shutdown callback
+ [ ] It provides safe config for logging
+
+Stdio Transport Integration (JTD\LaravelMCP\Tests\Feature\Transport\StdioTransportIntegration)
+ [ ] It creates stdio transport through manager
+ [ ] It initializes stdio transport with config
+ [ ] It manages stdio transport lifecycle
+ [ ] It simulates message exchange with mock streams
+ [ ] It handles json rpc error responses
+ [ ] It processes notifications without id
+ [ ] It handles large messages
+ [ ] It handles content length framing
+ [ ] It handles multiple messages in buffer
+ [ ] It handles partial message buffering
+ [ ] It tracks transport health
+ [ ] It integrates with symfony process
+ [ ] It provides comprehensive connection info
+ [ ] It handles keepalive messages
+ [ ] It manages transport through manager
+ [ ] It supports custom configuration
+
+Stream Handler (JTD\LaravelMCP\Tests\Unit\Transport\StreamHandler)
+ [ ] It opens and closes streams
+ [ ] It throws exception for invalid stream path
+ [ ] It writes data to stream
+ [ ] It reads data from stream
+ [ ] It reads complete lines
+ [ ] It writes lines with delimiter
+ [ ] It detects readable and writable modes
+ [ ] It detects end of file
+ [ ] It sets blocking mode
+ [ ] It sets stream timeout
+ [ ] It tracks statistics
+ [ ] It resets statistics
+ [ ] It performs health checks
+ [ ] It throws exception when reading from closed stream
+ [ ] It throws exception when writing to closed stream
+ [ ] It handles partial writes with retry
+ [ ] It waits for stream to become readable
+ [ ] It waits for stream to become writable
+ [ ] It returns stream resource
+ [ ] It handles buffer overflow for line reading
+ [ ] It handles custom line delimiter
+
+Tool Handler (JTD\LaravelMCP\Tests\Unit\Server\Handlers\ToolHandler)
+ [ ] Constructor sets dependencies and handler name
+ [ ] Get supported methods returns tool methods
+ [ ] Supports method returns true for supported methods
+ [ ] Supports method returns false for unsupported methods
+ [ ] Handle throws protocol exception for unsupported method
+ [ ] Handle tools list returns empty tools array when no tools
+ [ ] Handle tools list returns tool definitions
+ [ ] Handle tools list handles tool definition failures gracefully
+ [ ] Handle tools list validates cursor parameter
+ [ ] Handle tools list applies cursor pagination
+ [ ] Handle tools list includes next cursor when more tools available
+ [ ] Handle tools call validates required parameters
+ [ ] Handle tools call validates parameter types
+ [ ] Handle tools call throws error for non existent tool
+ [ ] Handle tools call executes tool with execute method
+ [ ] Handle tools call executes tool with invoke method
+ [ ] Handle tools call executes callable tool
+ [ ] Handle tools call throws error for non executable tool
+ [ ] Handle tools call validates arguments if tool supports it
+ [ ] Handle tools call skips validation if tool does not support it
+ [ ] Handle tools call returns error response for execution failures
+ [ ] Handle tools call uses default empty arguments when not provided
+ [ ] Get tool description handles different description methods with data set "getDescription method"
+ [ ] Get tool description handles different description methods with data set "description method"
+ [ ] Get tool description handles different description methods with data set "description property"
+ [ ] Get tool description handles different description methods with data set "no description"
+ [ ] Get tool input schema handles different schema methods with data set "getInputSchema method"
+ [ ] Get tool input schema handles different schema methods with data set "inputSchema method"
+ [ ] Get tool input schema handles different schema methods with data set "inputSchema property"
+ [ ] Get tool input schema handles different schema methods with data set "no input schema"
+ [ ] Get content type determines correct type with data set "string content"
+ [ ] Get content type determines correct type with data set "array content"
+ [ ] Get content type determines correct type with data set "object content"
+ [ ] Get content type determines correct type with data set "number content"
+ [ ] Get content type determines correct type with data set "boolean content"
+
+Tool Registry (JTD\LaravelMCP\Tests\Unit\Registry\ToolRegistry)
+ [ ] Register tool successfully
+ [ ] Register duplicate tool throws exception
+ [ ] Get non existent tool throws exception
+ [ ] Unregister tool successfully
+ [ ] Unregister non existent tool
+ [ ] Has tool
+ [ ] Get all tools
+ [ ] Get tool names
+ [ ] Count tools
+ [ ] Clear all tools
+ [ ] Get tool metadata
+ [ ] Get metadata for non existent tool throws exception
+ [ ] Filter tools by metadata
+ [ ] Search tools by pattern
+ [ ] Get registry type
+ [ ] Get tool definitions
+ [ ] Execute tool
+ [ ] Execute tool with class name
+ [ ] Execute invalid tool throws exception
+ [ ] Validate parameters
+ [ ] Validate parameters with no schema
+ [ ] Get tools by capability
+ [ ] Initialize
+ [ ] Metadata defaults
+ [ ] Complex filtering
+ [ ] Tool name edge cases
+
+Transport Discovery And Lifecycle (JTD\LaravelMCP\Tests\Feature\TransportDiscoveryAndLifecycle)
+ [ ] It discovers and registers default transports
+ [ ] It resolves transport interface from container
+ [ ] It resolves stdio transport as default when not configured
+ [ ] It manages complete transport lifecycle
+ [ ] It manages multiple transport instances
+ [ ] It handles active transport management
+ [ ] It performs transport health monitoring
+ [ ] It handles transport configuration integration
+ [ ] It manages transport discovery through service container
+ [ ] It handles transport lifecycle with error recovery
+ [ ] It manages transport statistics and monitoring
+ [ ] It handles transport manager bulk operations
+ [ ] It handles transport instance caching and purging
+ [ ] It integrates with laravel configuration system
+ [ ] It manages transport custom extensions
+ [ ] It handles transport registration and removal
+ [ ] It handles transport refresh operations
+
+Transport Interface (JTD\LaravelMCP\Tests\Unit\Transport\Contracts\TransportInterface)
+ [ ] Initialize with config
+ [ ] Initialize without config
+ [ ] Start transport
+ [ ] Stop transport
+ [ ] Send message
+ [ ] Send complex message
+ [ ] Receive returns message
+ [ ] Receive returns null when no message
+ [ ] Get connection info
+ [ ] Is connected returns true
+ [ ] Is connected returns false
+ [ ] Get connection info returns empty array
+ [ ] Set message handler
+ [ ] Transport lifecycle
+ [ ] Multiple message operations
+ [ ] Connection info after initialization
+ [ ] Setting multiple handlers
+
+Transport Manager (JTD\LaravelMCP\Tests\Unit\Transport\TransportManager)
+ [ ] It registers default drivers on construction
+ [ ] It creates http transport instance
+ [ ] It creates stdio transport instance
+ [ ] It throws exception for unknown transport type
+ [ ] It creates transport with custom configuration
+ [ ] It sets and gets active transport
+ [ ] It sets active transport with custom config
+ [ ] It gets default driver from config
+ [ ] It falls back to stdio when no config
+ [ ] It creates driver instance
+ [ ] It uses default driver when none specified
+ [ ] It caches transport instances
+ [ ] It gets default transport
+ [ ] It extends with custom driver
+ [ ] It checks if driver exists
+ [ ] It sets default driver
+ [ ] It throws exception for invalid default driver
+ [ ] It purges transport instances
+ [ ] It purges default driver when none specified
+ [ ] It purges all transports
+ [ ] It gets active transports
+ [ ] It checks if has active transports
+ [ ] It creates transport using alias method
+ [ ] It creates custom transport with config
+ [ ] It throws exception for unknown custom transport
+ [ ] It gets transport health status
+ [ ] It refreshes transport instance
+ [ ] It registers custom transport instance
+ [ ] It removes transport instance
+ [ ] It starts all transports
+ [ ] It stops all transports
+ [ ] It throws exception when start all fails
+ [ ] It gets active transport count
+ [ ] It performs cleanup
+ [ ] It initializes default transports from config
+ [ ] It handles factory registration errors
+ [ ] It validates transport interface compliance
+
+Validates Parameters (JTD\LaravelMCP\Tests\Unit\Traits\ValidatesParameters)
+ [ ] Validate schema with valid params
+ [ ] Validate schema missing required
+ [ ] Validate schema with defaults
+ [ ] Validate field type string
+ [ ] Validate field type integer
+ [ ] Validate field type number
+ [ ] Validate field type boolean
+ [ ] Validate field type array
+ [ ] Validate field type object
+ [ ] Validate field type null
+ [ ] Validate field format email
+ [ ] Validate field format url
+ [ ] Validate field format uri
+ [ ] Validate field format datetime
+ [ ] Validate field format uuid
+ [ ] Validate field length string
+ [ ] Validate field length array
+ [ ] Validate field range
+ [ ] Validate field enum
+ [ ] Validate field pattern
+ [ ] Validate field with custom validator
+ [ ] Complex schema validation
+ [ ] Is required
+ [ ] Get validation error summary
+

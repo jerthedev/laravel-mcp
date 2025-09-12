@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use JTD\LaravelMCP\Commands\DocumentationCommand;
 use JTD\LaravelMCP\Commands\ListCommand;
-use JTD\LaravelMCP\McpManager;
 use JTD\LaravelMCP\Commands\MakePromptCommand;
 use JTD\LaravelMCP\Commands\MakeResourceCommand;
 use JTD\LaravelMCP\Commands\MakeToolCommand;
@@ -14,6 +13,10 @@ use JTD\LaravelMCP\Commands\RegisterCommand;
 use JTD\LaravelMCP\Commands\ServeCommand;
 use JTD\LaravelMCP\Http\Middleware\McpAuthMiddleware;
 use JTD\LaravelMCP\Http\Middleware\McpCorsMiddleware;
+use JTD\LaravelMCP\Http\Middleware\McpErrorHandlingMiddleware;
+use JTD\LaravelMCP\Http\Middleware\McpLoggingMiddleware;
+use JTD\LaravelMCP\Http\Middleware\McpRateLimitMiddleware;
+use JTD\LaravelMCP\Http\Middleware\McpValidationMiddleware;
 use JTD\LaravelMCP\Protocol\CapabilityNegotiator;
 use JTD\LaravelMCP\Protocol\Contracts\JsonRpcHandlerInterface;
 use JTD\LaravelMCP\Protocol\JsonRpcHandler;
@@ -77,7 +80,7 @@ class LaravelMcpServiceProvider extends ServiceProvider
         $this->app->singleton(ToolRegistry::class);
         $this->app->singleton(ResourceRegistry::class);
         $this->app->singleton(PromptRegistry::class);
-        
+
         // Register core MCP services with explicit factory for McpRegistry
         $this->app->singleton(McpRegistry::class, function ($app) {
             return new McpRegistry(
@@ -86,7 +89,7 @@ class LaravelMcpServiceProvider extends ServiceProvider
                 $app->make(PromptRegistry::class)
             );
         });
-        
+
         $this->app->singleton(JsonRpcHandler::class);
         $this->app->singleton(MessageProcessor::class);
         $this->app->singleton(CapabilityNegotiator::class);
@@ -248,6 +251,98 @@ class LaravelMcpServiceProvider extends ServiceProvider
         $this->app->terminating(function () {
             $this->onApplicationTerminating();
         });
+
+        // Register MCP-specific event listeners
+        $this->registerMcpEventListeners();
+    }
+
+    private function registerMcpEventListeners(): void
+    {
+        if (! config('laravel-mcp.events.enabled', true)) {
+            return;
+        }
+
+        // Register component registration listener
+        $this->app['events']->listen(
+            \JTD\LaravelMCP\Events\McpComponentRegistered::class,
+            \JTD\LaravelMCP\Listeners\LogMcpComponentRegistration::class
+        );
+
+        // Register request processed listener
+        $this->app['events']->listen(
+            \JTD\LaravelMCP\Events\McpRequestProcessed::class,
+            \JTD\LaravelMCP\Listeners\TrackMcpRequestMetrics::class
+        );
+
+        // Register tool executed listeners
+        $this->app['events']->listen(
+            \JTD\LaravelMCP\Events\McpToolExecuted::class,
+            [\JTD\LaravelMCP\Listeners\LogMcpActivity::class, 'handle']
+        );
+        $this->app['events']->listen(
+            \JTD\LaravelMCP\Events\McpToolExecuted::class,
+            [\JTD\LaravelMCP\Listeners\TrackMcpUsage::class, 'handle']
+        );
+
+        // Register resource accessed listeners
+        $this->app['events']->listen(
+            \JTD\LaravelMCP\Events\McpResourceAccessed::class,
+            [\JTD\LaravelMCP\Listeners\LogMcpActivity::class, 'handle']
+        );
+        $this->app['events']->listen(
+            \JTD\LaravelMCP\Events\McpResourceAccessed::class,
+            [\JTD\LaravelMCP\Listeners\TrackMcpUsage::class, 'handle']
+        );
+
+        // Register prompt generated listeners
+        $this->app['events']->listen(
+            \JTD\LaravelMCP\Events\McpPromptGenerated::class,
+            [\JTD\LaravelMCP\Listeners\LogMcpActivity::class, 'handle']
+        );
+        $this->app['events']->listen(
+            \JTD\LaravelMCP\Events\McpPromptGenerated::class,
+            [\JTD\LaravelMCP\Listeners\TrackMcpUsage::class, 'handle']
+        );
+
+        // Register custom listeners from config (including those from specification)
+        $defaultListeners = [
+            \JTD\LaravelMCP\Events\McpToolExecuted::class => [
+                \JTD\LaravelMCP\Listeners\LogMcpActivity::class,
+                \JTD\LaravelMCP\Listeners\TrackMcpUsage::class,
+            ],
+            \JTD\LaravelMCP\Events\McpResourceAccessed::class => [
+                \JTD\LaravelMCP\Listeners\LogMcpActivity::class,
+                \JTD\LaravelMCP\Listeners\TrackMcpUsage::class,
+            ],
+            \JTD\LaravelMCP\Events\McpPromptGenerated::class => [
+                \JTD\LaravelMCP\Listeners\LogMcpActivity::class,
+                \JTD\LaravelMCP\Listeners\TrackMcpUsage::class,
+            ],
+        ];
+
+        // Merge with custom listeners from configuration
+        $listeners = array_merge_recursive(
+            $defaultListeners,
+            config('laravel-mcp.events.listeners', [])
+        );
+
+        // Register any additional custom listeners from config
+        foreach ($listeners as $event => $eventListeners) {
+            // Skip if already registered above
+            if (in_array($event, [
+                \JTD\LaravelMCP\Events\McpComponentRegistered::class,
+                \JTD\LaravelMCP\Events\McpRequestProcessed::class,
+                \JTD\LaravelMCP\Events\McpToolExecuted::class,
+                \JTD\LaravelMCP\Events\McpResourceAccessed::class,
+                \JTD\LaravelMCP\Events\McpPromptGenerated::class,
+            ])) {
+                continue;
+            }
+
+            foreach ((array) $eventListeners as $listener) {
+                $this->app['events']->listen($event, $listener);
+            }
+        }
     }
 
     private function onProvidersBooted(): void
@@ -414,19 +509,19 @@ class LaravelMcpServiceProvider extends ServiceProvider
     private function bootRoutes(): void
     {
         // Skip route registration if Route facade is not available (e.g., during testing)
-        if (!class_exists(\Illuminate\Support\Facades\Route::class) || 
-            !\Illuminate\Support\Facades\Facade::getFacadeApplication()) {
+        if (! class_exists(\Illuminate\Support\Facades\Route::class) ||
+            ! \Illuminate\Support\Facades\Facade::getFacadeApplication()) {
             return;
         }
 
         // Build middleware array with auth middleware always included
         $middleware = config('laravel-mcp.routes.middleware', ['api']);
-        
+
         // Ensure middleware is an array
-        if (!is_array($middleware)) {
+        if (! is_array($middleware)) {
             $middleware = [$middleware];
         }
-        
+
         // Always add auth middleware - it checks config on each request
         $middleware[] = McpAuthMiddleware::class;
 
@@ -466,16 +561,33 @@ class LaravelMcpServiceProvider extends ServiceProvider
     {
         $router = $this->app['router'];
 
-        // Register middleware aliases
+        // Register all MCP middleware aliases
         $router->aliasMiddleware('mcp.auth', McpAuthMiddleware::class);
         $router->aliasMiddleware('mcp.cors', McpCorsMiddleware::class);
+        $router->aliasMiddleware('mcp.logging', McpLoggingMiddleware::class);
+        $router->aliasMiddleware('mcp.validation', McpValidationMiddleware::class);
+        $router->aliasMiddleware('mcp.rate_limit', McpRateLimitMiddleware::class);
+        $router->aliasMiddleware('mcp.error_handling', McpErrorHandlingMiddleware::class);
 
-        // Add middleware to groups if configured
+        // Register middleware groups for MCP
+        $router->middlewareGroup('mcp', [
+            McpErrorHandlingMiddleware::class, // Must be first to catch all errors
+            McpCorsMiddleware::class,
+            McpLoggingMiddleware::class,
+            McpAuthMiddleware::class,
+            McpValidationMiddleware::class,
+            McpRateLimitMiddleware::class,
+        ]);
+
+        // Add middleware to API group if configured
         if (config('laravel-mcp.middleware.auto_register', true)) {
+            // Add in correct order for API group
+            $router->prependMiddlewareToGroup('api', McpErrorHandlingMiddleware::class);
             $router->pushMiddlewareToGroup('api', McpCorsMiddleware::class);
-
-            // Always add auth middleware - it checks config on each request
+            $router->pushMiddlewareToGroup('api', McpLoggingMiddleware::class);
             $router->pushMiddlewareToGroup('api', McpAuthMiddleware::class);
+            $router->pushMiddlewareToGroup('api', McpValidationMiddleware::class);
+            $router->pushMiddlewareToGroup('api', McpRateLimitMiddleware::class);
         }
     }
 
@@ -525,8 +637,8 @@ class LaravelMcpServiceProvider extends ServiceProvider
         }
 
         // Skip if Route facade is not available (e.g., during testing)
-        if (!class_exists(\Illuminate\Support\Facades\Route::class) || 
-            !\Illuminate\Support\Facades\Facade::getFacadeApplication()) {
+        if (! class_exists(\Illuminate\Support\Facades\Route::class) ||
+            ! \Illuminate\Support\Facades\Facade::getFacadeApplication()) {
             return;
         }
 

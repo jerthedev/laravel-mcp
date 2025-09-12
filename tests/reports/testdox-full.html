@@ -1,0 +1,2214 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <title>Test Documentation</title>
+        <style>
+            body {
+                text-rendering: optimizeLegibility;
+                font-family: Source SansSerif Pro, Arial, sans-serif;
+                font-variant-ligatures: common-ligatures;
+                font-kerning: normal;
+                margin-left: 2rem;
+                background-color: #fff;
+                color: #000;
+            }
+
+            body > ul > li {
+                font-size: larger;
+            }
+
+            h2 {
+                font-size: larger;
+                text-decoration-line: underline;
+                text-decoration-thickness: 2px;
+                margin: 0;
+                padding: 0.5rem 0;
+            }
+
+            ul {
+                list-style: none;
+                margin: 0 0 2rem;
+                padding: 0 0 0 1rem;
+                text-indent: -1rem;
+            }
+
+            .success:before {
+                color: #4e9a06;
+                content: '✓';
+                padding-right: 0.5rem;
+            }
+
+            .defect {
+                color: #a40000;
+            }
+
+            .defect:before {
+                color: #a40000;
+                content: '✗';
+                padding-right: 0.5rem;
+            }
+        </style>
+    </head>
+    <body>
+        <h2>Auto Discovery (JTD\LaravelMCP\Tests\Feature\Registry\AutoDiscovery)</h2>
+        <ul>
+            <li class="defect">It auto discovers components on boot</li>
+            <li class="defect">It discovers and registers multiple component types</li>
+            <li class="defect">It caches discovery results</li>
+            <li class="defect">It clears cache when requested</li>
+            <li class="defect">It validates discovered components</li>
+            <li class="defect">It handles discovery with namespace conflicts</li>
+            <li class="defect">It ignores test files during discovery</li>
+            <li class="defect">It supports custom discovery paths</li>
+            <li class="defect">It discovers components recursively</li>
+            <li class="defect">It handles malformed php files gracefully</li>
+        </ul>
+        <h2>Base Command (JTD\LaravelMCP\Tests\Unit\Commands\BaseCommand)</h2>
+        <ul>
+            <li class="defect">Successful command execution</li>
+            <li class="defect">Command with validation failure</li>
+            <li class="defect">Error handling without debug</li>
+            <li class="defect">Error handling with debug mode</li>
+            <li class="defect">Output formatting methods</li>
+            <li class="defect">Debug output in verbose mode</li>
+            <li class="defect">Configuration helper methods</li>
+            <li class="defect">Mcp disabled check</li>
+            <li class="defect">Option validation methods</li>
+        </ul>
+        <h2>Base Component (JTD\LaravelMCP\Tests\Unit\Abstracts\BaseComponent)</h2>
+        <ul>
+            <li class="defect">It initializes with container and validator</li>
+            <li class="defect">It returns configured name</li>
+            <li class="defect">It generates name from class when not set</li>
+            <li class="defect">It returns configured description</li>
+            <li class="defect">It returns default description when not set</li>
+            <li class="defect">It manages middleware</li>
+            <li class="defect">It manages auth requirement</li>
+            <li class="defect">It provides make helper</li>
+            <li class="defect">It provides resolve helper</li>
+            <li class="defect">It returns metadata</li>
+            <li class="defect">It converts to array</li>
+            <li class="defect">Authorize returns true when auth not required</li>
+            <li class="defect">Authorize returns true by default when auth required</li>
+            <li class="defect">Generate name from class removes suffixes</li>
+        </ul>
+        <h2>Base Handler (JTD\LaravelMCP\Tests\Unit\Server\Handlers\BaseHandler)</h2>
+        <ul>
+            <li class="defect">Constructor sets handler name and debug mode</li>
+            <li class="defect">Constructor defaults to non debug mode</li>
+            <li class="defect">Set debug updates debug mode</li>
+            <li class="defect">Validate request passes with valid parameters</li>
+            <li class="defect">Validate request passes with empty rules</li>
+            <li class="defect">Validate request throws protocol exception with invalid parameters</li>
+            <li class="defect">Validate request throws protocol exception with missing required parameters</li>
+            <li class="defect">Validate request uses custom error messages</li>
+            <li class="defect">Validate required params passes with all required present</li>
+            <li class="defect">Validate required params passes with empty required list</li>
+            <li class="defect">Validate required params throws protocol exception with missing parameters</li>
+            <li class="defect">Create success response returns result without metadata</li>
+            <li class="defect">Create success response adds metadata when requested</li>
+            <li class="defect">Create error response returns proper structure</li>
+            <li class="defect">Create error response includes data when provided</li>
+            <li class="defect">Supports method returns true for supported methods</li>
+            <li class="defect">Supports method returns false for unsupported methods</li>
+            <li class="defect">Get supported methods returns expected methods</li>
+            <li class="defect">Sanitize for logging removes sensitive keys</li>
+            <li class="defect">Sanitize for logging handles empty array</li>
+            <li class="defect">Handle exception preserves protocol exception details</li>
+            <li class="defect">Handle exception converts generic exception to internal error</li>
+            <li class="defect">Handle exception includes debug data when debug enabled</li>
+            <li class="defect">Format content handles different types correctly with data set "string as text"</li>
+            <li class="defect">Format content handles different types correctly with data set "array as text"</li>
+            <li class="defect">Format content handles different types correctly with data set "string as json"</li>
+            <li class="defect">Format content handles different types correctly with data set "array as json"</li>
+            <li class="defect">Format content handles different types correctly with data set "resource type"</li>
+            <li class="defect">Format content handles different types correctly with data set "unknown type defaults to text"</li>
+            <li class="defect">Format content handles different types correctly with data set "number as text"</li>
+            <li class="defect">Logging methods use handler name prefix</li>
+            <li class="defect">Debug logging works when debug enabled</li>
+            <li class="defect">Constructor logs initialization when debug enabled</li>
+            <li class="defect">Constructor does not log when debug disabled</li>
+        </ul>
+        <h2>Base Transport (JTD\LaravelMCP\Tests\Unit\Transport\BaseTransport)</h2>
+        <ul>
+            <li class="defect">It initializes with default configuration</li>
+            <li class="defect">It merges custom configuration with defaults</li>
+            <li class="defect">It validates configuration on initialization</li>
+            <li class="defect">It starts and stops correctly</li>
+            <li class="defect">It prevents double start</li>
+            <li class="defect">It gracefully handles double stop</li>
+            <li class="defect">It sends messages when connected</li>
+            <li class="defect">It throws exception when sending while disconnected</li>
+            <li class="defect">It receives messages when connected</li>
+            <li class="defect">It returns null when no messages to receive</li>
+            <li class="defect">It tracks statistics correctly</li>
+            <li class="defect">It handles errors correctly</li>
+            <li class="defect">It sets and uses message handler</li>
+            <li class="defect">It calculates uptime correctly</li>
+            <li class="defect">It provides connection information</li>
+            <li class="defect">It performs health checks</li>
+            <li class="defect">It fails health check when disconnected</li>
+            <li class="defect">It reconnects successfully</li>
+            <li class="defect">It handles start failure gracefully</li>
+            <li class="defect">It validates negative retry attempts</li>
+            <li class="defect">It validates negative retry delay</li>
+            <li class="defect">It sends with retry on failure</li>
+            <li class="defect">It fails after max retry attempts</li>
+            <li class="defect">It masks sensitive config in logs</li>
+        </ul>
+        <h2>Capability Manager (JTD\LaravelMCP\Tests\Unit\Server\CapabilityManager)</h2>
+        <ul>
+            <li class="defect">Can create capability manager instance</li>
+            <li class="defect">Initializes server capabilities from config</li>
+            <li class="defect">Can negotiate capabilities with client</li>
+            <li class="defect">Adjusts capabilities for empty components</li>
+            <li class="defect">Can check if capability is enabled</li>
+            <li class="defect">Can check if feature is enabled</li>
+            <li class="defect">Can get capability info</li>
+            <li class="defect">Can update server capabilities before negotiation</li>
+            <li class="defect">Cannot update capabilities after negotiation</li>
+            <li class="defect">Can reset capabilities</li>
+            <li class="defect">Can lock capabilities</li>
+            <li class="defect">Validates tools capability</li>
+            <li class="defect">Validates resources capability</li>
+            <li class="defect">Validates logging capability</li>
+            <li class="defect">Gets mcp10 requirements</li>
+            <li class="defect">Validates mcp10 compliance</li>
+            <li class="defect">Creates dynamic capabilities</li>
+            <li class="defect">Gets detailed capability info</li>
+            <li class="defect">Prevents double negotiation</li>
+            <li class="defect">Creates minimal capabilities when empty</li>
+        </ul>
+        <h2>Claude Desktop Generator (JTD\LaravelMCP\Tests\Unit\Support\Generators\ClaudeDesktopGenerator)</h2>
+        <ul>
+            <li class="defect">It generates stdio configuration</li>
+            <li class="defect">It generates http configuration</li>
+            <li class="defect">It uses default values when not provided</li>
+            <li class="defect">It validates configuration</li>
+            <li class="defect">It merges configurations properly</li>
+            <li class="defect">It loads existing configuration</li>
+            <li class="defect">It handles invalid transport type</li>
+            <li class="defect">It gets default server name</li>
+            <li class="defect">It gets default description with component counts</li>
+        </ul>
+        <h2>Client Detector (JTD\LaravelMCP\Tests\Unit\Support\ClientDetector)</h2>
+        <ul>
+            <li class="defect">It detects operating system</li>
+            <li class="defect">It determines if client is installed</li>
+            <li class="defect">It gets default config path for client with data set "claude-desktop"</li>
+            <li class="defect">It gets default config path for client with data set "claude-code"</li>
+            <li class="defect">It gets default config path for client with data set "chatgpt-desktop"</li>
+            <li class="defect">It gets default config path for client with data set "unsupported"</li>
+            <li class="defect">It gets home directory</li>
+            <li class="defect">It detects client environment</li>
+            <li class="defect">It validates client compatibility</li>
+            <li class="defect">It gets config directory for os</li>
+            <li class="defect">It gets app data directory</li>
+            <li class="defect">It provides client specific config filename</li>
+        </ul>
+        <h2>Component Discovery (JTD\LaravelMCP\Tests\Unit\Registry\ComponentDiscovery)</h2>
+        <ul>
+            <li class="defect">It can be instantiated</li>
+            <li class="defect">It discovers tools in directory</li>
+            <li class="defect">It discovers resources in directory</li>
+            <li class="defect">It discovers prompts in directory</li>
+            <li class="defect">It ignores non existent directories</li>
+            <li class="defect">It ignores abstract classes</li>
+            <li class="defect">It ignores interfaces</li>
+            <li class="defect">It ignores traits</li>
+            <li class="defect">It extracts class name from file</li>
+            <li class="defect">It returns null for file without class</li>
+            <li class="defect">It returns null for file without namespace</li>
+            <li class="defect">It registers discovered components</li>
+            <li class="defect">It validates discovered components</li>
+            <li class="defect">It supports discovery configuration</li>
+            <li class="defect">It supports discovery filters</li>
+            <li class="defect">It gets supported component types</li>
+        </ul>
+        <h2>Config Generator (JTD\LaravelMCP\Tests\Unit\Support\ConfigGenerator)</h2>
+        <ul>
+            <li class="defect">It generates claude desktop configuration</li>
+            <li class="defect">It generates claude desktop configuration with defaults</li>
+            <li class="defect">It generates claude code configuration</li>
+            <li class="defect">It generates claude code configuration with defaults</li>
+            <li class="defect">It generates chatgpt desktop configuration</li>
+            <li class="defect">It generates chatgpt desktop configuration with defaults</li>
+            <li class="defect">It validates claude desktop configuration</li>
+            <li class="defect">It validates claude code configuration</li>
+            <li class="defect">It validates chatgpt configuration</li>
+            <li class="defect">It validates unknown client type</li>
+            <li class="defect">It merges claude desktop configurations</li>
+            <li class="defect">It merges claude code configurations</li>
+            <li class="defect">It merges chatgpt configurations</li>
+            <li class="defect">It returns new config when existing is empty</li>
+            <li class="defect">It detects operating system</li>
+            <li class="defect">It gets home directory</li>
+            <li class="defect">It gets client config path</li>
+            <li class="defect">It saves client configuration</li>
+            <li class="defect">It prevents overwrite without force</li>
+            <li class="defect">It creates directory if not exists</li>
+            <li class="defect">It handles save errors gracefully</li>
+        </ul>
+        <h2>Directory Structure Validation (JTD\LaravelMCP\Tests\Feature\DirectoryStructureValidation)</h2>
+        <ul>
+            <li class="defect">It has all required source directories</li>
+            <li class="defect">It has all required configuration directories</li>
+            <li class="defect">It has all required test directories</li>
+            <li class="defect">It has all required contract interfaces</li>
+            <li class="defect">It has all required foundational traits</li>
+            <li class="defect">It has all required exception classes</li>
+            <li class="defect">It has the mcp facade</li>
+            <li class="defect">It has console utilities</li>
+            <li class="defect">It has all code generation stubs</li>
+            <li class="defect">It has debug view template</li>
+            <li class="defect">It has base test case</li>
+            <li class="defect">It has test fixtures</li>
+            <li class="defect">It can load all contract interfaces</li>
+            <li class="defect">It can load all trait classes</li>
+            <li class="defect">It can load all exception classes</li>
+            <li class="defect">It can load mcp facade</li>
+            <li class="defect">It can load console utilities</li>
+            <li class="defect">It can load test fixtures</li>
+            <li class="defect">It follows laravel namespace patterns</li>
+            <li class="defect">It supports psr4 autoloading</li>
+        </ul>
+        <h2>Discovery Interface (JTD\LaravelMCP\Tests\Unit\Registry\Contracts\DiscoveryInterface)</h2>
+        <ul>
+            <li class="defect">Discover components in paths</li>
+            <li class="defect">Discover returns empty when no components</li>
+            <li class="defect">Discover type for tools</li>
+            <li class="defect">Discover type for resources</li>
+            <li class="defect">Discover type for prompts</li>
+            <li class="defect">Is valid component with valid file</li>
+            <li class="defect">Is valid component with invalid file</li>
+            <li class="defect">Is valid component with wrong type</li>
+            <li class="defect">Extract metadata from file</li>
+            <li class="defect">Extract metadata returns empty for invalid</li>
+            <li class="defect">Get class from file valid</li>
+            <li class="defect">Get class from file no class</li>
+            <li class="defect">Is valid component class valid tool</li>
+            <li class="defect">Is valid component class invalid</li>
+            <li class="defect">Get supported types</li>
+            <li class="defect">Set config</li>
+            <li class="defect">Get config</li>
+            <li class="defect">Add filter</li>
+            <li class="defect">Get filters</li>
+            <li class="defect">Full discovery workflow</li>
+            <li class="defect">Discover multiple paths</li>
+            <li class="defect">Validate component types</li>
+            <li class="defect">Discovery with filters</li>
+        </ul>
+        <h2>Documentation Generation (JTD\LaravelMCP\Tests\Feature\Documentation\DocumentationGeneration)</h2>
+        <ul>
+            <li class="defect">It generates complete documentation via artisan command</li>
+            <li class="defect">It generates single file documentation</li>
+            <li class="defect">It generates api only documentation</li>
+            <li class="defect">It generates components only documentation</li>
+            <li class="defect">It enriches documentation with schemas</li>
+            <li class="defect">It generates documentation with examples</li>
+            <li class="defect">It integrates documentation generator and schema documenter</li>
+            <li class="defect">It handles empty registries gracefully</li>
+            <li class="defect">It generates documentation from blade templates</li>
+            <li class="defect">It validates documentation output structure</li>
+            <li class="defect">It handles custom output formats</li>
+        </ul>
+        <h2>Documentation Generator (Tests\Unit\Support\DocumentationGenerator)</h2>
+        <ul>
+            <li class="success">It generates overview with default options</li>
+            <li class="success">It generates overview with custom options</li>
+            <li class="success">It generates overview with populated registries</li>
+            <li class="success">It generates component documentation</li>
+            <li class="success">It generates tools documentation when empty</li>
+            <li class="success">It generates tools documentation with populated registry</li>
+            <li class="success">It generates resources documentation when empty</li>
+            <li class="success">It generates resources documentation with populated registry</li>
+            <li class="success">It generates prompts documentation when empty</li>
+            <li class="success">It generates prompts documentation with populated registry</li>
+            <li class="success">It generates api reference</li>
+            <li class="success">It includes tool methods in api reference when tools exist</li>
+            <li class="success">It includes resource methods in api reference when resources exist</li>
+            <li class="success">It includes prompt methods in api reference when prompts exist</li>
+            <li class="success">It generates usage guide</li>
+            <li class="success">It generates configuration guide</li>
+            <li class="success">It generates examples</li>
+            <li class="success">It generates readme</li>
+            <li class="success">It generates readme with custom options</li>
+            <li class="success">It generates complete documentation</li>
+            <li class="success">It gets and sets templates</li>
+        </ul>
+        <h2>Event Lifecycle Integration (JTD\LaravelMCP\Tests\Feature\EventLifecycleIntegration)</h2>
+        <ul>
+            <li class="defect">It finalizes component discovery on providers booted</li>
+            <li class="defect">It skips discovery finalization when disabled</li>
+            <li class="defect">It handles discovery finalization errors gracefully</li>
+            <li class="defect">It cleans up resources on kernel handled</li>
+            <li class="defect">It handles cleanup errors gracefully</li>
+            <li class="defect">It performs final cleanup on application terminating</li>
+            <li class="defect">It handles cache cleanup errors gracefully</li>
+            <li class="defect">It handles complete event lifecycle</li>
+            <li class="defect">It registers event listeners only once</li>
+            <li class="defect">It handles events with unbound services gracefully</li>
+            <li class="defect">It handles events in different environments</li>
+            <li class="defect">It maintains performance during event handling</li>
+        </ul>
+        <h2>Facade Integration (JTD\LaravelMCP\Tests\Feature\FacadeIntegration)</h2>
+        <ul>
+            <li class="defect">It demonstrates route style registration via facade</li>
+            <li class="defect">It demonstrates group registration with middleware</li>
+            <li class="defect">It demonstrates nested groups with prefixes</li>
+            <li class="defect">It demonstrates namespace grouping</li>
+            <li class="defect">It demonstrates mixed facade functionality</li>
+            <li class="defect">It demonstrates complex middleware ordering</li>
+            <li class="defect">It demonstrates fluent interface</li>
+            <li class="defect">It verifies all critical fixes are working</li>
+        </ul>
+        <h2>Formats Responses (JTD\LaravelMCP\Tests\Unit\Traits\FormatsResponses)</h2>
+        <ul>
+            <li class="defect">It formats success response</li>
+            <li class="defect">It formats success response with meta</li>
+            <li class="defect">It formats error response</li>
+            <li class="defect">It formats tool response</li>
+            <li class="defect">It formats resource read response</li>
+            <li class="defect">It formats resource list response</li>
+            <li class="defect">It formats prompt response</li>
+            <li class="defect">It formats paginated response</li>
+            <li class="defect">It formats json rpc response</li>
+            <li class="defect">It formats json rpc error response</li>
+            <li class="defect">It converts to json response</li>
+            <li class="defect">It detects mime type for json</li>
+            <li class="defect">It detects mime type for html</li>
+            <li class="defect">It detects mime type for xml</li>
+            <li class="defect">It detects mime type for plain text</li>
+            <li class="defect">It formats capabilities response</li>
+            <li class="defect">It formats validation errors</li>
+            <li class="defect">It strips sensitive data</li>
+            <li class="defect">It adds cors headers when enabled</li>
+            <li class="defect">It does not add cors headers when disabled</li>
+            <li class="defect">It includes timestamp when configured</li>
+            <li class="defect">It excludes timestamp when configured</li>
+            <li class="defect">It includes debug info when enabled</li>
+            <li class="defect">It formats batch response</li>
+            <li class="defect">It formats data with laravel models</li>
+            <li class="defect">It formats data with json serializable</li>
+            <li class="defect">It formats resource list item from array</li>
+            <li class="defect">It formats resource list item from object</li>
+        </ul>
+        <h2>Handler Integration (JTD\LaravelMCP\Tests\Feature\Server\Handlers\HandlerIntegration)</h2>
+        <ul>
+            <li class="defect">Complete tool workflow lists and executes tools</li>
+            <li class="defect">Complete resource workflow lists and reads resources</li>
+            <li class="defect">Complete prompt workflow lists and gets prompts</li>
+            <li class="defect">Tool handler manages pagination correctly</li>
+            <li class="defect">Resource handler manages pagination correctly</li>
+            <li class="defect">Prompt handler manages pagination correctly</li>
+            <li class="defect">Handlers handle error scenarios gracefully</li>
+            <li class="defect">Handlers validate request parameters correctly</li>
+            <li class="defect">Handlers return proper mcp response format</li>
+            <li class="defect">Tool execution handles different result types</li>
+            <li class="defect">Resource reading handles different content types</li>
+        </ul>
+        <h2>Handles Mcp Requests (JTD\LaravelMCP\Tests\Unit\Traits\HandlesMcpRequests)</h2>
+        <ul>
+            <li class="defect">Process request success</li>
+            <li class="defect">Process request with mcp exception</li>
+            <li class="defect">Process request with generic exception</li>
+            <li class="defect">Create success response</li>
+            <li class="defect">Create error response without data</li>
+            <li class="defect">Create error response with data</li>
+            <li class="defect">Validate required params all present</li>
+            <li class="defect">Validate required params missing</li>
+            <li class="defect">Extract params with required</li>
+            <li class="defect">Extract params missing required</li>
+            <li class="defect">Extract params with defaults</li>
+            <li class="defect">Validate param with type</li>
+            <li class="defect">Validate param with custom validator</li>
+            <li class="defect">Validate param type string</li>
+            <li class="defect">Validate param type integer</li>
+            <li class="defect">Validate param type array</li>
+            <li class="defect">Validate param type object</li>
+            <li class="defect">Get component name</li>
+            <li class="defect">Log request with debug enabled</li>
+            <li class="defect">Log request with debug disabled</li>
+            <li class="defect">Log response with debug enabled</li>
+            <li class="defect">Complex parameter extraction</li>
+            <li class="defect">Error response includes timestamp</li>
+            <li class="defect">Success response includes timestamp</li>
+        </ul>
+        <h2>Http Transport (JTD\LaravelMCP\Tests\Unit\Transport\HttpTransport)</h2>
+        <ul>
+            <li class="defect">It initializes with default configuration</li>
+            <li class="defect">It starts and stops correctly</li>
+            <li class="defect">It handles http request successfully</li>
+            <li class="defect">It handles notification without response</li>
+            <li class="defect">It returns error for invalid content type</li>
+            <li class="defect">It returns error for invalid json</li>
+            <li class="defect">It returns error for empty request body</li>
+            <li class="defect">It handles options request for cors</li>
+            <li class="defect">It adds cors headers when enabled</li>
+            <li class="defect">It does not add cors headers when disabled</li>
+            <li class="defect">It returns error when transport is closed</li>
+            <li class="defect">It returns error when no handler configured</li>
+            <li class="defect">It handles handler exceptions</li>
+            <li class="defect">It generates correct base url</li>
+            <li class="defect">It generates correct https base url</li>
+            <li class="defect">It omits default ports in base url</li>
+            <li class="defect">It performs health checks</li>
+            <li class="defect">It performs health checks with ssl enabled</li>
+            <li class="defect">It returns connection info</li>
+            <li class="defect">It manages current request</li>
+            <li class="defect">It manages current response data</li>
+            <li class="defect">It validates json content in receive</li>
+            <li class="defect">It logs debug information when enabled</li>
+            <li class="defect">It logs errors during receive</li>
+            <li class="defect">It logs errors during request handling</li>
+            <li class="defect">It encodes response with proper json flags</li>
+            <li class="defect">It handles json encoding errors</li>
+        </ul>
+        <h2>Http Transport Integration (JTD\LaravelMCP\Tests\Feature\Http\HttpTransportIntegration)</h2>
+        <ul>
+            <li class="defect">It handles complete http request response cycle</li>
+            <li class="defect">It handles cors preflight requests</li>
+            <li class="defect">It adds cors headers to regular requests</li>
+            <li class="defect">It enforces authentication when enabled</li>
+            <li class="defect">It provides health check endpoint</li>
+            <li class="defect">It provides server info endpoint</li>
+            <li class="defect">It handles malformed json requests</li>
+            <li class="defect">It rejects invalid content type</li>
+            <li class="defect">It handles jsonrpc notifications</li>
+            <li class="defect">It handles batch requests</li>
+            <li class="defect">It invokes tools through http</li>
+            <li class="defect">It reads resources through http</li>
+            <li class="defect">It handles prompts through http</li>
+            <li class="defect">It processes requests through middleware stack</li>
+            <li class="defect">It handles concurrent http requests</li>
+            <li class="defect">It recovers from transport errors</li>
+            <li class="defect">It handles large payloads</li>
+            <li class="defect">It handles request timeouts gracefully</li>
+            <li class="defect">It tracks transport statistics</li>
+            <li class="defect">It validates ssl configuration</li>
+            <li class="defect">It includes custom headers in responses</li>
+        </ul>
+        <h2>Json Rpc Handler (Tests\Unit\Protocol\JsonRpcHandler)</h2>
+        <ul>
+            <li class="defect">Constructor with debug modes</li>
+            <li class="defect">Debug mode setting</li>
+            <li class="defect">Handle request valid</li>
+            <li class="defect">Handle request no params</li>
+            <li class="defect">Handle request invalid format with data set "missing jsonrpc"</li>
+            <li class="defect">Handle request invalid format with data set "wrong jsonrpc version"</li>
+            <li class="defect">Handle request invalid format with data set "missing method"</li>
+            <li class="defect">Handle request invalid format with data set "empty method"</li>
+            <li class="defect">Handle request invalid format with data set "missing id"</li>
+            <li class="defect">Handle request method not found</li>
+            <li class="defect">Handle request invalid params exception</li>
+            <li class="defect">Handle request internal error</li>
+            <li class="defect">Handle request internal error debug mode</li>
+            <li class="defect">Handle request global exception</li>
+            <li class="defect">Handle request debug logging</li>
+            <li class="defect">Handle notification valid</li>
+            <li class="defect">Handle notification no params</li>
+            <li class="defect">Handle notification invalid format with data set "missing jsonrpc"</li>
+            <li class="defect">Handle notification invalid format with data set "wrong jsonrpc version"</li>
+            <li class="defect">Handle notification invalid format with data set "missing method"</li>
+            <li class="defect">Handle notification invalid format with data set "empty method"</li>
+            <li class="defect">Handle notification invalid format with data set "has id (makes it request)"</li>
+            <li class="defect">Handle notification unregistered method</li>
+            <li class="defect">Handle notification handler exception</li>
+            <li class="defect">Handle notification debug logging</li>
+            <li class="defect">Handle response valid success</li>
+            <li class="defect">Handle response valid error</li>
+            <li class="defect">Handle response invalid format with data set "missing jsonrpc"</li>
+            <li class="defect">Handle response invalid format with data set "wrong jsonrpc version"</li>
+            <li class="defect">Handle response invalid format with data set "missing id"</li>
+            <li class="defect">Handle response invalid format with data set "missing result and error"</li>
+            <li class="defect">Handle response invalid format with data set "both result and error"</li>
+            <li class="defect">Handle response no handler</li>
+            <li class="defect">Handle response handler exception</li>
+            <li class="defect">Handle response debug logging</li>
+            <li class="defect">Create request with params</li>
+            <li class="defect">Create request no params</li>
+            <li class="defect">Create request notification</li>
+            <li class="defect">Create success response</li>
+            <li class="defect">Create error response no data</li>
+            <li class="defect">Create error response with data</li>
+            <li class="defect">Create error response standard codes with data set "Parse error"</li>
+            <li class="defect">Create error response standard codes with data set "Invalid request"</li>
+            <li class="defect">Create error response standard codes with data set "Method not found"</li>
+            <li class="defect">Create error response standard codes with data set "Invalid params"</li>
+            <li class="defect">Create error response standard codes with data set "Internal error"</li>
+            <li class="defect">Create error response standard codes with data set "Server error"</li>
+            <li class="defect">Create error response standard codes with data set "Custom error"</li>
+            <li class="defect">Validate message with data set "valid request"</li>
+            <li class="defect">Validate message with data set "valid notification"</li>
+            <li class="defect">Validate message with data set "valid success response"</li>
+            <li class="defect">Validate message with data set "valid error response"</li>
+            <li class="defect">Validate message with data set "missing jsonrpc"</li>
+            <li class="defect">Validate message with data set "wrong jsonrpc version"</li>
+            <li class="defect">Validate message with data set "empty message"</li>
+            <li class="defect">Validate message with data set "malformed response"</li>
+            <li class="defect">Is request with data set "valid request"</li>
+            <li class="defect">Is request with data set "request with params"</li>
+            <li class="defect">Is request with data set "request with string id"</li>
+            <li class="defect">Is request with data set "notification (no id)"</li>
+            <li class="defect">Is request with data set "missing method"</li>
+            <li class="defect">Is request with data set "empty method"</li>
+            <li class="defect">Is request with data set "non-string method"</li>
+            <li class="defect">Is request with data set "wrong jsonrpc version"</li>
+            <li class="defect">Is request with data set "missing jsonrpc"</li>
+            <li class="defect">Is notification with data set "valid notification"</li>
+            <li class="defect">Is notification with data set "notification with params"</li>
+            <li class="defect">Is notification with data set "request (has id)"</li>
+            <li class="defect">Is notification with data set "missing method"</li>
+            <li class="defect">Is notification with data set "empty method"</li>
+            <li class="defect">Is notification with data set "non-string method"</li>
+            <li class="defect">Is notification with data set "wrong jsonrpc version"</li>
+            <li class="defect">Is notification with data set "missing jsonrpc"</li>
+            <li class="defect">Is response with data set "success response"</li>
+            <li class="defect">Is response with data set "error response"</li>
+            <li class="defect">Is response with data set "both result and error"</li>
+            <li class="defect">Is response with data set "missing result and error"</li>
+            <li class="defect">Is response with data set "missing id"</li>
+            <li class="defect">Is response with data set "wrong jsonrpc version"</li>
+            <li class="defect">Is response with data set "missing jsonrpc"</li>
+            <li class="defect">Is response with data set "request with method"</li>
+            <li class="defect">Handler registration</li>
+            <li class="defect">Response handler registration</li>
+            <li class="defect">Get methods empty</li>
+            <li class="defect">Multiple handlers</li>
+            <li class="defect">Handler overriding</li>
+        </ul>
+        <h2>Json Rpc Handler Interface (Tests\Unit\Protocol\Contracts\JsonRpcHandlerInterface)</h2>
+        <ul>
+            <li class="defect">Handle request with valid request</li>
+            <li class="defect">Handle request with params</li>
+            <li class="defect">Handle notification</li>
+            <li class="defect">Handle notification with params</li>
+            <li class="defect">Handle response success</li>
+            <li class="defect">Handle response error</li>
+            <li class="defect">Create request without params</li>
+            <li class="defect">Create request with params</li>
+            <li class="defect">Create request notification</li>
+            <li class="defect">Create success response</li>
+            <li class="defect">Create error response without data</li>
+            <li class="defect">Create error response with data</li>
+            <li class="defect">Create error response for notification</li>
+            <li class="defect">Validate message valid</li>
+            <li class="defect">Validate message invalid</li>
+            <li class="defect">Is request valid</li>
+            <li class="defect">Is request with notification</li>
+            <li class="defect">Is notification valid</li>
+            <li class="defect">Is notification with request</li>
+            <li class="defect">Is response success</li>
+            <li class="defect">Is response error</li>
+            <li class="defect">Is response with request</li>
+            <li class="defect">Handle batch request</li>
+            <li class="defect">Json rpc error codes</li>
+        </ul>
+        <h2>Laravel Facade Components (JTD\LaravelMCP\Tests\Unit\LaravelFacadeComponents)</h2>
+        <ul>
+            <li class="defect">Mcp manager delegates to registry and registrar</li>
+            <li class="defect">Mcp manager handles magic method calls</li>
+            <li class="defect">Mcp manager throws exception for invalid method</li>
+            <li class="defect">Process mcp request generates request id</li>
+            <li class="defect">Process mcp request uses provided request id</li>
+            <li class="defect">Process mcp request merges context</li>
+            <li class="defect">Mcp component registered handles null user id</li>
+            <li class="defect">Mcp component registered uses provided user id</li>
+            <li class="defect">Mcp request processed component type returns null for unknown</li>
+            <li class="defect">Mcp request processed component name returns null for invalid</li>
+            <li class="defect">Mcp request processed formats time under one second</li>
+            <li class="defect">Mcp request processed formats time over one second</li>
+            <li class="defect">Mcp error notification handles null exception</li>
+            <li class="defect">Mcp error notification uses provided severity</li>
+            <li class="defect">Mcp error notification stores exception</li>
+            <li class="defect">Mcp error notification via returns correct channels</li>
+            <li class="defect">Process mcp request has correct retry settings</li>
+            <li class="defect">Mcp component registered get component details includes all fields</li>
+            <li class="defect">Mcp request processed get request details includes all fields</li>
+            <li class="defect">Mcp request processed performance metrics includes memory</li>
+            <li class="defect">Mcp manager notifiable fallback logic</li>
+            <li class="defect">Mcp manager dispatches events conditionally</li>
+            <li class="defect">Process mcp request cache keys are formatted correctly</li>
+        </ul>
+        <h2>Laravel Facade Integration (JTD\LaravelMCP\Tests\Feature\LaravelFacadeIntegration)</h2>
+        <ul>
+            <li class="defect">It registers component and fires event</li>
+            <li class="defect">It dispatches async job</li>
+            <li class="defect">It retrieves async result from cache</li>
+            <li class="defect">It retrieves async status from cache</li>
+            <li class="defect">It sends error notification</li>
+            <li class="defect">It fires request processed event</li>
+            <li class="defect">It registers event listeners</li>
+            <li class="defect">It configures events jobs and notifications</li>
+            <li class="defect">It provides server information</li>
+            <li class="defect">It provides server statistics</li>
+            <li class="defect">It manages debug mode</li>
+            <li class="defect">It chains fluent methods</li>
+            <li class="defect">It handles error notification with exception</li>
+        </ul>
+        <h2>Laravel Mcp Service Provider (JTD\LaravelMCP\Tests\Unit\LaravelMcpServiceProvider)</h2>
+        <ul>
+            <li class="defect">It registers all singleton services</li>
+            <li class="defect">It ensures singletons return same instance</li>
+            <li class="defect">It registers transport implementations</li>
+            <li class="defect">It binds interfaces to implementations</li>
+            <li class="defect">It binds transport interface to default transport</li>
+            <li class="defect">It merges laravel mcp configuration</li>
+            <li class="defect">It merges mcp transports configuration</li>
+            <li class="defect">It allows custom configuration to override defaults</li>
+            <li class="defect">It validates dependencies successfully when met</li>
+            <li class="defect">It throws exception when required dependencies are missing</li>
+            <li class="defect">It detects console environment</li>
+            <li class="defect">It detects testing environment</li>
+            <li class="defect">It detects web environment</li>
+            <li class="defect">It skips discovery when disabled</li>
+            <li class="defect">It runs discovery when enabled</li>
+            <li class="defect">It sets up publishing configurations</li>
+            <li class="defect">It loads routes when mcp routes file exists</li>
+            <li class="defect">It skips routes when mcp routes file does not exist</li>
+            <li class="defect">It runs console boot only in console</li>
+            <li class="defect">It resolves individual services with data set "McpRegistry"</li>
+            <li class="defect">It resolves individual services with data set "TransportManager"</li>
+            <li class="defect">It resolves individual services with data set "JsonRpcHandler"</li>
+            <li class="defect">It resolves individual services with data set "MessageProcessor"</li>
+            <li class="defect">It resolves individual services with data set "CapabilityNegotiator"</li>
+            <li class="defect">It resolves individual services with data set "ToolRegistry"</li>
+            <li class="defect">It resolves individual services with data set "ResourceRegistry"</li>
+            <li class="defect">It resolves individual services with data set "PromptRegistry"</li>
+            <li class="defect">It resolves individual services with data set "ComponentDiscovery"</li>
+            <li class="defect">It resolves all services after boot</li>
+            <li class="defect">It validates configuration structure</li>
+            <li class="defect">It handles invalid configuration gracefully</li>
+            <li class="defect">It registers middleware when auto register enabled</li>
+            <li class="defect">It registers auth middleware when auth enabled</li>
+            <li class="defect">It skips middleware auto registration when disabled</li>
+            <li class="defect">It registers event hooks</li>
+            <li class="defect">It has proper error handling structure</li>
+            <li class="defect">It handles boot failure gracefully in production</li>
+            <li class="defect">It registers lazy services</li>
+            <li class="defect">It registers caching services</li>
+        </ul>
+        <h2>List Command (JTD\LaravelMCP\Tests\Unit\Commands\ListCommand)</h2>
+        <ul>
+            <li class="defect">It lists all components in table format</li>
+            <li class="defect">It filters by tool type</li>
+            <li class="defect">It filters by resource type</li>
+            <li class="defect">It filters by prompt type</li>
+            <li class="defect">It outputs in json format</li>
+            <li class="defect">It shows detailed information</li>
+            <li class="defect">It handles empty registries gracefully</li>
+            <li class="defect">It validates invalid type option</li>
+            <li class="defect">It validates invalid format option</li>
+        </ul>
+        <h2>List Command Feature (JTD\LaravelMCP\Tests\Feature\Commands\ListCommandFeature)</h2>
+        <ul>
+            <li class="defect">List command is registered in artisan</li>
+            <li class="defect">Command can be discovered by artisan</li>
+            <li class="defect">Command help displays correct information</li>
+            <li class="defect">Command handles empty registries</li>
+            <li class="defect">Command lists all component types</li>
+            <li class="defect">Command filters by tools type</li>
+            <li class="defect">Command filters by resources type</li>
+            <li class="defect">Command filters by prompts type</li>
+            <li class="defect">Command outputs json format</li>
+            <li class="defect">Command outputs yaml format</li>
+            <li class="defect">Command shows detailed information</li>
+            <li class="defect">Command shows detailed resource information</li>
+            <li class="defect">Command shows detailed prompt information</li>
+            <li class="defect">Command runs with debug mode</li>
+            <li class="defect">Command validates invalid type option</li>
+            <li class="defect">Command validates invalid format option</li>
+            <li class="defect">Command handles metadata failures gracefully</li>
+            <li class="defect">Command lists multiple components</li>
+            <li class="defect">Command json format with detailed flag</li>
+            <li class="defect">Full integration with service provider</li>
+            <li class="defect">Command integrates with mcp facade</li>
+            <li class="defect">Command truncates long descriptions</li>
+            <li class="defect">Command formats class names</li>
+        </ul>
+        <h2>Logs Operations (JTD\LaravelMCP\Tests\Unit\Traits\LogsOperations)</h2>
+        <ul>
+            <li class="defect">It logs operation when enabled</li>
+            <li class="defect">It does not log when disabled</li>
+            <li class="defect">It logs operation start</li>
+            <li class="defect">It logs operation complete with duration</li>
+            <li class="defect">It logs operation error</li>
+            <li class="defect">It logs request when enabled</li>
+            <li class="defect">It does not log request when disabled</li>
+            <li class="defect">It logs response when enabled</li>
+            <li class="defect">It logs validation failure</li>
+            <li class="defect">It logs authorization failure</li>
+            <li class="defect">It tracks performance when enabled</li>
+            <li class="defect">It calculates performance metrics</li>
+            <li class="defect">It sanitizes sensitive data for logging</li>
+            <li class="defect">It logs debug when enabled</li>
+            <li class="defect">It logs registration</li>
+            <li class="defect">It generates unique request id</li>
+            <li class="defect">It calculates data size</li>
+            <li class="defect">It calculates median correctly</li>
+            <li class="defect">It calculates percentile correctly</li>
+            <li class="defect">It sets custom log channel</li>
+            <li class="defect">It clears performance data</li>
+            <li class="defect">It respects log level configuration</li>
+            <li class="defect">It limits performance samples</li>
+        </ul>
+        <h2>MCP Auth Middleware Enhanced Functionality</h2>
+        <ul>
+            <li class="defect">It allows request when authentication is disabled</li>
+            <li class="defect">It authenticates with laravel guard</li>
+            <li class="defect">It authenticates with api key</li>
+            <li class="defect">It supports multiple api keys</li>
+            <li class="defect">It authenticates with bearer token</li>
+            <li class="defect">It returns unauthorized when authentication fails</li>
+            <li class="defect">It adds user context when authenticated</li>
+            <li class="defect">It handles authentication exceptions gracefully</li>
+            <li class="defect">It extracts api key from multiple locations</li>
+        </ul>
+        <h2>MCP Logging Middleware</h2>
+        <ul>
+            <li class="defect">It skips logging when disabled</li>
+            <li class="defect">It logs request and response</li>
+            <li class="defect">It redacts sensitive data from logs</li>
+            <li class="defect">It logs performance warning for slow requests</li>
+            <li class="defect">It logs exceptions as errors</li>
+            <li class="defect">It truncates large values in logs</li>
+            <li class="defect">It adds user context to logs when available</li>
+        </ul>
+        <h2>Make Commands Integration (JTD\LaravelMCP\Tests\Integration\Commands\MakeCommandsIntegration)</h2>
+        <ul>
+            <li class="defect">It generates valid tool class that compiles</li>
+            <li class="defect">It generates valid resource class that compiles</li>
+            <li class="defect">It generates valid prompt class that compiles</li>
+            <li class="defect">It generates classes with proper inheritance structure</li>
+            <li class="defect">It handles complex nested namespace generation</li>
+            <li class="defect">It generates classes with proper mcp schema structure</li>
+            <li class="defect">It handles force overwrite correctly across all commands</li>
+        </ul>
+        <h2>Make Prompt Command (JTD\LaravelMCP\Tests\Unit\Commands\MakePromptCommand)</h2>
+        <ul>
+            <li class="defect">It extends generator command</li>
+            <li class="defect">It has correct signature</li>
+            <li class="defect">It has correct description</li>
+            <li class="defect">It returns correct stub path</li>
+            <li class="defect">It returns correct default namespace</li>
+            <li class="defect">It generates correct prompt name from class</li>
+            <li class="defect">It creates prompt file successfully</li>
+            <li class="defect">It creates prompt with template integration</li>
+            <li class="defect">It validates variables json</li>
+            <li class="defect">It validates variable definitions</li>
+            <li class="defect">It validates invalid class names</li>
+            <li class="defect">It handles nonexistent template gracefully</li>
+            <li class="defect">It resolves template paths correctly</li>
+            <li class="defect">It handles nested namespaces</li>
+            <li class="defect">It handles force option to overwrite existing files</li>
+            <li class="defect">It displays success message with details</li>
+            <li class="defect">It generates description with template context</li>
+            <li class="defect">It handles empty options gracefully</li>
+            <li class="defect">It handles filesystem errors gracefully</li>
+        </ul>
+        <h2>Make Resource Command (JTD\LaravelMCP\Tests\Unit\Commands\MakeResourceCommand)</h2>
+        <ul>
+            <li class="defect">It extends generator command</li>
+            <li class="defect">It has correct signature</li>
+            <li class="defect">It has correct description</li>
+            <li class="defect">It returns correct stub path</li>
+            <li class="defect">It returns correct default namespace</li>
+            <li class="defect">It generates correct resource name from class</li>
+            <li class="defect">It creates resource file successfully</li>
+            <li class="defect">It creates resource with model integration</li>
+            <li class="defect">It creates resource with custom uri template</li>
+            <li class="defect">It validates invalid class names</li>
+            <li class="defect">It validates uri template format</li>
+            <li class="defect">It handles nonexistent model gracefully</li>
+            <li class="defect">It handles nested namespaces</li>
+            <li class="defect">It handles force option to overwrite existing files</li>
+            <li class="defect">It displays success message with details</li>
+            <li class="defect">It generates appropriate uri for model resources</li>
+            <li class="defect">It qualifies model class correctly</li>
+            <li class="defect">It handles filesystem errors gracefully</li>
+        </ul>
+        <h2>Make Tool Command (JTD\LaravelMCP\Tests\Unit\Commands\MakeToolCommand)</h2>
+        <ul>
+            <li class="defect">It extends generator command</li>
+            <li class="defect">It has correct signature</li>
+            <li class="defect">It has correct description</li>
+            <li class="defect">It returns correct stub path</li>
+            <li class="defect">It returns correct default namespace</li>
+            <li class="defect">It generates correct tool name from class</li>
+            <li class="defect">It creates tool file successfully</li>
+            <li class="defect">It creates tool with custom description</li>
+            <li class="defect">It validates parameters json</li>
+            <li class="defect">It handles invalid class names</li>
+            <li class="defect">It handles force option to overwrite existing files</li>
+            <li class="defect">It generates default description when none provided</li>
+            <li class="defect">It handles nested namespaces</li>
+            <li class="defect">It displays success message with details</li>
+            <li class="defect">It handles filesystem errors gracefully</li>
+        </ul>
+        <h2>Manages Capabilities (JTD\LaravelMCP\Tests\Unit\Traits\ManagesCapabilities)</h2>
+        <ul>
+            <li class="defect">It gets default capabilities</li>
+            <li class="defect">It adds capability</li>
+            <li class="defect">It prevents duplicate capabilities</li>
+            <li class="defect">It removes capability</li>
+            <li class="defect">It sets capabilities replacing existing</li>
+            <li class="defect">It gets tool default capabilities</li>
+            <li class="defect">It gets resource default capabilities</li>
+            <li class="defect">It gets prompt default capabilities</li>
+            <li class="defect">It checks capability existence</li>
+            <li class="defect">It gets capabilities array</li>
+            <li class="defect">It gets supported operations for tool</li>
+            <li class="defect">It gets supported operations for resource</li>
+            <li class="defect">It checks operation support</li>
+            <li class="defect">It enables subscription capability</li>
+            <li class="defect">It disables subscription capability</li>
+            <li class="defect">It gets capability metadata</li>
+            <li class="defect">It detects tool component type</li>
+            <li class="defect">It detects resource component type</li>
+            <li class="defect">It detects prompt component type</li>
+            <li class="defect">It validates tool capabilities</li>
+            <li class="defect">It validates resource capabilities</li>
+            <li class="defect">It validates prompt capabilities</li>
+            <li class="defect">It handles unknown component type</li>
+            <li class="defect">It merges default and custom capabilities</li>
+            <li class="defect">It returns self for fluent interface</li>
+        </ul>
+        <h2>Mcp Auth Middleware (JTD\LaravelMCP\Tests\Unit\Http\Middleware\McpAuthMiddleware)</h2>
+        <ul>
+            <li class="defect">It passes through when auth disabled</li>
+            <li class="defect">It passes through when no api key configured</li>
+            <li class="defect">It authenticates with valid api key in header</li>
+            <li class="defect">It authenticates with valid api key in query</li>
+            <li class="defect">It rejects invalid api key</li>
+            <li class="defect">It rejects request with no api key when required</li>
+            <li class="defect">It prioritizes header over query parameter</li>
+        </ul>
+        <h2>Mcp Component Registered (JTD\LaravelMCP\Tests\Unit\Events\McpComponentRegistered)</h2>
+        <ul>
+            <li class="defect">It creates event with required parameters</li>
+            <li class="defect">It creates event with metadata</li>
+            <li class="defect">It creates event with user id</li>
+            <li class="defect">It gets component type label</li>
+            <li class="defect">It gets component details</li>
+            <li class="defect">It checks metadata existence</li>
+            <li class="defect">It gets metadata value</li>
+            <li class="defect">It serializes for broadcasting</li>
+        </ul>
+        <h2>Mcp Controller (JTD\LaravelMCP\Tests\Unit\Http\Controllers\McpController)</h2>
+        <ul>
+            <li class="defect">It handles mcp request successfully</li>
+            <li class="defect">It handles transport exception</li>
+            <li class="defect">It handles unexpected exception</li>
+            <li class="defect">It handles options request</li>
+            <li class="defect">It handles options request with error</li>
+            <li class="defect">It provides health check</li>
+            <li class="defect">It returns unhealthy status</li>
+            <li class="defect">It handles health check exception</li>
+            <li class="defect">It provides server info</li>
+            <li class="defect">It handles info with transport unavailable</li>
+            <li class="defect">It handles info exception</li>
+            <li class="defect">It provides server sent events</li>
+            <li class="defect">It reuses existing http transport</li>
+            <li class="defect">It throws exception for invalid transport type</li>
+            <li class="defect">It adds cors headers to error response</li>
+        </ul>
+        <h2>Mcp Cors Middleware (JTD\LaravelMCP\Tests\Unit\Http\Middleware\McpCorsMiddleware)</h2>
+        <ul>
+            <li class="defect">It adds cors headers to regular requests</li>
+            <li class="defect">It handles preflight options requests</li>
+            <li class="defect">It respects specific allowed origins</li>
+            <li class="defect">It rejects disallowed origins</li>
+            <li class="defect">It allows all origins with wildcard</li>
+            <li class="defect">It sets default origin when no origin header</li>
+            <li class="defect">It uses default configuration values</li>
+            <li class="defect">It includes mcp specific headers</li>
+        </ul>
+        <h2>Mcp Error Handling Middleware (JTD\LaravelMCP\Tests\Unit\Http\Middleware\McpErrorHandlingMiddleware)</h2>
+        <ul>
+            <li class="defect">It passes through successful requests</li>
+            <li class="defect">It handles validation exceptions</li>
+            <li class="defect">It handles authentication exceptions</li>
+            <li class="defect">It handles authorization exceptions</li>
+            <li class="defect">It handles model not found exceptions</li>
+            <li class="defect">It handles not found http exceptions</li>
+            <li class="defect">It handles http exceptions with data set "Bad Request"</li>
+            <li class="defect">It handles http exceptions with data set "Unauthorized"</li>
+            <li class="defect">It handles http exceptions with data set "Forbidden"</li>
+            <li class="defect">It handles http exceptions with data set "Not Found"</li>
+            <li class="defect">It handles http exceptions with data set "Method Not Allowed"</li>
+            <li class="defect">It handles http exceptions with data set "Conflict"</li>
+            <li class="defect">It handles http exceptions with data set "Unprocessable Entity"</li>
+            <li class="defect">It handles http exceptions with data set "Too Many Requests"</li>
+            <li class="defect">It handles http exceptions with data set "Internal Server Error"</li>
+            <li class="defect">It handles http exceptions with data set "Service Unavailable"</li>
+            <li class="defect">It handles http exceptions with data set "Other Error"</li>
+            <li class="defect">It handles mcp specific exceptions</li>
+            <li class="defect">It handles mcp namespace exceptions</li>
+            <li class="defect">It handles generic exceptions without debug</li>
+            <li class="defect">It handles generic exceptions with debug</li>
+            <li class="defect">It does not show debug info when disabled</li>
+            <li class="defect">It does not log stack trace when disabled</li>
+            <li class="defect">It extracts request id from non json requests</li>
+            <li class="defect">It maps mcp error codes to http status</li>
+            <li class="defect">It limits stack trace to 10 frames</li>
+            <li class="defect">It handles validation exception with non array errors</li>
+            <li class="defect">It handles authentication exception with empty message</li>
+            <li class="defect">It handles authorization exception with empty message</li>
+            <li class="defect">It handles not found exception with empty message</li>
+        </ul>
+        <h2>Mcp Error Notification (JTD\LaravelMCP\Tests\Unit\Notifications\McpErrorNotification)</h2>
+        <ul>
+            <li class="defect">It creates notification with required parameters</li>
+            <li class="defect">It creates notification with all parameters</li>
+            <li class="defect">It determines notification channels based on severity</li>
+            <li class="defect">It creates mail message</li>
+            <li class="defect">It creates array representation</li>
+            <li class="defect">It creates slack message</li>
+            <li class="defect">It determines if notification should be sent</li>
+            <li class="defect">It checks slack channel configuration</li>
+            <li class="defect">It has correct tags</li>
+            <li class="defect">It generates correct email subject based on severity</li>
+            <li class="defect">It generates correct email greeting based on severity</li>
+            <li class="defect">It formats slack content with correct emoji</li>
+        </ul>
+        <h2>Mcp Events Edge Cases (JTD\LaravelMCP\Tests\Unit\Events\McpEventsEdgeCases)</h2>
+        <ul>
+            <li class="defect">Mcp component registered handles string component</li>
+            <li class="defect">Mcp component registered handles object component</li>
+            <li class="defect">Mcp component registered handles unknown component type</li>
+            <li class="defect">Mcp component registered metadata methods work</li>
+            <li class="defect">Mcp request processed handles various request ids</li>
+            <li class="defect">Mcp request processed handles various result types</li>
+            <li class="defect">Mcp request processed transport types</li>
+            <li class="defect">Mcp request processed execution time edge cases</li>
+            <li class="defect">Mcp request processed context handling</li>
+            <li class="defect">Mcp request processed component extraction</li>
+            <li class="defect">Mcp request processed error detection</li>
+            <li class="defect">Event timestamps are valid iso8601</li>
+            <li class="defect">Mcp request processed memory usage is positive</li>
+        </ul>
+        <h2>Mcp Exception (JTD\LaravelMCP\Tests\Unit\Exceptions\McpException)</h2>
+        <ul>
+            <li class="defect">Basic exception creation</li>
+            <li class="defect">Exception with data</li>
+            <li class="defect">Exception with context</li>
+            <li class="defect">Exception with previous</li>
+            <li class="defect">Set data</li>
+            <li class="defect">Set context</li>
+            <li class="defect">Add context</li>
+            <li class="defect">To array</li>
+            <li class="defect">To array with previous</li>
+            <li class="defect">To json</li>
+            <li class="defect">Get error type json rpc</li>
+            <li class="defect">Is client error</li>
+            <li class="defect">Is server error</li>
+            <li class="defect">Static parse error</li>
+            <li class="defect">Static invalid request</li>
+            <li class="defect">Static method not found</li>
+            <li class="defect">Static invalid params</li>
+            <li class="defect">Static internal error</li>
+            <li class="defect">Static application error</li>
+            <li class="defect">Static from throwable</li>
+            <li class="defect">From throwable with custom code</li>
+            <li class="defect">Fluent interface</li>
+        </ul>
+        <h2>Mcp Prompt (JTD\LaravelMCP\Tests\Unit\Abstracts\McpPrompt)</h2>
+        <ul>
+            <li class="defect">It initializes with container and view</li>
+            <li class="defect">It returns configured name</li>
+            <li class="defect">It generates name from class when not set</li>
+            <li class="defect">It returns configured description</li>
+            <li class="defect">It returns default description when not set</li>
+            <li class="defect">It returns configured arguments</li>
+            <li class="defect">It generates prompt messages</li>
+            <li class="defect">It handles authorization</li>
+            <li class="defect">It validates arguments</li>
+            <li class="defect">It uses template when provided</li>
+            <li class="defect">It converts to array</li>
+            <li class="defect">It creates message structure</li>
+            <li class="defect">It formats messages</li>
+            <li class="defect">It applies template variables</li>
+            <li class="defect">It provides container helpers</li>
+            <li class="defect">It uses traits</li>
+            <li class="defect">It throws exception for unimplemented custom content</li>
+            <li class="defect">It handles empty arguments</li>
+        </ul>
+        <h2>Mcp Rate Limit Middleware (JTD\LaravelMCP\Tests\Unit\Http\Middleware\McpRateLimitMiddleware)</h2>
+        <ul>
+            <li class="defect">It skips rate limiting when disabled</li>
+            <li class="defect">It allows requests within rate limit</li>
+            <li class="defect">It blocks requests exceeding rate limit</li>
+            <li class="defect">It uses named limiter when provided</li>
+            <li class="defect">It uses method specific configuration with data set "tools category"</li>
+            <li class="defect">It uses method specific configuration with data set "resources category"</li>
+            <li class="defect">It uses method specific configuration with data set "prompts category"</li>
+            <li class="defect">It uses method specific configuration with data set "sampling category"</li>
+            <li class="defect">It uses method specific configuration with data set "completion category"</li>
+            <li class="defect">It generates correct key for strategy with data set "per_user strategy with mcp_user_id"</li>
+            <li class="defect">It generates correct key for strategy with data set "per_user strategy with auth user"</li>
+            <li class="defect">It generates correct key for strategy with data set "per_ip strategy"</li>
+            <li class="defect">It generates correct key for strategy with data set "per_user_per_ip strategy"</li>
+            <li class="defect">It generates correct key for strategy with data set "per_api_key strategy"</li>
+            <li class="defect">It generates correct key for strategy with data set "global strategy"</li>
+            <li class="defect">It adds custom key suffix from config</li>
+            <li class="defect">It adds retry after headers when limited</li>
+            <li class="defect">It does not log when logging disabled</li>
+            <li class="success">It clears rate limit for specific key</li>
+            <li class="defect">It resets rate limits for user</li>
+            <li class="defect">It returns rate limit status</li>
+            <li class="defect">It handles simple integer config</li>
+            <li class="defect">It handles non json requests</li>
+            <li class="defect">It handles api key from query parameter</li>
+            <li class="defect">It uses x api key header as fallback</li>
+            <li class="defect">It uses anonymous for missing api key</li>
+        </ul>
+        <h2>Mcp Registry (JTD\LaravelMCP\Tests\Unit\Registry\McpRegistry)</h2>
+        <ul>
+            <li class="defect">It can be instantiated</li>
+            <li class="defect">It initializes registries</li>
+            <li class="defect">It registers tools with type</li>
+            <li class="defect">It registers resources with type</li>
+            <li class="defect">It registers prompts with type</li>
+            <li class="defect">It throws exception for invalid type</li>
+            <li class="defect">It validates empty component name</li>
+            <li class="defect">It validates non existent handler class</li>
+            <li class="defect">It validates handler extends correct base class</li>
+            <li class="defect">It gets tool from registry</li>
+            <li class="defect">It gets resource from registry</li>
+            <li class="defect">It gets prompt from registry</li>
+            <li class="defect">It lists all tools</li>
+            <li class="defect">It lists all resources</li>
+            <li class="defect">It lists all prompts</li>
+            <li class="defect">It checks if tool exists</li>
+            <li class="defect">It checks if resource exists</li>
+            <li class="defect">It checks if prompt exists</li>
+            <li class="defect">It unregisters tool</li>
+            <li class="defect">It unregisters resource</li>
+            <li class="defect">It unregisters prompt</li>
+            <li class="defect">It returns capabilities</li>
+            <li class="defect">It handles thread safety in registration</li>
+        </ul>
+        <h2>Mcp Request Processed (JTD\LaravelMCP\Tests\Unit\Events\McpRequestProcessed)</h2>
+        <ul>
+            <li class="defect">It creates event with required parameters</li>
+            <li class="defect">It creates event with all parameters</li>
+            <li class="defect">It gets component type from method</li>
+            <li class="defect">It gets component name from method</li>
+            <li class="defect">It checks if request was successful</li>
+            <li class="defect">It gets request details</li>
+            <li class="defect">It gets performance metrics</li>
+            <li class="defect">It checks if execution time exceeded threshold</li>
+            <li class="defect">It formats execution time</li>
+            <li class="defect">It serializes for broadcasting</li>
+        </ul>
+        <h2>Mcp Resource (JTD\LaravelMCP\Tests\Unit\Abstracts\McpResource)</h2>
+        <ul>
+            <li class="defect">It gets resource name</li>
+            <li class="defect">It generates name from class when not set</li>
+            <li class="defect">It gets resource description</li>
+            <li class="defect">It gets default description when not set</li>
+            <li class="defect">It gets uri template</li>
+            <li class="defect">It generates uri template when not set</li>
+            <li class="defect">It reads resource with custom implementation</li>
+            <li class="defect">It lists resources with custom implementation</li>
+            <li class="defect">It throws exception when authorization fails for read</li>
+            <li class="defect">It throws exception when authorization fails for list</li>
+            <li class="defect">It throws exception for unsupported subscription</li>
+            <li class="defect">It handles subscription when supported</li>
+            <li class="defect">It validates parameters for read</li>
+            <li class="defect">It validates parameters for list</li>
+            <li class="defect">It converts to array representation</li>
+            <li class="defect">It formats content for mcp response</li>
+            <li class="defect">It handles boot lifecycle</li>
+            <li class="defect">It does not require auth by default</li>
+            <li class="defect">It uses container for dependency injection</li>
+            <li class="defect">It throws exception when custom read not implemented</li>
+            <li class="defect">It throws exception when custom list not implemented</li>
+        </ul>
+        <h2>Mcp Server (JTD\LaravelMCP\Tests\Unit\Server\McpServer)</h2>
+        <ul>
+            <li class="defect">Implements server interface</li>
+            <li class="defect">Can create server instance</li>
+            <li class="defect">Server starts uninitialized and not running</li>
+            <li class="defect">Can initialize server</li>
+            <li class="defect">Cannot initialize server twice</li>
+            <li class="defect">Can start server after initialization</li>
+            <li class="defect">Cannot start uninitialized server</li>
+            <li class="defect">Start is idempotent</li>
+            <li class="defect">Can stop running server</li>
+            <li class="defect">Stop is idempotent</li>
+            <li class="defect">Can restart server</li>
+            <li class="defect">Can get server status</li>
+            <li class="defect">Can get server health</li>
+            <li class="defect">Can get server info</li>
+            <li class="defect">Can get capabilities</li>
+            <li class="defect">Can set and get configuration</li>
+            <li class="defect">Can register transport</li>
+            <li class="defect">Can remove transport</li>
+            <li class="defect">Can get uptime</li>
+            <li class="defect">Can get metrics</li>
+            <li class="defect">Can shutdown gracefully</li>
+            <li class="defect">Can increment request count</li>
+            <li class="defect">Can increment error count</li>
+            <li class="defect">Can get diagnostics</li>
+            <li class="defect">Handles initialization errors</li>
+            <li class="defect">Handles start errors</li>
+            <li class="defect">Handles stop errors</li>
+        </ul>
+        <h2>Mcp Server Integration (JTD\LaravelMCP\Tests\Feature\McpServerIntegration)</h2>
+        <ul>
+            <li class="defect">Can resolve server from container</li>
+            <li class="defect">Can resolve server info from container</li>
+            <li class="defect">Can resolve capability manager from container</li>
+            <li class="defect">Server initialization flow</li>
+            <li class="defect">Server lifecycle management</li>
+            <li class="defect">Server status and health</li>
+            <li class="defect">Server configuration integration</li>
+            <li class="defect">Capability negotiation integration</li>
+            <li class="defect">Server metrics tracking</li>
+            <li class="defect">Server info detailed information</li>
+            <li class="defect">Server graceful shutdown</li>
+            <li class="defect">Capability manager mcp10 compliance</li>
+            <li class="defect">Server transport integration</li>
+            <li class="defect">Server component integration</li>
+            <li class="defect">Server diagnostics</li>
+            <li class="defect">Server uptime tracking</li>
+            <li class="defect">Server protocol version</li>
+        </ul>
+        <h2>Mcp Tool (JTD\LaravelMCP\Tests\Unit\Abstracts\McpTool)</h2>
+        <ul>
+            <li class="defect">It gets tool name</li>
+            <li class="defect">It generates name from class when not set</li>
+            <li class="defect">It gets tool description</li>
+            <li class="defect">It gets default description when not set</li>
+            <li class="defect">It gets input schema</li>
+            <li class="defect">It executes tool with valid parameters</li>
+            <li class="defect">It throws exception when authorization fails</li>
+            <li class="defect">It validates parameters before execution</li>
+            <li class="defect">It applies middleware to parameters</li>
+            <li class="defect">It resolves dependencies from container</li>
+            <li class="defect">It converts to array representation</li>
+            <li class="defect">It handles boot lifecycle</li>
+            <li class="defect">It handles empty parameter schema</li>
+            <li class="defect">It does not require auth by default</li>
+            <li class="defect">It uses validation factory for parameter validation</li>
+            <li class="defect">It uses container for dependency injection</li>
+        </ul>
+        <h2>Mcp Validation Middleware (JTD\LaravelMCP\Tests\Unit\Http\Middleware\McpValidationMiddleware)</h2>
+        <ul>
+            <li class="success">It skips validation when disabled</li>
+            <li class="defect">It validates content type for post requests</li>
+            <li class="success">It allows non json content when strict mode disabled</li>
+            <li class="defect">It validates request size</li>
+            <li class="defect">It validates json rpc structure</li>
+            <li class="success">It validates valid json rpc request</li>
+            <li class="defect">It validates method format</li>
+            <li class="success">It allows single word methods</li>
+            <li class="defect">It validates params must be array</li>
+            <li class="defect">It validates id format</li>
+            <li class="defect">It enforces strict mcp methods when enabled</li>
+            <li class="success">It allows custom methods from config</li>
+            <li class="defect">It validates initialize protocol version</li>
+            <li class="defect">It validates capabilities configuration</li>
+            <li class="defect">It validates disabled capabilities</li>
+            <li class="success">It validates method specific parameters with data set "tools/call with valid params"</li>
+            <li class="defect">It validates method specific parameters with data set "tools/call without name"</li>
+            <li class="success">It validates method specific parameters with data set "resources/read with valid uri"</li>
+            <li class="defect">It validates method specific parameters with data set "resources/read without uri"</li>
+            <li class="success">It validates method specific parameters with data set "resources/write with valid params"</li>
+            <li class="defect">It validates method specific parameters with data set "resources/write without contents"</li>
+            <li class="success">It validates method specific parameters with data set "prompts/get with valid params"</li>
+            <li class="success">It validates method specific parameters with data set "logging/setLevel with valid level"</li>
+            <li class="defect">It validates method specific parameters with data set "logging/setLevel with invalid level"</li>
+            <li class="success">It validates method specific parameters with data set "sampling/createMessage with valid params"</li>
+            <li class="defect">It validates method specific parameters with data set "sampling/createMessage with invalid role"</li>
+            <li class="success">It validates method specific parameters with data set "completion/complete with valid params"</li>
+            <li class="defect">It applies custom validation rules from config</li>
+            <li class="defect">It allows custom tool methods</li>
+            <li class="success">It logs unknown capabilities</li>
+            <li class="defect">It handles validation exception properly</li>
+            <li class="defect">It handles generic exceptions</li>
+            <li class="success">It skips validation for non json requests</li>
+            <li class="defect">It validates nested parameters</li>
+        </ul>
+        <h2>Message Framer (JTD\LaravelMCP\Tests\Unit\Transport\MessageFramer)</h2>
+        <ul>
+            <li class="defect">It frames json rpc request</li>
+            <li class="defect">It frames json rpc response</li>
+            <li class="defect">It frames json rpc error response</li>
+            <li class="defect">It frames with content length header</li>
+            <li class="defect">It parses line delimited messages</li>
+            <li class="defect">It parses partial messages</li>
+            <li class="defect">It parses messages with content length</li>
+            <li class="defect">It handles multiple content length messages</li>
+            <li class="defect">It throws exception for invalid json</li>
+            <li class="defect">It throws exception for missing jsonrpc version</li>
+            <li class="defect">It throws exception for invalid message structure</li>
+            <li class="defect">It throws exception for buffer overflow</li>
+            <li class="defect">It creates request messages</li>
+            <li class="defect">It creates notification messages</li>
+            <li class="defect">It creates response messages</li>
+            <li class="defect">It creates error response messages</li>
+            <li class="defect">It identifies request messages</li>
+            <li class="defect">It identifies response messages</li>
+            <li class="defect">It identifies notification messages</li>
+            <li class="defect">It clears buffer</li>
+            <li class="defect">It checks for buffered data</li>
+            <li class="defect">It tracks statistics</li>
+            <li class="defect">It resets statistics</li>
+            <li class="defect">It provides standard error codes with data set #0</li>
+            <li class="defect">It provides standard error codes with data set #1</li>
+            <li class="defect">It provides standard error codes with data set #2</li>
+            <li class="defect">It provides standard error codes with data set #3</li>
+            <li class="defect">It provides standard error codes with data set #4</li>
+            <li class="defect">It provides standard error codes with data set #5</li>
+            <li class="defect">It validates error object structure</li>
+            <li class="defect">It validates method type</li>
+            <li class="defect">It validates params type</li>
+            <li class="defect">It validates id type</li>
+        </ul>
+        <h2>Message Handler Interface (JTD\LaravelMCP\Tests\Unit\Transport\Contracts\MessageHandlerInterface)</h2>
+        <ul>
+            <li class="defect">Handle valid message returns response</li>
+            <li class="defect">Handle notification returns null</li>
+            <li class="defect">Handle complex message</li>
+            <li class="defect">Handle error with exception</li>
+            <li class="defect">Handle error with different types</li>
+            <li class="defect">On connect</li>
+            <li class="defect">On disconnect</li>
+            <li class="defect">Can handle supported message</li>
+            <li class="defect">Can handle unsupported message</li>
+            <li class="defect">Can handle various formats</li>
+            <li class="defect">Get supported message types</li>
+            <li class="defect">Get supported message types empty</li>
+            <li class="defect">Lifecycle events sequence</li>
+            <li class="defect">Handle multiple messages</li>
+            <li class="defect">Error handling isolation</li>
+            <li class="defect">Check specific message type support</li>
+        </ul>
+        <h2>Message Processor (JTD\LaravelMCP\Tests\Unit\Protocol\MessageProcessor)</h2>
+        <ul>
+            <li class="defect">Constructor initializes handlers and capabilities</li>
+            <li class="defect">Get supported message types returns expected methods</li>
+            <li class="defect">Can handle returns true for valid json rpc messages</li>
+            <li class="defect">Can handle returns false for invalid messages</li>
+            <li class="defect">Handle returns error for invalid json rpc messages</li>
+            <li class="defect">Handle processes valid requests</li>
+            <li class="defect">Handle processes notifications without response</li>
+            <li class="defect">Handle processes responses without response</li>
+            <li class="defect">Handle returns error for unrecognized message types</li>
+            <li class="defect">Handle catches and handles exceptions</li>
+            <li class="defect">Handle error logs transport errors</li>
+            <li class="defect">On connect logs transport connection</li>
+            <li class="defect">On disconnect resets initialization state</li>
+            <li class="defect">Set server info updates server information</li>
+            <li class="defect">Get server info returns current information</li>
+            <li class="defect">Initialization workflow works correctly</li>
+            <li class="defect">Tools list handler integration works</li>
+            <li class="defect">Resources list handler integration works</li>
+            <li class="defect">Prompts list handler integration works</li>
+            <li class="defect">Handler methods auto initialize when not initialized</li>
+            <li class="defect">Initialize request handles capability negotiation</li>
+            <li class="defect">Initialized notification sets initialization state</li>
+            <li class="defect">Ping request returns empty response</li>
+            <li class="defect">Tools list auto initializes when not initialized</li>
+            <li class="defect">Tools call auto initializes when not initialized</li>
+            <li class="defect">Resources list auto initializes when not initialized</li>
+            <li class="defect">Resources read auto initializes when not initialized</li>
+            <li class="defect">Resources templates list auto initializes when not initialized</li>
+            <li class="defect">Prompts list auto initializes when not initialized</li>
+            <li class="defect">Prompts get auto initializes when not initialized</li>
+            <li class="defect">Resources templates list works when initialized</li>
+            <li class="defect">Server info can be updated and retrieved</li>
+            <li class="defect">Client capabilities are tracked correctly</li>
+            <li class="defect">Server capabilities are set up correctly</li>
+            <li class="defect">On connect logs different transport configurations with data set "HTTP config"</li>
+            <li class="defect">On connect logs different transport configurations with data set "Stdio config"</li>
+            <li class="defect">On connect logs different transport configurations with data set "Empty config"</li>
+            <li class="defect">On connect logs different transport configurations with data set "Custom config"</li>
+            <li class="defect">On disconnect resets all state properly</li>
+            <li class="defect">Handle error logs different error types with data set "Runtime exception"</li>
+            <li class="defect">Handle error logs different error types with data set "Protocol exception"</li>
+            <li class="defect">Handle error logs different error types with data set "Invalid argument exception"</li>
+            <li class="defect">Handle error logs different error types with data set "Exception with no message"</li>
+            <li class="defect">Handle message edge cases with data set "Empty message"</li>
+            <li class="defect">Handle message edge cases with data set "Message with null values"</li>
+            <li class="defect">Handle message edge cases with data set "Message with numeric method"</li>
+            <li class="defect">Handle message edge cases with data set "Very large message"</li>
+            <li class="defect">Handle message edge cases with data set "Exception during validation"</li>
+            <li class="defect">Constructor sets up all handlers</li>
+        </ul>
+        <h2>Middleware Integration (JTD\LaravelMCP\Tests\Feature\MiddlewareIntegration)</h2>
+        <ul>
+            <li class="defect">It allows valid cors requests</li>
+            <li class="defect">It handles cors preflight requests</li>
+            <li class="defect">It allows requests with valid api key</li>
+            <li class="defect">It rejects requests with invalid api key</li>
+            <li class="defect">It rejects requests without api key when required</li>
+            <li class="defect">It allows requests when auth disabled</li>
+            <li class="defect">It processes middleware stack correctly</li>
+            <li class="defect">It accepts api key in query parameter</li>
+            <li class="defect">It respects cors origin restrictions</li>
+            <li class="defect">It allows wildcard origins</li>
+            <li class="defect">It handles complex cors scenarios</li>
+            <li class="defect">It maintains cors headers on auth errors</li>
+        </ul>
+        <h2>Middleware Stack Integration (JTD\LaravelMCP\Tests\Feature\MiddlewareStackIntegration)</h2>
+        <ul>
+            <li class="defect">It processes valid mcp request through full stack</li>
+            <li class="defect">It handles authentication failure gracefully</li>
+            <li class="defect">It handles validation errors with proper error format</li>
+            <li class="defect">It enforces rate limits across requests</li>
+            <li class="defect">It handles runtime errors with error middleware</li>
+            <li class="defect">It logs slow requests with performance warning</li>
+            <li class="defect">It handles preflight cors requests with full stack</li>
+            <li class="defect">It validates json rpc structure before processing</li>
+            <li class="defect">It adds user context when authenticated</li>
+            <li class="defect">It validates mcp protocol compliance</li>
+            <li class="defect">It handles multiple middleware failures correctly</li>
+            <li class="defect">It maintains request context through middleware stack</li>
+            <li class="defect">It handles different authentication methods</li>
+            <li class="defect">It respects capability configuration</li>
+        </ul>
+        <h2>Notification Handler (Tests\Unit\Protocol\NotificationHandler)</h2>
+        <ul>
+            <li class="defect">Broadcast notification fires events</li>
+            <li class="defect">Subscribe and unsubscribe</li>
+            <li class="defect">Notification filtering</li>
+            <li class="defect">Queued notification delivery</li>
+            <li class="defect">Sse response creation</li>
+            <li class="defect">Delivery status tracking</li>
+            <li class="defect">Pending notifications management</li>
+            <li class="defect">Filter update</li>
+            <li class="defect">Notification types</li>
+        </ul>
+        <h2>Process Mcp Request (JTD\LaravelMCP\Tests\Unit\Jobs\ProcessMcpRequest)</h2>
+        <ul>
+            <li class="defect">It creates job with required parameters</li>
+            <li class="defect">It creates job with custom request id and context</li>
+            <li class="defect">It has correct job properties</li>
+            <li class="defect">It parses method correctly</li>
+            <li class="defect">It throws exception for invalid method format</li>
+            <li class="defect">It executes tool successfully</li>
+            <li class="defect">It executes resource read action</li>
+            <li class="defect">It executes resource list action</li>
+            <li class="defect">It executes prompt generation</li>
+            <li class="defect">It handles tool not found error</li>
+            <li class="defect">It stores result in cache</li>
+            <li class="defect">It handles job failure</li>
+            <li class="defect">It gets correct cache keys</li>
+            <li class="defect">It has correct tags</li>
+            <li class="defect">It has correct display name</li>
+            <li class="defect">It sets retry until correctly</li>
+        </ul>
+        <h2>Prompt Handler (JTD\LaravelMCP\Tests\Unit\Server\Handlers\PromptHandler)</h2>
+        <ul>
+            <li class="defect">Constructor sets dependencies and handler name</li>
+            <li class="defect">Get supported methods returns prompt methods</li>
+            <li class="defect">Supports method returns true for supported methods</li>
+            <li class="defect">Supports method returns false for unsupported methods</li>
+            <li class="defect">Handle throws protocol exception for unsupported method</li>
+            <li class="defect">Handle prompts list returns empty prompts array when no prompts</li>
+            <li class="defect">Handle prompts list returns prompt definitions</li>
+            <li class="defect">Handle prompts list handles prompt definition failures gracefully</li>
+            <li class="defect">Handle prompts list validates cursor parameter</li>
+            <li class="defect">Handle prompts list applies cursor pagination</li>
+            <li class="defect">Handle prompts list includes next cursor when more prompts available</li>
+            <li class="defect">Handle prompts get validates required parameters</li>
+            <li class="defect">Handle prompts get validates parameter types</li>
+            <li class="defect">Handle prompts get throws error for non existent prompt</li>
+            <li class="defect">Handle prompts get processes prompt with process method</li>
+            <li class="defect">Handle prompts get processes prompt with get method</li>
+            <li class="defect">Handle prompts get processes prompt with invoke method</li>
+            <li class="defect">Handle prompts get processes callable prompt</li>
+            <li class="defect">Handle prompts get throws error for non processable prompt</li>
+            <li class="defect">Handle prompts get validates arguments if prompt supports it</li>
+            <li class="defect">Handle prompts get skips validation if prompt does not support it</li>
+            <li class="defect">Handle prompts get handles processing failures</li>
+            <li class="defect">Handle prompts get uses default empty arguments when not provided</li>
+            <li class="defect">Get prompt description handles different description methods with data set "getDescription method"</li>
+            <li class="defect">Get prompt description handles different description methods with data set "description method"</li>
+            <li class="defect">Get prompt description handles different description methods with data set "description property"</li>
+            <li class="defect">Get prompt description handles different description methods with data set "no description"</li>
+            <li class="defect">Get prompt arguments handles different arguments methods with data set "getArguments method"</li>
+            <li class="defect">Get prompt arguments handles different arguments methods with data set "arguments method"</li>
+            <li class="defect">Get prompt arguments handles different arguments methods with data set "arguments property"</li>
+            <li class="defect">Get prompt arguments handles different arguments methods with data set "no arguments"</li>
+            <li class="defect">Format prompt messages handles different result formats with data set "array of messages"</li>
+            <li class="defect">Format prompt messages handles different result formats with data set "single message object"</li>
+            <li class="defect">Format prompt messages handles different result formats with data set "string result"</li>
+            <li class="defect">Format prompt messages handles different result formats with data set "array result (not messages)"</li>
+            <li class="defect">Format prompt messages handles different result formats with data set "object result"</li>
+            <li class="defect">Format prompt messages handles different result formats with data set "number result"</li>
+            <li class="defect">Format prompt messages handles different result formats with data set "empty array result"</li>
+            <li class="defect">Is message array correctly identifies message arrays with data set "valid message array"</li>
+            <li class="defect">Is message array correctly identifies message arrays with data set "array with content only"</li>
+            <li class="defect">Is message array correctly identifies message arrays with data set "array with role only"</li>
+            <li class="defect">Is message array correctly identifies message arrays with data set "empty array"</li>
+            <li class="defect">Is message array correctly identifies message arrays with data set "array of strings"</li>
+            <li class="defect">Is message array correctly identifies message arrays with data set "array of numbers"</li>
+            <li class="defect">Is message array correctly identifies message arrays with data set "mixed array"</li>
+        </ul>
+        <h2>Prompt Registry (JTD\LaravelMCP\Tests\Unit\Registry\PromptRegistry)</h2>
+        <ul>
+            <li class="defect">Register prompt successfully</li>
+            <li class="defect">Register duplicate prompt throws exception</li>
+            <li class="defect">Get non existent prompt throws exception</li>
+            <li class="defect">Unregister prompt successfully</li>
+            <li class="defect">Unregister non existent prompt</li>
+            <li class="defect">Has prompt</li>
+            <li class="defect">Get all prompts</li>
+            <li class="defect">Get prompt names</li>
+            <li class="defect">Count prompts</li>
+            <li class="defect">Clear all prompts</li>
+            <li class="defect">Get prompt metadata</li>
+            <li class="defect">Get metadata for non existent prompt throws exception</li>
+            <li class="defect">Filter prompts by metadata</li>
+            <li class="defect">Search prompts by pattern</li>
+            <li class="defect">Get registry type</li>
+            <li class="defect">Get prompt definitions</li>
+            <li class="defect">Get prompt</li>
+            <li class="defect">Get prompt with class name</li>
+            <li class="defect">Get invalid prompt throws exception</li>
+            <li class="defect">List prompts</li>
+            <li class="defect">Validate arguments</li>
+            <li class="defect">Get prompts by arguments</li>
+            <li class="defect">Get argument schema</li>
+            <li class="defect">Initialize</li>
+            <li class="defect">Metadata defaults</li>
+            <li class="defect">Complex filtering</li>
+            <li class="defect">Prompt name edge cases</li>
+            <li class="defect">Argument schema with missing names</li>
+            <li class="defect">Message formatting</li>
+        </ul>
+        <h2>Protocol Handler Interface (Tests\Unit\Protocol\Contracts\ProtocolHandlerInterface)</h2>
+        <ul>
+            <li class="defect">Initialize with capabilities</li>
+            <li class="defect">Initialize with empty capabilities</li>
+            <li class="defect">Handle initialize</li>
+            <li class="defect">Handle initialized</li>
+            <li class="defect">Handle ping</li>
+            <li class="defect">Handle tools list without params</li>
+            <li class="defect">Handle tools list with filters</li>
+            <li class="defect">Handle tools call</li>
+            <li class="defect">Handle resources list without params</li>
+            <li class="defect">Handle resources read</li>
+            <li class="defect">Handle resources subscribe</li>
+            <li class="defect">Handle resources unsubscribe</li>
+            <li class="defect">Handle prompts list without params</li>
+            <li class="defect">Handle prompts get</li>
+            <li class="defect">Handle logging set level</li>
+            <li class="defect">Get capabilities</li>
+            <li class="defect">Get server info</li>
+            <li class="defect">Can handle method supported</li>
+            <li class="defect">Can handle method unsupported</li>
+            <li class="defect">Get supported methods</li>
+            <li class="defect">Full initialization sequence</li>
+            <li class="defect">Handle all mcp methods</li>
+            <li class="defect">Unsupported capabilities</li>
+        </ul>
+        <h2>Protocol Integration (JTD\LaravelMCP\Tests\Feature\Protocol\ProtocolIntegration)</h2>
+        <ul>
+            <li class="defect">It handles complete server initialization sequence</li>
+            <li class="defect">It negotiates capabilities based on client support</li>
+            <li class="defect">It handles complete tool execution flow</li>
+            <li class="defect">It handles complete resource reading flow</li>
+            <li class="defect">It handles complete prompt retrieval flow</li>
+            <li class="defect">It handles notification delivery flow</li>
+            <li class="defect">It integrates with http transport for different request types</li>
+            <li class="defect">It simulates stdio transport integration</li>
+            <li class="defect">It routes messages through different transport types</li>
+            <li class="defect">It handles multiple concurrent requests</li>
+            <li class="defect">It handles error recovery and retry scenarios</li>
+            <li class="defect">It manages session lifecycle correctly</li>
+            <li class="defect">It handles client disconnection scenarios</li>
+            <li class="defect">It maintains jsonrpc 2 0 compliance in real scenarios</li>
+            <li class="defect">It adheres to mcp 1 0 protocol specification</li>
+            <li class="defect">It handles errors with correct jsonrpc codes</li>
+            <li class="defect">It handles large messages correctly</li>
+            <li class="defect">It handles timeout scenarios gracefully</li>
+            <li class="defect">It handles invalid messages robustly</li>
+        </ul>
+        <h2>Register Command (JTD\LaravelMCP\Tests\Feature\Commands\RegisterCommand)</h2>
+        <ul>
+            <li class="defect">It registers claude desktop configuration</li>
+            <li class="defect">It registers claude code configuration</li>
+            <li class="defect">It registers chatgpt desktop configuration</li>
+            <li class="defect">It validates invalid client type</li>
+            <li class="defect">It prompts for server name when not provided</li>
+            <li class="defect">It handles environment variables</li>
+            <li class="defect">It handles additional arguments</li>
+            <li class="defect">It prevents overwrite without force flag</li>
+            <li class="defect">It merges with existing configuration</li>
+            <li class="defect">It uses custom output path</li>
+            <li class="defect">It shows next steps for claude desktop</li>
+            <li class="defect">It shows next steps for claude code</li>
+            <li class="defect">It shows next steps for chatgpt</li>
+            <li class="defect">It handles custom server path</li>
+            <li class="defect">It handles invalid environment variables with data set "no equals sign"</li>
+            <li class="defect">It handles invalid environment variables with data set "empty value"</li>
+            <li class="defect">It handles invalid environment variables with data set "only equals"</li>
+        </ul>
+        <h2>Register Command Feature (JTD\LaravelMCP\Tests\Feature\Commands\RegisterCommandFeature)</h2>
+        <ul>
+            <li class="defect">It can register claude desktop configuration</li>
+            <li class="defect">It can register claude code configuration</li>
+            <li class="defect">It can register chatgpt configuration</li>
+            <li class="defect">It validates client type</li>
+            <li class="defect">It accepts additional arguments</li>
+            <li class="defect">It accepts environment variables</li>
+            <li class="defect">It uses custom server path</li>
+            <li class="defect">It prevents overwrite without force flag</li>
+            <li class="defect">It overwrites with force flag</li>
+            <li class="defect">It merges with existing configuration</li>
+            <li class="defect">It creates directory if not exists</li>
+            <li class="defect">It provides helpful next steps</li>
+            <li class="defect">It shows different next steps for different clients</li>
+            <li class="defect">It handles configuration generation errors</li>
+            <li class="defect">It validates configuration before saving</li>
+            <li class="defect">It handles file save errors</li>
+            <li class="defect">It falls back to current directory when default path unavailable</li>
+            <li class="defect">It shows debug information in verbose mode</li>
+        </ul>
+        <h2>Registration Integration (JTD\LaravelMCP\Tests\Feature\Registry\RegistrationIntegration)</h2>
+        <ul>
+            <li class="defect">It supports route style registration</li>
+            <li class="defect">It supports group registration with middleware</li>
+            <li class="defect">It supports namespace group registration</li>
+            <li class="defect">It loads routes from mcp routes file</li>
+            <li class="defect">It supports fluent interface registration</li>
+            <li class="defect">It handles complex nested groups</li>
+            <li class="defect">It provides list functionality</li>
+            <li class="defect">It integrates with service provider</li>
+            <li class="defect">It supports closure handlers</li>
+            <li class="defect">It supports instance handlers</li>
+            <li class="defect">It handles duplicate registrations</li>
+            <li class="defect">It validates empty component names</li>
+            <li class="defect">It validates non existent classes</li>
+            <li class="defect">It unregisters components</li>
+            <li class="defect">It counts registered components</li>
+        </ul>
+        <h2>Registration System (JTD\LaravelMCP\Tests\Feature\RegistrationSystem)</h2>
+        <ul>
+            <li class="defect">Tool registration workflow</li>
+            <li class="defect">Resource registration workflow</li>
+            <li class="defect">Prompt registration workflow</li>
+            <li class="defect">Registration validation errors</li>
+            <li class="defect">Duplicate registration prevention</li>
+            <li class="defect">Invalid handler validation</li>
+            <li class="defect">Invalid handler type validation</li>
+            <li class="defect">Backward compatibility methods</li>
+            <li class="defect">Registry initialization</li>
+            <li class="defect">Registry clear</li>
+            <li class="defect">Get type registries</li>
+            <li class="defect">Server capabilities</li>
+            <li class="defect">Component discovery configuration</li>
+            <li class="defect">Component discovery filters</li>
+            <li class="defect">Supported component types</li>
+            <li class="defect">Complete registration count</li>
+            <li class="defect">Get all components</li>
+            <li class="defect">All method returns all components</li>
+        </ul>
+        <h2>Registry Interface (JTD\LaravelMCP\Tests\Unit\Registry\Contracts\RegistryInterface)</h2>
+        <ul>
+            <li class="defect">Register component without metadata</li>
+            <li class="defect">Register component with metadata</li>
+            <li class="defect">Unregister existing component</li>
+            <li class="defect">Unregister non existing component</li>
+            <li class="defect">Has existing component</li>
+            <li class="defect">Has non existing component</li>
+            <li class="defect">Get existing component</li>
+            <li class="defect">Get non existing component throws exception</li>
+            <li class="defect">All returns all components</li>
+            <li class="defect">All returns empty array</li>
+            <li class="defect">Names returns component names</li>
+            <li class="defect">Count returns component count</li>
+            <li class="defect">Count returns zero</li>
+            <li class="defect">Clear removes all components</li>
+            <li class="defect">Get metadata returns metadata</li>
+            <li class="defect">Get metadata returns empty array</li>
+            <li class="defect">Filter with criteria</li>
+            <li class="defect">Filter returns empty when no matches</li>
+            <li class="defect">Search with pattern</li>
+            <li class="defect">Search with regex pattern</li>
+            <li class="defect">Get type returns registry type</li>
+            <li class="defect">Registration lifecycle</li>
+            <li class="defect">Multiple component operations</li>
+            <li class="defect">Filter multiple criteria</li>
+            <li class="defect">Registry types</li>
+        </ul>
+        <h2>Resource Handler (JTD\LaravelMCP\Tests\Unit\Server\Handlers\ResourceHandler)</h2>
+        <ul>
+            <li class="defect">Constructor sets dependencies and handler name</li>
+            <li class="defect">Get supported methods returns resource methods</li>
+            <li class="defect">Supports method returns true for supported methods</li>
+            <li class="defect">Supports method returns false for unsupported methods</li>
+            <li class="defect">Handle throws protocol exception for unsupported method</li>
+            <li class="defect">Handle resources list returns empty resources array when no resources</li>
+            <li class="defect">Handle resources list returns resource definitions</li>
+            <li class="defect">Handle resources list handles resource definition failures gracefully</li>
+            <li class="defect">Handle resources list validates cursor parameter</li>
+            <li class="defect">Handle resources list applies cursor pagination</li>
+            <li class="defect">Handle resources list includes next cursor when more resources available</li>
+            <li class="defect">Handle resources read validates required parameters</li>
+            <li class="defect">Handle resources read validates parameter types</li>
+            <li class="defect">Handle resources read throws error for non existent resource</li>
+            <li class="defect">Handle resources read reads resource with read method</li>
+            <li class="defect">Handle resources read reads resource with get content method</li>
+            <li class="defect">Handle resources read reads resource with invoke method</li>
+            <li class="defect">Handle resources read reads callable resource</li>
+            <li class="defect">Handle resources read throws error for non readable resource</li>
+            <li class="defect">Handle resources read handles array content</li>
+            <li class="defect">Handle resources read handles pre formatted content</li>
+            <li class="defect">Handle resources read handles execution failures</li>
+            <li class="defect">Get resource uri handles different uri methods with data set "getUri method"</li>
+            <li class="defect">Get resource uri handles different uri methods with data set "uri method"</li>
+            <li class="defect">Get resource uri handles different uri methods with data set "uri property"</li>
+            <li class="defect">Get resource uri handles different uri methods with data set "no uri (default)"</li>
+            <li class="defect">Get resource description handles different description methods with data set "getDescription method"</li>
+            <li class="defect">Get resource description handles different description methods with data set "description method"</li>
+            <li class="defect">Get resource description handles different description methods with data set "description property"</li>
+            <li class="defect">Get resource description handles different description methods with data set "no description"</li>
+            <li class="defect">Get resource mime type handles different mime type methods with data set "getMimeType method"</li>
+            <li class="defect">Get resource mime type handles different mime type methods with data set "mimeType method"</li>
+            <li class="defect">Get resource mime type handles different mime type methods with data set "mimeType property"</li>
+            <li class="defect">Get resource mime type handles different mime type methods with data set "no mime type (default)"</li>
+            <li class="defect">Get resource metadata handles different metadata methods with data set "getMetadata method"</li>
+            <li class="defect">Get resource metadata handles different metadata methods with data set "metadata property"</li>
+            <li class="defect">Get resource metadata handles different metadata methods with data set "no metadata"</li>
+        </ul>
+        <h2>Resource Registry (JTD\LaravelMCP\Tests\Unit\Registry\ResourceRegistry)</h2>
+        <ul>
+            <li class="defect">Register resource successfully</li>
+            <li class="defect">Register duplicate resource throws exception</li>
+            <li class="defect">Get non existent resource throws exception</li>
+            <li class="defect">Unregister resource successfully</li>
+            <li class="defect">Unregister non existent resource</li>
+            <li class="defect">Has resource</li>
+            <li class="defect">Get all resources</li>
+            <li class="defect">Get resource names</li>
+            <li class="defect">Count resources</li>
+            <li class="defect">Clear all resources</li>
+            <li class="defect">Get resource metadata</li>
+            <li class="defect">Get metadata for non existent resource throws exception</li>
+            <li class="defect">Filter resources by metadata</li>
+            <li class="defect">Search resources by pattern</li>
+            <li class="defect">Get registry type</li>
+            <li class="defect">Get resource templates</li>
+            <li class="defect">Read resource</li>
+            <li class="defect">Read resource with class name</li>
+            <li class="defect">Read invalid resource throws exception</li>
+            <li class="defect">Get resource content</li>
+            <li class="defect">List resources</li>
+            <li class="defect">Get resources by uri</li>
+            <li class="defect">Get resources by mime type</li>
+            <li class="defect">Has annotations</li>
+            <li class="defect">Initialize</li>
+            <li class="defect">Metadata defaults</li>
+            <li class="defect">Complex filtering</li>
+            <li class="defect">Resource name edge cases</li>
+            <li class="defect">Resource templates with defaults</li>
+        </ul>
+        <h2>Route Registrar (JTD\LaravelMCP\Tests\Unit\Registry\RouteRegistrar)</h2>
+        <ul>
+            <li class="defect">It can be instantiated</li>
+            <li class="defect">It registers a tool</li>
+            <li class="defect">It registers a resource</li>
+            <li class="defect">It registers a prompt</li>
+            <li class="defect">It supports group registration</li>
+            <li class="defect">It supports nested groups</li>
+            <li class="defect">It supports namespace groups</li>
+            <li class="defect">It supports middleware groups</li>
+            <li class="defect">It supports prefix groups</li>
+            <li class="defect">It merges middleware in groups</li>
+            <li class="defect">It checks if component exists</li>
+            <li class="defect">It gets a registered tool</li>
+            <li class="defect">It gets a registered resource</li>
+            <li class="defect">It gets a registered prompt</li>
+            <li class="defect">It lists all tools</li>
+            <li class="defect">It lists all resources</li>
+            <li class="defect">It lists all prompts</li>
+            <li class="defect">It returns empty array for invalid type</li>
+            <li class="defect">It returns null for invalid type get</li>
+            <li class="defect">It returns false for invalid type has</li>
+            <li class="defect">It gets the underlying registry</li>
+            <li class="defect">It loads routes from file</li>
+            <li class="defect">It handles non existent route file</li>
+            <li class="defect">Route attribute merging</li>
+            <li class="defect">Registration with route options</li>
+            <li class="defect">Error handling during registration</li>
+            <li class="defect">Fluent api with mixed component types</li>
+            <li class="defect">Registration with callable handlers</li>
+            <li class="defect">Registration with string class names</li>
+            <li class="defect">Batch registration with empty arrays</li>
+            <li class="defect">Complex nested group scenarios</li>
+            <li class="defect">Middleware array handling in groups</li>
+            <li class="defect">Registration with duplicate names</li>
+            <li class="defect">Group attributes isolation</li>
+            <li class="defect">Registration count tracking</li>
+        </ul>
+        <h2>Route Registration Integration (JTD\LaravelMCP\Tests\Feature\RouteRegistrationIntegration)</h2>
+        <ul>
+            <li class="defect">Full route registration flow for tools</li>
+            <li class="defect">Full route registration flow for resources</li>
+            <li class="defect">Full route registration flow for prompts</li>
+            <li class="defect">Component discovery with route registration</li>
+            <li class="defect">Route registration with middleware</li>
+            <li class="defect">Route registration with custom prefix</li>
+            <li class="defect">Route registration with constraints</li>
+            <li class="defect">Route caching compatibility</li>
+            <li class="defect">Route group registration</li>
+            <li class="defect">Nested route groups</li>
+            <li class="defect">Resource style route generation</li>
+            <li class="defect">Route registration with custom controller</li>
+            <li class="defect">Error handling during route registration</li>
+            <li class="defect">Route name collision handling</li>
+            <li class="defect">Route registration with domain constraints</li>
+            <li class="defect">Batch route registration performance</li>
+            <li class="defect">Route registration cleanup and isolation</li>
+        </ul>
+        <h2>Routing Patterns (JTD\LaravelMCP\Tests\Unit\Registry\RoutingPatterns)</h2>
+        <ul>
+            <li class="defect">Get pattern for valid component types</li>
+            <li class="defect">Get pattern for invalid component type</li>
+            <li class="defect">Get all patterns</li>
+            <li class="defect">Generate route name for tools</li>
+            <li class="defect">Generate route name for resources</li>
+            <li class="defect">Generate route name for prompts</li>
+            <li class="defect">Generate route name with action</li>
+            <li class="defect">Generate route uri for tools</li>
+            <li class="defect">Generate route uri for resources</li>
+            <li class="defect">Generate route uri for prompts</li>
+            <li class="defect">Generate route uri with parameters</li>
+            <li class="defect">Get middleware for component types</li>
+            <li class="defect">Get middleware with additional</li>
+            <li class="defect">Get middleware pattern</li>
+            <li class="defect">Get constraint</li>
+            <li class="defect">Get all constraints</li>
+            <li class="defect">Cache configuration</li>
+            <li class="defect">Generate cache key</li>
+            <li class="defect">Normalize component name</li>
+            <li class="defect">Normalize action name</li>
+            <li class="defect">Denormalize component name</li>
+            <li class="defect">Is mcp route name</li>
+            <li class="defect">Parse route name</li>
+            <li class="defect">Generate resource routes</li>
+            <li class="defect">Get http methods</li>
+            <li class="defect">Get controller action</li>
+            <li class="defect">Set pattern</li>
+            <li class="defect">Set middleware pattern</li>
+            <li class="defect">Set constraint</li>
+            <li class="defect">Validate component name</li>
+            <li class="defect">Get route template</li>
+            <li class="defect">Get route template for resources</li>
+            <li class="defect">Get route template for prompts</li>
+            <li class="defect">Route name generation edge cases</li>
+            <li class="defect">Uri generation edge cases</li>
+        </ul>
+        <h2>Schema Documenter (Tests\Unit\Support\SchemaDocumenter)</h2>
+        <ul>
+            <li class="success">It documents string schema</li>
+            <li class="success">It documents number schema</li>
+            <li class="success">It documents integer schema</li>
+            <li class="success">It documents boolean schema</li>
+            <li class="success">It documents object schema with properties</li>
+            <li class="success">It documents array schema</li>
+            <li class="success">It documents array schema with object items</li>
+            <li class="success">It documents properties with empty properties</li>
+            <li class="success">It documents properties with nested objects</li>
+            <li class="success">It documents properties with nested arrays</li>
+            <li class="success">It documents validation rules for string type</li>
+            <li class="success">It documents validation rules for number type</li>
+            <li class="success">It documents validation rules for array type</li>
+            <li class="success">It documents validation rules for object type</li>
+            <li class="success">It documents general validation rules</li>
+            <li class="success">It returns empty string for no validation rules</li>
+            <li class="success">It formats array type</li>
+            <li class="success">It formats string type</li>
+            <li class="success">It formats unknown type</li>
+            <li class="success">It generates example with const value</li>
+            <li class="success">It generates example with default value</li>
+            <li class="success">It generates example with enum value</li>
+            <li class="success">It generates example for string with format</li>
+            <li class="success">It generates example for array</li>
+            <li class="success">It generates example for object</li>
+            <li class="success">It generates empty example for null result</li>
+            <li class="success">It returns empty string for no example</li>
+            <li class="success">It extracts input schema from metadata</li>
+            <li class="success">It returns null for missing input schema</li>
+            <li class="success">It documents tool schema</li>
+            <li class="success">It documents tool schema with no schema</li>
+            <li class="success">It documents resource schema</li>
+            <li class="success">It documents resource schema with no schema</li>
+            <li class="success">It documents prompt schema</li>
+            <li class="success">It documents prompt schema with no schema</li>
+            <li class="success">It respects depth limiting for nested schemas</li>
+            <li class="success">It handles empty schema</li>
+            <li class="success">It handles invalid schema gracefully</li>
+            <li class="success">It gets and sets options</li>
+            <li class="success">It gets and sets templates</li>
+            <li class="success">It disables validation rules when option is false</li>
+            <li class="success">It disables nested schemas when option is false</li>
+            <li class="success">It generates markdown formatted output</li>
+        </ul>
+        <h2>Schema Validator (JTD\LaravelMCP\Tests\Unit\Support\SchemaValidator)</h2>
+        <ul>
+            <li class="defect">It validates simple string schema</li>
+            <li class="defect">It throws exception for missing required field</li>
+            <li class="defect">It validates integer type</li>
+            <li class="defect">It throws exception for wrong type</li>
+            <li class="defect">It validates number with minimum and maximum</li>
+            <li class="defect">It throws exception for number below minimum</li>
+            <li class="defect">It validates array schema</li>
+            <li class="defect">It validates unique array items</li>
+            <li class="defect">It throws exception for non unique array items</li>
+            <li class="defect">It validates string with pattern</li>
+            <li class="defect">It validates string with enum</li>
+            <li class="defect">It throws exception for invalid enum value</li>
+            <li class="defect">It validates string with format email</li>
+            <li class="defect">It throws exception for invalid email format</li>
+            <li class="defect">It validates nested objects</li>
+            <li class="defect">It applies default values</li>
+            <li class="defect">It validates additional properties when false</li>
+            <li class="defect">It creates schema from laravel rules</li>
+            <li class="defect">It validates boolean type</li>
+            <li class="defect">It validates null when nullable</li>
+            <li class="defect">It validates string length constraints</li>
+            <li class="defect">It throws exception for string too short</li>
+            <li class="defect">It validates uuid format</li>
+            <li class="defect">It validates url format</li>
+        </ul>
+        <h2>Serve Command (JTD\LaravelMCP\Tests\Unit\Commands\ServeCommand)</h2>
+        <ul>
+            <li class="defect">It has correct command signature</li>
+            <li class="defect">It starts stdio transport successfully</li>
+            <li class="defect">It starts http transport successfully</li>
+            <li class="defect">It validates invalid transport type</li>
+            <li class="defect">It validates disabled transport</li>
+            <li class="defect">It validates unregistered transport in manager</li>
+            <li class="defect">It validates timeout option</li>
+            <li class="defect">It validates port option for http transport</li>
+            <li class="defect">It enables debug mode</li>
+            <li class="defect">It handles transport creation failure</li>
+            <li class="defect">It handles stdio transport errors</li>
+            <li class="defect">It builds correct transport configuration</li>
+            <li class="defect">It handles invalid transport instance</li>
+            <li class="defect">It handles shutdown signals with pcntl</li>
+            <li class="defect">It configures server info correctly</li>
+            <li class="defect">It displays transport stats in verbose mode</li>
+            <li class="defect">It returns error when mcp is disabled</li>
+            <li class="defect">It attempts reconnection for http transport</li>
+        </ul>
+        <h2>Serve Command Feature (JTD\LaravelMCP\Tests\Feature\Commands\ServeCommandFeature)</h2>
+        <ul>
+            <li class="defect">Serve command is registered in artisan</li>
+            <li class="defect">Command can be discovered by artisan</li>
+            <li class="defect">Command help displays correct information</li>
+            <li class="defect">Command initializes with stdio transport</li>
+            <li class="defect">Command initializes with http transport</li>
+            <li class="defect">Command fails with invalid transport type</li>
+            <li class="defect">Command fails when transport is disabled</li>
+            <li class="defect">Command runs with debug mode enabled</li>
+            <li class="defect">Command validates numeric options</li>
+            <li class="defect">Command handles transport exceptions gracefully</li>
+            <li class="defect">Command integrates with real transport manager</li>
+            <li class="defect">Command merges configuration from options</li>
+            <li class="defect">Command sets server info on message processor</li>
+            <li class="defect">Command displays verbose output</li>
+            <li class="defect">Full integration with service provider</li>
+        </ul>
+        <h2>Server Info (JTD\LaravelMCP\Tests\Unit\Server\ServerInfo)</h2>
+        <ul>
+            <li class="defect">Can create server info instance</li>
+            <li class="defect">Has default server information</li>
+            <li class="defect">Can get basic info</li>
+            <li class="defect">Can get protocol version</li>
+            <li class="defect">Can get uptime</li>
+            <li class="defect">Can get start time</li>
+            <li class="defect">Can get name</li>
+            <li class="defect">Can get version</li>
+            <li class="defect">Can get description</li>
+            <li class="defect">Can get vendor</li>
+            <li class="defect">Can set name</li>
+            <li class="defect">Can set version</li>
+            <li class="defect">Can set description</li>
+            <li class="defect">Can set vendor</li>
+            <li class="defect">Can update server info</li>
+            <li class="defect">Can update runtime info</li>
+            <li class="defect">Can get status</li>
+            <li class="defect">Can get detailed info</li>
+            <li class="defect">Can get formatted uptime</li>
+            <li class="defect">Can reset start time</li>
+            <li class="defect">Can convert to json</li>
+            <li class="defect">Can convert to array</li>
+            <li class="defect">Respects configuration</li>
+            <li class="defect">Respects environment variables</li>
+            <li class="defect">Runtime info contains required fields</li>
+            <li class="defect">Implementation info is correct</li>
+        </ul>
+        <h2>Service Provider Integration (JTD\LaravelMCP\Tests\Feature\ServiceProviderIntegration)</h2>
+        <ul>
+            <li class="defect">It registers service provider in laravel application</li>
+            <li class="defect">It resolves all services through container</li>
+            <li class="defect">It resolves interfaces to correct implementations</li>
+            <li class="defect">It provides functional mcp facade</li>
+            <li class="defect">It loads and merges configuration</li>
+            <li class="defect">It allows environment variables to override config</li>
+            <li class="defect">It integrates services correctly</li>
+            <li class="defect">It discovers components when enabled</li>
+            <li class="defect">It configures publishable assets</li>
+            <li class="defect">It loads routes when route file exists</li>
+            <li class="defect">It configures transport manager based on config</li>
+            <li class="defect">It handles missing optional dependencies gracefully</li>
+            <li class="defect">It resolves services using app helper</li>
+            <li class="defect">It supports dependency injection resolution</li>
+            <li class="defect">It completes full service provider lifecycle</li>
+            <li class="defect">It handles multiple provider instances safely</li>
+            <li class="defect">It recovers from invalid configuration</li>
+            <li class="defect">It respects disabled state configuration</li>
+        </ul>
+        <h2>Stdio Transport (JTD\LaravelMCP\Tests\Unit\Transport\StdioTransport)</h2>
+        <ul>
+            <li class="defect">It initializes with default configuration</li>
+            <li class="defect">It initializes with custom configuration</li>
+            <li class="defect">It returns correct transport type</li>
+            <li class="defect">It tracks connection status</li>
+            <li class="defect">It sets message handler</li>
+            <li class="defect">It clears buffer</li>
+            <li class="defect">It handles symfony process integration</li>
+            <li class="defect">It provides connection info</li>
+            <li class="defect">It performs health checks</li>
+            <li class="defect">It gets statistics</li>
+            <li class="defect">It handles signal term</li>
+            <li class="defect">It handles signal int</li>
+            <li class="defect">It handles signal hup</li>
+            <li class="defect">It runs as command</li>
+            <li class="defect">It sends error response</li>
+            <li class="defect">It validates configuration</li>
+            <li class="defect">It validates retry attempts</li>
+            <li class="defect">It validates retry delay</li>
+            <li class="defect">It handles reconnection</li>
+            <li class="defect">It tracks uptime</li>
+            <li class="defect">It handles shutdown callback</li>
+            <li class="defect">It provides safe config for logging</li>
+        </ul>
+        <h2>Stdio Transport Integration (JTD\LaravelMCP\Tests\Feature\Transport\StdioTransportIntegration)</h2>
+        <ul>
+            <li class="defect">It creates stdio transport through manager</li>
+            <li class="defect">It initializes stdio transport with config</li>
+            <li class="defect">It manages stdio transport lifecycle</li>
+            <li class="defect">It simulates message exchange with mock streams</li>
+            <li class="defect">It handles json rpc error responses</li>
+            <li class="defect">It processes notifications without id</li>
+            <li class="defect">It handles large messages</li>
+            <li class="defect">It handles content length framing</li>
+            <li class="defect">It handles multiple messages in buffer</li>
+            <li class="defect">It handles partial message buffering</li>
+            <li class="defect">It tracks transport health</li>
+            <li class="defect">It integrates with symfony process</li>
+            <li class="defect">It provides comprehensive connection info</li>
+            <li class="defect">It handles keepalive messages</li>
+            <li class="defect">It manages transport through manager</li>
+            <li class="defect">It supports custom configuration</li>
+        </ul>
+        <h2>Stream Handler (JTD\LaravelMCP\Tests\Unit\Transport\StreamHandler)</h2>
+        <ul>
+            <li class="defect">It opens and closes streams</li>
+            <li class="defect">It throws exception for invalid stream path</li>
+            <li class="defect">It writes data to stream</li>
+            <li class="defect">It reads data from stream</li>
+            <li class="defect">It reads complete lines</li>
+            <li class="defect">It writes lines with delimiter</li>
+            <li class="defect">It detects readable and writable modes</li>
+            <li class="defect">It detects end of file</li>
+            <li class="defect">It sets blocking mode</li>
+            <li class="defect">It sets stream timeout</li>
+            <li class="defect">It tracks statistics</li>
+            <li class="defect">It resets statistics</li>
+            <li class="defect">It performs health checks</li>
+            <li class="defect">It throws exception when reading from closed stream</li>
+            <li class="defect">It throws exception when writing to closed stream</li>
+            <li class="defect">It handles partial writes with retry</li>
+            <li class="defect">It waits for stream to become readable</li>
+            <li class="defect">It waits for stream to become writable</li>
+            <li class="defect">It returns stream resource</li>
+            <li class="defect">It handles buffer overflow for line reading</li>
+            <li class="defect">It handles custom line delimiter</li>
+        </ul>
+        <h2>Tool Handler (JTD\LaravelMCP\Tests\Unit\Server\Handlers\ToolHandler)</h2>
+        <ul>
+            <li class="defect">Constructor sets dependencies and handler name</li>
+            <li class="defect">Get supported methods returns tool methods</li>
+            <li class="defect">Supports method returns true for supported methods</li>
+            <li class="defect">Supports method returns false for unsupported methods</li>
+            <li class="defect">Handle throws protocol exception for unsupported method</li>
+            <li class="defect">Handle tools list returns empty tools array when no tools</li>
+            <li class="defect">Handle tools list returns tool definitions</li>
+            <li class="defect">Handle tools list handles tool definition failures gracefully</li>
+            <li class="defect">Handle tools list validates cursor parameter</li>
+            <li class="defect">Handle tools list applies cursor pagination</li>
+            <li class="defect">Handle tools list includes next cursor when more tools available</li>
+            <li class="defect">Handle tools call validates required parameters</li>
+            <li class="defect">Handle tools call validates parameter types</li>
+            <li class="defect">Handle tools call throws error for non existent tool</li>
+            <li class="defect">Handle tools call executes tool with execute method</li>
+            <li class="defect">Handle tools call executes tool with invoke method</li>
+            <li class="defect">Handle tools call executes callable tool</li>
+            <li class="defect">Handle tools call throws error for non executable tool</li>
+            <li class="defect">Handle tools call validates arguments if tool supports it</li>
+            <li class="defect">Handle tools call skips validation if tool does not support it</li>
+            <li class="defect">Handle tools call returns error response for execution failures</li>
+            <li class="defect">Handle tools call uses default empty arguments when not provided</li>
+            <li class="defect">Get tool description handles different description methods with data set "getDescription method"</li>
+            <li class="defect">Get tool description handles different description methods with data set "description method"</li>
+            <li class="defect">Get tool description handles different description methods with data set "description property"</li>
+            <li class="defect">Get tool description handles different description methods with data set "no description"</li>
+            <li class="defect">Get tool input schema handles different schema methods with data set "getInputSchema method"</li>
+            <li class="defect">Get tool input schema handles different schema methods with data set "inputSchema method"</li>
+            <li class="defect">Get tool input schema handles different schema methods with data set "inputSchema property"</li>
+            <li class="defect">Get tool input schema handles different schema methods with data set "no input schema"</li>
+            <li class="defect">Get content type determines correct type with data set "string content"</li>
+            <li class="defect">Get content type determines correct type with data set "array content"</li>
+            <li class="defect">Get content type determines correct type with data set "object content"</li>
+            <li class="defect">Get content type determines correct type with data set "number content"</li>
+            <li class="defect">Get content type determines correct type with data set "boolean content"</li>
+        </ul>
+        <h2>Tool Registry (JTD\LaravelMCP\Tests\Unit\Registry\ToolRegistry)</h2>
+        <ul>
+            <li class="defect">Register tool successfully</li>
+            <li class="defect">Register duplicate tool throws exception</li>
+            <li class="defect">Get non existent tool throws exception</li>
+            <li class="defect">Unregister tool successfully</li>
+            <li class="defect">Unregister non existent tool</li>
+            <li class="defect">Has tool</li>
+            <li class="defect">Get all tools</li>
+            <li class="defect">Get tool names</li>
+            <li class="defect">Count tools</li>
+            <li class="defect">Clear all tools</li>
+            <li class="defect">Get tool metadata</li>
+            <li class="defect">Get metadata for non existent tool throws exception</li>
+            <li class="defect">Filter tools by metadata</li>
+            <li class="defect">Search tools by pattern</li>
+            <li class="defect">Get registry type</li>
+            <li class="defect">Get tool definitions</li>
+            <li class="defect">Execute tool</li>
+            <li class="defect">Execute tool with class name</li>
+            <li class="defect">Execute invalid tool throws exception</li>
+            <li class="defect">Validate parameters</li>
+            <li class="defect">Validate parameters with no schema</li>
+            <li class="defect">Get tools by capability</li>
+            <li class="defect">Initialize</li>
+            <li class="defect">Metadata defaults</li>
+            <li class="defect">Complex filtering</li>
+            <li class="defect">Tool name edge cases</li>
+        </ul>
+        <h2>Transport Discovery And Lifecycle (JTD\LaravelMCP\Tests\Feature\TransportDiscoveryAndLifecycle)</h2>
+        <ul>
+            <li class="defect">It discovers and registers default transports</li>
+            <li class="defect">It resolves transport interface from container</li>
+            <li class="defect">It resolves stdio transport as default when not configured</li>
+            <li class="defect">It manages complete transport lifecycle</li>
+            <li class="defect">It manages multiple transport instances</li>
+            <li class="defect">It handles active transport management</li>
+            <li class="defect">It performs transport health monitoring</li>
+            <li class="defect">It handles transport configuration integration</li>
+            <li class="defect">It manages transport discovery through service container</li>
+            <li class="defect">It handles transport lifecycle with error recovery</li>
+            <li class="defect">It manages transport statistics and monitoring</li>
+            <li class="defect">It handles transport manager bulk operations</li>
+            <li class="defect">It handles transport instance caching and purging</li>
+            <li class="defect">It integrates with laravel configuration system</li>
+            <li class="defect">It manages transport custom extensions</li>
+            <li class="defect">It handles transport registration and removal</li>
+            <li class="defect">It handles transport refresh operations</li>
+        </ul>
+        <h2>Transport Interface (JTD\LaravelMCP\Tests\Unit\Transport\Contracts\TransportInterface)</h2>
+        <ul>
+            <li class="defect">Initialize with config</li>
+            <li class="defect">Initialize without config</li>
+            <li class="defect">Start transport</li>
+            <li class="defect">Stop transport</li>
+            <li class="defect">Send message</li>
+            <li class="defect">Send complex message</li>
+            <li class="defect">Receive returns message</li>
+            <li class="defect">Receive returns null when no message</li>
+            <li class="defect">Get connection info</li>
+            <li class="defect">Is connected returns true</li>
+            <li class="defect">Is connected returns false</li>
+            <li class="defect">Get connection info returns empty array</li>
+            <li class="defect">Set message handler</li>
+            <li class="defect">Transport lifecycle</li>
+            <li class="defect">Multiple message operations</li>
+            <li class="defect">Connection info after initialization</li>
+            <li class="defect">Setting multiple handlers</li>
+        </ul>
+        <h2>Transport Manager (JTD\LaravelMCP\Tests\Unit\Transport\TransportManager)</h2>
+        <ul>
+            <li class="defect">It registers default drivers on construction</li>
+            <li class="defect">It creates http transport instance</li>
+            <li class="defect">It creates stdio transport instance</li>
+            <li class="defect">It throws exception for unknown transport type</li>
+            <li class="defect">It creates transport with custom configuration</li>
+            <li class="defect">It sets and gets active transport</li>
+            <li class="defect">It sets active transport with custom config</li>
+            <li class="defect">It gets default driver from config</li>
+            <li class="defect">It falls back to stdio when no config</li>
+            <li class="defect">It creates driver instance</li>
+            <li class="defect">It uses default driver when none specified</li>
+            <li class="defect">It caches transport instances</li>
+            <li class="defect">It gets default transport</li>
+            <li class="defect">It extends with custom driver</li>
+            <li class="defect">It checks if driver exists</li>
+            <li class="defect">It sets default driver</li>
+            <li class="defect">It throws exception for invalid default driver</li>
+            <li class="defect">It purges transport instances</li>
+            <li class="defect">It purges default driver when none specified</li>
+            <li class="defect">It purges all transports</li>
+            <li class="defect">It gets active transports</li>
+            <li class="defect">It checks if has active transports</li>
+            <li class="defect">It creates transport using alias method</li>
+            <li class="defect">It creates custom transport with config</li>
+            <li class="defect">It throws exception for unknown custom transport</li>
+            <li class="defect">It gets transport health status</li>
+            <li class="defect">It refreshes transport instance</li>
+            <li class="defect">It registers custom transport instance</li>
+            <li class="defect">It removes transport instance</li>
+            <li class="defect">It starts all transports</li>
+            <li class="defect">It stops all transports</li>
+            <li class="defect">It throws exception when start all fails</li>
+            <li class="defect">It gets active transport count</li>
+            <li class="defect">It performs cleanup</li>
+            <li class="defect">It initializes default transports from config</li>
+            <li class="defect">It handles factory registration errors</li>
+            <li class="defect">It validates transport interface compliance</li>
+        </ul>
+        <h2>Validates Parameters (JTD\LaravelMCP\Tests\Unit\Traits\ValidatesParameters)</h2>
+        <ul>
+            <li class="defect">Validate schema with valid params</li>
+            <li class="defect">Validate schema missing required</li>
+            <li class="defect">Validate schema with defaults</li>
+            <li class="defect">Validate field type string</li>
+            <li class="defect">Validate field type integer</li>
+            <li class="defect">Validate field type number</li>
+            <li class="defect">Validate field type boolean</li>
+            <li class="defect">Validate field type array</li>
+            <li class="defect">Validate field type object</li>
+            <li class="defect">Validate field type null</li>
+            <li class="defect">Validate field format email</li>
+            <li class="defect">Validate field format url</li>
+            <li class="defect">Validate field format uri</li>
+            <li class="defect">Validate field format datetime</li>
+            <li class="defect">Validate field format uuid</li>
+            <li class="defect">Validate field length string</li>
+            <li class="defect">Validate field length array</li>
+            <li class="defect">Validate field range</li>
+            <li class="defect">Validate field enum</li>
+            <li class="defect">Validate field pattern</li>
+            <li class="defect">Validate field with custom validator</li>
+            <li class="defect">Complex schema validation</li>
+            <li class="defect">Is required</li>
+            <li class="defect">Get validation error summary</li>
+        </ul>
+    </body>
+</html>
