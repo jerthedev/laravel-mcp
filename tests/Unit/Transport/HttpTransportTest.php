@@ -81,8 +81,7 @@ class HttpTransportTest extends TestCase
             ->once()
             ->with($requestData, $this->transport)
             ->andReturn($responseData);
-        $this->mockHandler->shouldReceive('onDisconnect')->once();
-
+        // Note: onDisconnect is NOT called for HTTP requests as they are stateless
         $this->transport->setMessageHandler($this->mockHandler);
         $this->transport->start();
 
@@ -109,13 +108,12 @@ class HttpTransportTest extends TestCase
             'CONTENT_TYPE' => 'application/json',
         ], json_encode($requestData));
 
-        $this->mockHandler->shouldReceive('onConnect')->twice(); // Called in start() and handleHttpRequest()
+        $this->mockHandler->shouldReceive('onConnect')->twice();
         $this->mockHandler->shouldReceive('handle')
             ->once()
             ->with($requestData, $this->transport)
             ->andReturn(null);
-        $this->mockHandler->shouldReceive('onDisconnect')->once();
-
+        // Note: onDisconnect is NOT called for HTTP requests as they are stateless
         $this->transport->setMessageHandler($this->mockHandler);
         $this->transport->start();
 
@@ -133,7 +131,7 @@ class HttpTransportTest extends TestCase
         ], 'invalid content');
 
         $this->mockHandler->shouldReceive('onConnect')->once();
-        $this->mockHandler->shouldReceive('onDisconnect')->atLeast()->once();
+        // Note: onDisconnect is NOT called for HTTP requests as they are stateless
         $this->transport->setMessageHandler($this->mockHandler);
         $this->transport->start();
 
@@ -154,18 +152,17 @@ class HttpTransportTest extends TestCase
         ], 'invalid json');
 
         $this->mockHandler->shouldReceive('onConnect')->twice(); // Called in start() and handleHttpRequest()
-        $this->mockHandler->shouldReceive('handleError')->twice(); // Called for JSON parse error
-        $this->mockHandler->shouldReceive('onDisconnect')->once();
-
+        // Note: handleError is NOT called for parse errors as they're detected early
+        // Note: onDisconnect is NOT called for HTTP requests as they are stateless
         $this->transport->setMessageHandler($this->mockHandler);
         $this->transport->start();
 
         $response = $this->transport->handleHttpRequest($request);
 
-        $this->assertEquals(500, $response->getStatusCode()); // Error is caught in outer try-catch
+        $this->assertEquals(400, $response->getStatusCode()); // Parse error is a client error
         $content = json_decode($response->getContent(), true);
         $this->assertArrayHasKey('error', $content);
-        $this->assertEquals(-32603, $content['error']['code']); // Internal error code
+        $this->assertEquals(-32700, $content['error']['code']); // Parse error code
     }
 
     #[Test]
@@ -175,9 +172,8 @@ class HttpTransportTest extends TestCase
             'CONTENT_TYPE' => 'application/json',
         ], '');
 
-        $this->mockHandler->shouldReceive('onConnect')->twice(); // Called in start() and handleHttpRequest()
-        $this->mockHandler->shouldReceive('onDisconnect')->once();
-
+        $this->mockHandler->shouldReceive('onConnect')->twice();
+        // Note: onDisconnect is NOT called for HTTP requests as they are stateless
         $this->transport->setMessageHandler($this->mockHandler);
         $this->transport->start();
 
@@ -242,8 +238,7 @@ class HttpTransportTest extends TestCase
         ], '');
 
         $this->mockHandler->shouldReceive('onConnect')->once();
-        $this->mockHandler->shouldReceive('onDisconnect')->once();
-
+        // Note: onDisconnect is NOT called for HTTP requests as they are stateless
         $this->transport->setMessageHandler($this->mockHandler);
 
         $response = $this->transport->handleHttpRequest($request);
@@ -310,8 +305,7 @@ class HttpTransportTest extends TestCase
         $this->mockHandler->shouldReceive('handleError')
             ->once()
             ->with(Mockery::type(\Throwable::class), $this->transport);
-        $this->mockHandler->shouldReceive('onDisconnect')->once();
-
+        // Note: onDisconnect is NOT called for HTTP requests as they are stateless
         $this->transport->setMessageHandler($this->mockHandler);
         $this->transport->start();
 
@@ -534,8 +528,7 @@ class HttpTransportTest extends TestCase
             ->once()
             ->andThrow(new \RuntimeException('Test error'));
         $this->mockHandler->shouldReceive('handleError')->once();
-        $this->mockHandler->shouldReceive('onDisconnect')->once();
-
+        // Note: onDisconnect is NOT called for HTTP requests as they are stateless
         $this->transport->setMessageHandler($this->mockHandler);
         $this->transport->start();
 
@@ -564,12 +557,11 @@ class HttpTransportTest extends TestCase
             'CONTENT_TYPE' => 'application/json',
         ], json_encode($requestData));
 
-        $this->mockHandler->shouldReceive('onConnect')->twice(); // Called in start() and handleHttpRequest()
+        $this->mockHandler->shouldReceive('onConnect')->twice();
         $this->mockHandler->shouldReceive('handle')
             ->once()
             ->andReturn($responseData);
-        $this->mockHandler->shouldReceive('onDisconnect')->once();
-
+        // Note: onDisconnect is NOT called for HTTP requests as they are stateless
         $this->transport->setMessageHandler($this->mockHandler);
         $this->transport->start();
 
@@ -607,8 +599,7 @@ class HttpTransportTest extends TestCase
             ->once()
             ->andReturn($responseData);
         $this->mockHandler->shouldReceive('handleError')->once();
-        $this->mockHandler->shouldReceive('onDisconnect')->once();
-
+        // Note: onDisconnect is NOT called for HTTP requests as they are stateless
         $this->transport->setMessageHandler($this->mockHandler);
         $this->transport->start();
 

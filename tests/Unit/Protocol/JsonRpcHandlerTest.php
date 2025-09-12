@@ -4,7 +4,7 @@ namespace Tests\Unit\Protocol;
 
 use Illuminate\Support\Facades\Log;
 use JTD\LaravelMCP\Protocol\JsonRpcHandler;
-use Orchestra\Testbench\TestCase;
+use JTD\LaravelMCP\Tests\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 /**

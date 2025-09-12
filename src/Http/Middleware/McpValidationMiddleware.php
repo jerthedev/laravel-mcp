@@ -210,7 +210,7 @@ class McpValidationMiddleware
                 ]);
             }
 
-            return $this->errorResponse('Validation error occurred');
+            return $this->errorResponse('Validation error occurred', $request);
         }
     }
 
@@ -576,7 +576,7 @@ class McpValidationMiddleware
     /**
      * Return error response.
      */
-    protected function errorResponse(string $message): JsonResponse
+    protected function errorResponse(string $message, ?Request $request = null): JsonResponse
     {
         $data = [
             'jsonrpc' => '2.0',
@@ -591,8 +591,8 @@ class McpValidationMiddleware
         ];
 
         // Try to get request ID if available
-        if (function_exists('request') && request()->isJson()) {
-            $data['id'] = request()->json('id');
+        if ($request && $request->isJson()) {
+            $data['id'] = $request->json('id');
         }
 
         return new JsonResponse($data, Response::HTTP_INTERNAL_SERVER_ERROR);

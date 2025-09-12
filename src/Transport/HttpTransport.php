@@ -326,6 +326,9 @@ class HttpTransport extends BaseTransport
                 $httpStatus = 400;
                 $errorCode = -32600;
                 $errorMessage = 'Invalid Request: '.$e->getMessage();
+            } elseif ($e instanceof TransportException) {
+                // Preserve TransportException messages
+                $errorMessage = $e->getMessage();
             }
 
             return $this->createErrorResponse(
@@ -424,13 +427,18 @@ class HttpTransport extends BaseTransport
             $origin = $this->currentRequest ? $this->currentRequest->header('Origin') : null;
 
             if (in_array('*', $allowedOrigins)) {
-                // If wildcard is allowed, reflect the actual origin header
-                $response->headers->set('Access-Control-Allow-Origin', $origin ?? '*');
-                $response->headers->set('Access-Control-Allow-Credentials', 'true');
+                // If wildcard is allowed, use wildcard
+                $response->headers->set('Access-Control-Allow-Origin', '*');
+                if ($origin) {
+                    $response->headers->set('Access-Control-Allow-Credentials', 'true');
+                }
             } elseif ($origin && in_array($origin, $allowedOrigins)) {
                 // If specific origin is allowed, use it
                 $response->headers->set('Access-Control-Allow-Origin', $origin);
                 $response->headers->set('Access-Control-Allow-Credentials', 'true');
+            } elseif (! $origin && ! empty($allowedOrigins)) {
+                // For OPTIONS requests without an Origin header, use the first allowed origin
+                $response->headers->set('Access-Control-Allow-Origin', $allowedOrigins[0]);
             }
 
             $response->headers->set(

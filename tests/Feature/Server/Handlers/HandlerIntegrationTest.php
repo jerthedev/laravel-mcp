@@ -604,7 +604,7 @@ class HandlerIntegrationTest extends TestCase
         $this->assertStringContainsString('value', $jsonResponse['contents'][0]['text']);
     }
 
-    private function registerTestComponents(): void
+    protected function registerTestComponents(): void
     {
         // Register calculator tool
         $calculatorTool = new class extends McpTool

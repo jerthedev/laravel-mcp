@@ -54,7 +54,7 @@ class McpAuthMiddlewareEnhancedTest extends TestCase
         $this->request = new Request;
 
         $this->authFactory->method('guard')->willReturn($this->guard);
-        $this->authFactory->method('user')->willReturn(null);
+        $this->guard->method('user')->willReturn(null);
 
         $this->middleware = new McpAuthMiddleware($this->authFactory);
     }

@@ -9,9 +9,9 @@ use JTD\LaravelMCP\Events\NotificationDelivered;
 use JTD\LaravelMCP\Events\NotificationQueued;
 use JTD\LaravelMCP\Protocol\Contracts\JsonRpcHandlerInterface;
 use JTD\LaravelMCP\Protocol\NotificationHandler;
+use JTD\LaravelMCP\Tests\TestCase;
 use JTD\LaravelMCP\Transport\Contracts\TransportInterface;
 use Mockery;
-use Orchestra\Testbench\TestCase;
 
 /**
  * Test cases for NotificationHandler.

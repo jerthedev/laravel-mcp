@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\Validator;
+use JTD\LaravelMCP\Http\Exceptions\McpValidationException;
 use JTD\LaravelMCP\Http\Middleware\McpValidationMiddleware;
 use JTD\LaravelMCP\Tests\UnitTestCase;
 use Mockery;
@@ -111,15 +112,8 @@ class McpValidationMiddlewareTest extends UnitTestCase
             return new Response('success');
         };
 
-        $response = $this->middleware->handle($request, $next);
-
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertEquals(400, $response->getStatusCode());
-
-        $data = json_decode($response->getContent(), true);
-        $this->assertEquals('2.0', $data['jsonrpc']);
-        $this->assertEquals(-32602, $data['error']['code']);
-        $this->assertArrayHasKey('content_type', $data['error']['data']['validation_errors']);
+        $this->expectException(McpValidationException::class);
+        $this->middleware->handle($request, $next);
     }
 
     #[Test]
@@ -153,15 +147,8 @@ class McpValidationMiddlewareTest extends UnitTestCase
             return new Response('success');
         };
 
-        $response = $middleware->handle($request, $next);
-
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertEquals(400, $response->getStatusCode());
-
-        $data = json_decode($response->getContent(), true);
-        $this->assertEquals('2.0', $data['jsonrpc']);
-        $this->assertEquals(-32602, $data['error']['code']);
-        $this->assertArrayHasKey('request_size', $data['error']['data']['validation_errors']);
+        $this->expectException(McpValidationException::class);
+        $middleware->handle($request, $next);
     }
 
     #[Test]
@@ -186,14 +173,8 @@ class McpValidationMiddlewareTest extends UnitTestCase
             return new Response('success');
         };
 
-        $response = $this->middleware->handle($request, $next);
-
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertEquals(400, $response->getStatusCode());
-
-        $data = json_decode($response->getContent(), true);
-        $this->assertEquals('2.0', $data['jsonrpc']);
-        $this->assertEquals(-32602, $data['error']['code']);
+        $this->expectException(McpValidationException::class);
+        $this->middleware->handle($request, $next);
     }
 
     #[Test]
@@ -247,14 +228,8 @@ class McpValidationMiddlewareTest extends UnitTestCase
             return new Response('success');
         };
 
-        $response = $this->middleware->handle($request, $next);
-
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertEquals(400, $response->getStatusCode());
-
-        $data = json_decode($response->getContent(), true);
-        $this->assertEquals('2.0', $data['jsonrpc']);
-        $this->assertEquals(-32602, $data['error']['code']);
+        $this->expectException(McpValidationException::class);
+        $this->middleware->handle($request, $next);
     }
 
     #[Test]
@@ -313,14 +288,8 @@ class McpValidationMiddlewareTest extends UnitTestCase
             return new Response('success');
         };
 
-        $response = $this->middleware->handle($request, $next);
-
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertEquals(400, $response->getStatusCode());
-
-        $data = json_decode($response->getContent(), true);
-        $this->assertEquals('2.0', $data['jsonrpc']);
-        $this->assertEquals(-32602, $data['error']['code']);
+        $this->expectException(McpValidationException::class);
+        $this->middleware->handle($request, $next);
     }
 
     #[Test]
@@ -345,14 +314,8 @@ class McpValidationMiddlewareTest extends UnitTestCase
             return new Response('success');
         };
 
-        $response = $this->middleware->handle($request, $next);
-
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertEquals(400, $response->getStatusCode());
-
-        $data = json_decode($response->getContent(), true);
-        $this->assertEquals('2.0', $data['jsonrpc']);
-        $this->assertEquals(-32602, $data['error']['code']);
+        $this->expectException(McpValidationException::class);
+        $this->middleware->handle($request, $next);
     }
 
     #[Test]
@@ -382,14 +345,8 @@ class McpValidationMiddlewareTest extends UnitTestCase
             return new Response('success');
         };
 
-        $response = $middleware->handle($request, $next);
-
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertEquals(400, $response->getStatusCode());
-
-        $data = json_decode($response->getContent(), true);
-        $this->assertEquals('2.0', $data['jsonrpc']);
-        $this->assertEquals(-32602, $data['error']['code']);
+        $this->expectException(McpValidationException::class);
+        $middleware->handle($request, $next);
     }
 
     #[Test]
@@ -456,14 +413,8 @@ class McpValidationMiddlewareTest extends UnitTestCase
             return new Response('success');
         };
 
-        $response = $middleware->handle($request, $next);
-
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertEquals(400, $response->getStatusCode());
-
-        $data = json_decode($response->getContent(), true);
-        $this->assertEquals('2.0', $data['jsonrpc']);
-        $this->assertEquals(-32602, $data['error']['code']);
+        $this->expectException(McpValidationException::class);
+        $middleware->handle($request, $next);
     }
 
     #[Test]
@@ -495,14 +446,8 @@ class McpValidationMiddlewareTest extends UnitTestCase
             return new Response('success');
         };
 
-        $response = $this->middleware->handle($request, $next);
-
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertEquals(400, $response->getStatusCode());
-
-        $data = json_decode($response->getContent(), true);
-        $this->assertEquals('2.0', $data['jsonrpc']);
-        $this->assertEquals(-32602, $data['error']['code']);
+        $this->expectException(McpValidationException::class);
+        $this->middleware->handle($request, $next);
     }
 
     #[Test]
@@ -532,14 +477,8 @@ class McpValidationMiddlewareTest extends UnitTestCase
             return new Response('success');
         };
 
-        $response = $middleware->handle($request, $next);
-
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertEquals(400, $response->getStatusCode());
-
-        $data = json_decode($response->getContent(), true);
-        $this->assertEquals('2.0', $data['jsonrpc']);
-        $this->assertEquals(-32602, $data['error']['code']);
+        $this->expectException(McpValidationException::class);
+        $middleware->handle($request, $next);
     }
 
     #[Test]
@@ -567,17 +506,14 @@ class McpValidationMiddlewareTest extends UnitTestCase
             return $response;
         };
 
+        if (! $shouldPass) {
+            $this->expectException(McpValidationException::class);
+        }
+
         $result = $this->middleware->handle($request, $next);
 
         if ($shouldPass) {
             $this->assertSame($response, $result);
-        } else {
-            $this->assertInstanceOf(JsonResponse::class, $result);
-            $this->assertEquals(400, $result->getStatusCode());
-
-            $data = json_decode($result->getContent(), true);
-            $this->assertEquals('2.0', $data['jsonrpc']);
-            $this->assertEquals(-32602, $data['error']['code']);
         }
     }
 
@@ -689,14 +625,8 @@ class McpValidationMiddlewareTest extends UnitTestCase
             return new Response('success');
         };
 
-        $response = $middleware->handle($request, $next);
-
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertEquals(400, $response->getStatusCode());
-
-        $data = json_decode($response->getContent(), true);
-        $this->assertEquals('2.0', $data['jsonrpc']);
-        $this->assertEquals(-32602, $data['error']['code']);
+        $this->expectException(McpValidationException::class);
+        $middleware->handle($request, $next);
     }
 
     #[Test]
@@ -710,7 +640,7 @@ class McpValidationMiddlewareTest extends UnitTestCase
 
         $request = Request::create('/mcp', 'POST', [], [], [], [], json_encode([
             'jsonrpc' => '2.0',
-            'method' => 'tools/myCustomTool',
+            'method' => 'tools/my-custom-tool',
             'id' => 1,
         ]));
         $request->headers = new HeaderBag(['Content-Type' => 'application/json']);
@@ -811,15 +741,12 @@ class McpValidationMiddlewareTest extends UnitTestCase
             return new Response('success');
         };
 
-        $response = $this->middleware->handle($request, $next);
-
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertEquals(400, $response->getStatusCode());
-
-        $data = json_decode($response->getContent(), true);
-        $this->assertEquals('2.0', $data['jsonrpc']);
-        $this->assertEquals(-32602, $data['error']['code']);
-        $this->assertEquals($errors, $data['error']['data']['validation_errors']);
+        try {
+            $this->middleware->handle($request, $next);
+            $this->fail('Expected McpValidationException');
+        } catch (McpValidationException $e) {
+            $this->assertEquals($errors, $e->errors());
+        }
     }
 
     #[Test]
@@ -922,14 +849,7 @@ class McpValidationMiddlewareTest extends UnitTestCase
             return new Response('success');
         };
 
-        $response = $this->middleware->handle($request, $next);
-
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertEquals(400, $response->getStatusCode());
-
-        $data = json_decode($response->getContent(), true);
-        $this->assertEquals('2.0', $data['jsonrpc']);
-        $this->assertEquals(-32602, $data['error']['code']);
-        $this->assertEquals($errors, $data['error']['data']['validation_errors']);
+        $this->expectException(McpValidationException::class);
+        $this->middleware->handle($request, $next);
     }
 }

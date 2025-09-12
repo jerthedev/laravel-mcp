@@ -372,7 +372,16 @@ class StdioTransport extends BaseTransport
             } catch (\Exception $e) {
                 // Ignore logging errors during shutdown
             }
-            $this->stop();
+
+            // Try to stop cleanly but ignore errors during shutdown
+            try {
+                $this->stop();
+            } catch (\Exception $e) {
+                // During shutdown, the container might not be available
+                // Just mark as disconnected and clean up what we can
+                $this->connected = false;
+                $this->closeStreams();
+            }
         }
     }
 

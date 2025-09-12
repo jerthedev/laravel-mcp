@@ -62,19 +62,35 @@ class CapabilityNegotiator
         $baseCapabilities = array_merge($this->defaultServerCapabilities, $serverCapabilities);
 
         foreach ($baseCapabilities as $capability => $features) {
+            $clientFeatures = $clientCapabilities[$capability] ?? [];
+            // Ensure features are arrays for negotiation
+            if (! is_array($features)) {
+                $features = [];
+            }
+            if (! is_array($clientFeatures)) {
+                $clientFeatures = [];
+            }
             $negotiated[$capability] = $this->negotiateCapability(
                 $capability,
                 $features,
-                $clientCapabilities[$capability] ?? []
+                $clientFeatures
             );
         }
 
         // Add any client-specific capabilities we can support
         foreach ($clientCapabilities as $capability => $features) {
             if (! isset($negotiated[$capability]) && $this->canSupportCapability($capability)) {
+                $defaultFeatures = $this->getDefaultCapabilityFeatures($capability);
+                // Ensure features are arrays for negotiation
+                if (! is_array($features)) {
+                    $features = [];
+                }
+                if (! is_array($defaultFeatures)) {
+                    $defaultFeatures = [];
+                }
                 $negotiated[$capability] = $this->negotiateCapability(
                     $capability,
-                    $this->getDefaultCapabilityFeatures($capability),
+                    $defaultFeatures,
                     $features
                 );
             }
