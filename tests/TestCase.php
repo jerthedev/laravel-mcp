@@ -2,58 +2,68 @@
 
 namespace JTD\LaravelMCP\Tests;
 
+use Illuminate\Foundation\Application;
 use JTD\LaravelMCP\Facades\Mcp;
 use JTD\LaravelMCP\LaravelMcpServiceProvider;
+use JTD\LaravelMCP\McpManager;
 use JTD\LaravelMCP\Tests\Support\TestPackageManifest;
+use JTD\LaravelMCP\Tests\Support\TestProviderRepository;
+use JTD\LaravelMCP\Tests\Utilities\McpTestHelpers;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
 abstract class TestCase extends OrchestraTestCase
 {
+    use McpTestHelpers;
+
     /**
-     * Get the base path for the application.
-     * Override to use a writable temp directory.
+     * Get the base path of the application.
+     * Override to use a writable directory.
      *
      * @return string
      */
-    protected function getBasePath()
+    protected function getApplicationBasePath()
     {
-        $basePath = '/tmp/laravel-mcp-test-app';
-        
-        // Create directory structure
-        $dirs = [
-            $basePath,
-            $basePath . '/bootstrap',
-            $basePath . '/bootstrap/cache',
-            $basePath . '/storage',
-            $basePath . '/storage/framework',
-            $basePath . '/storage/framework/cache',
-            $basePath . '/storage/framework/sessions',
-            $basePath . '/storage/framework/views',
-            $basePath . '/storage/logs',
-            $basePath . '/app',
-            $basePath . '/config',
-            $basePath . '/database',
-            $basePath . '/public',
-            $basePath . '/resources',
-            $basePath . '/routes',
-        ];
-        
-        foreach ($dirs as $dir) {
-            if (!is_dir($dir)) {
-                mkdir($dir, 0777, true);
+        // Use the path set by bootstrap.php
+        return $_ENV['TESTBENCH_WORKING_PATH'] ?? '/tmp/orchestra-testbench';
+    }
+
+    /**
+     * Resolve the application implementation.
+     * Override to use our custom ProviderRepository.
+     */
+    protected function resolveApplication()
+    {
+        // Get base path with writable cache directory
+        $basePath = $this->getApplicationBasePath();
+
+        // Create application with our base path
+        $app = new Application($basePath);
+
+        // Set up bindings before bootstrapping
+        $app->bind(
+            \Illuminate\Foundation\ProviderRepository::class,
+            function ($app) {
+                return new TestProviderRepository(
+                    $app,
+                    new \Illuminate\Filesystem\Filesystem,
+                    $app->bootstrapPath('cache/services.php')
+                );
             }
-        }
-        
-        // Create necessary cache files
-        $cacheDir = $basePath . '/bootstrap/cache';
-        if (!file_exists($cacheDir . '/packages.php')) {
-            file_put_contents($cacheDir . '/packages.php', '<?php return [];');
-        }
-        if (!file_exists($cacheDir . '/services.php')) {
-            file_put_contents($cacheDir . '/services.php', '<?php return [];');
-        }
-        
-        return $basePath;
+        );
+
+        // Override PackageManifest with our cache-friendly version
+        $app->bind(
+            \Illuminate\Foundation\PackageManifest::class,
+            function ($app) {
+                return new TestPackageManifest(
+                    new \Illuminate\Filesystem\Filesystem,
+                    $app->basePath(),
+                    $app->bootstrapPath('cache/packages.php')
+                );
+            }
+        );
+
+        return $app;
     }
 
     protected function setUp(): void
@@ -119,6 +129,19 @@ abstract class TestCase extends OrchestraTestCase
         // Set app key for encryption (required for sessions/cookies)
         $app['config']->set('app.key', 'base64:'.base64_encode('32charactersoftestingencryptkey'));
 
+        // Set storage path to writable directory
+        $storagePath = '/tmp/orchestra-testbench/storage';
+        if (! is_dir($storagePath)) {
+            @mkdir($storagePath, 0777, true);
+            @mkdir($storagePath.'/framework', 0777, true);
+            @mkdir($storagePath.'/framework/cache', 0777, true);
+            @mkdir($storagePath.'/framework/sessions', 0777, true);
+            @mkdir($storagePath.'/framework/views', 0777, true);
+            @mkdir($storagePath.'/framework/testing', 0777, true);
+            @mkdir($storagePath.'/logs', 0777, true);
+        }
+        $app->useStoragePath($storagePath);
+
         // Set up test database
         $app['config']->set('database.default', 'testing');
         $app['config']->set('database.connections.testing', [
@@ -144,6 +167,12 @@ abstract class TestCase extends OrchestraTestCase
 
         // Clear any existing registrations
         $this->clearMcpRegistrations();
+
+        // Register test components
+        $this->registerTestComponents();
+
+        // Set up test data if needed
+        $this->setUpTestData();
     }
 
     /**
@@ -152,6 +181,22 @@ abstract class TestCase extends OrchestraTestCase
     protected function setupTestComponents(): void
     {
         // Register test components if needed
+    }
+
+    /**
+     * Register test components for testing.
+     */
+    protected function registerTestComponents(): void
+    {
+        // Override in test classes to register specific components
+    }
+
+    /**
+     * Set up test data for testing.
+     */
+    protected function setUpTestData(): void
+    {
+        // Override in test classes to set up specific test data
     }
 
     /**
@@ -168,7 +213,7 @@ abstract class TestCase extends OrchestraTestCase
 
         foreach ($directories as $directory) {
             if (! is_dir($directory)) {
-                mkdir($directory, 0755, true);
+                @mkdir($directory, 0777, true);
             }
         }
     }
@@ -178,13 +223,22 @@ abstract class TestCase extends OrchestraTestCase
      */
     protected function clearMcpRegistrations(): void
     {
-        // Clear registrations using the facade
-        if (class_exists(Mcp::class)) {
-            try {
-                Mcp::reset();
-            } catch (\Exception $e) {
-                // Ignore errors during setup
+        // Only clear registrations if we're using the real implementation
+        // Skip if the manager is mocked to avoid triggering mock expectations
+        try {
+            $manager = app('laravel-mcp');
+            if ($manager instanceof McpManager) {
+                // It's the real manager, safe to reset
+                if (class_exists(Mcp::class)) {
+                    try {
+                        Mcp::reset();
+                    } catch (\Exception $e) {
+                        // Ignore errors
+                    }
+                }
             }
+        } catch (\Exception $e) {
+            // Manager not bound, skip
         }
 
         // Also clear the registry directly if available
@@ -415,6 +469,45 @@ abstract class TestCase extends OrchestraTestCase
     }
 
     /**
+     * Assert valid JSON-RPC response.
+     *
+     * @param  array  $response  Response to validate
+     * @param  mixed  $expectedId  Expected request ID
+     */
+    protected function assertValidJsonRpcResponse(array $response, $expectedId = null): void
+    {
+        $this->assertArrayHasKey('jsonrpc', $response);
+        $this->assertEquals('2.0', $response['jsonrpc']);
+
+        if ($expectedId !== null) {
+            $this->assertArrayHasKey('id', $response);
+            $this->assertEquals($expectedId, $response['id']);
+        }
+
+        $this->assertTrue(
+            array_key_exists('result', $response) || array_key_exists('error', $response),
+            'Response must contain either result or error'
+        );
+    }
+
+    /**
+     * Assert JSON-RPC error response.
+     *
+     * @param  array  $response  Response to validate
+     * @param  int|null  $expectedCode  Expected error code
+     */
+    protected function assertJsonRpcError(array $response, ?int $expectedCode = null): void
+    {
+        $this->assertArrayHasKey('error', $response);
+        $this->assertArrayHasKey('code', $response['error']);
+        $this->assertArrayHasKey('message', $response['error']);
+
+        if ($expectedCode !== null) {
+            $this->assertEquals($expectedCode, $response['error']['code']);
+        }
+    }
+
+    /**
      * Create a mock JSON-RPC request.
      *
      * @param  string  $method  Method name
@@ -500,11 +593,52 @@ abstract class TestCase extends OrchestraTestCase
     }
 
     /**
+     * Process JSON-RPC request through the handler.
+     *
+     * @param  array  $request  Request data
+     * @return array Response data
+     */
+    protected function processJsonRpcRequest(array $request): array
+    {
+        $handler = $this->app->make(\JTD\LaravelMCP\Protocol\JsonRpcHandler::class);
+        $response = $handler->processRequest(json_encode($request));
+
+        return json_decode($response, true);
+    }
+
+    /**
+     * Mock a transport for testing.
+     *
+     * @param  string  $type  Transport type
+     */
+    protected function mockTransport(string $type = 'stdio'): \Mockery\MockInterface
+    {
+        $mock = \Mockery::mock(\JTD\LaravelMCP\Transport\Contracts\TransportInterface::class);
+
+        $this->app->bind("mcp.transport.{$type}", function () use ($mock) {
+            return $mock;
+        });
+
+        return $mock;
+    }
+
+    /**
      * Cleanup after test.
      */
     protected function tearDown(): void
     {
-        $this->clearMcpRegistrations();
+        // Clear MCP registrations first before any facade cleanup
+        try {
+            $this->clearMcpRegistrations();
+        } catch (\Exception $e) {
+            // Ignore errors during cleanup
+        }
+
+        // Clear any facade mocks to prevent test pollution
+        \Illuminate\Support\Facades\Log::clearResolvedInstances();
+        \Illuminate\Support\Facades\Cache::clearResolvedInstances();
+        \Illuminate\Support\Facades\Queue::clearResolvedInstances();
+
         parent::tearDown();
     }
 }

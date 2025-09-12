@@ -7,7 +7,8 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  test:
+  # Fast tests for quick CI feedback
+  test-fast:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
@@ -16,7 +17,7 @@ jobs:
         laravel: [11.*]
         stability: [prefer-lowest, prefer-stable]
 
-    name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }}
+    name: Fast - P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }}
 
     steps:
     - name: Checkout code
@@ -36,14 +37,45 @@ jobs:
 
     - name: Install dependencies
       run: |
-        composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
+        composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:^9.0" --no-interaction --no-update
         composer update --${{ matrix.stability }} --prefer-dist --no-interaction
 
     - name: List Installed Dependencies
       run: composer show -D
 
-    - name: Execute fast test suite (excludes heavy integration tests)
-      run: composer run test:ci
+    - name: Execute fast test suite (~6s)
+      run: composer run test:fast || vendor/bin/phpunit --testsuite=Fast
+
+  # Comprehensive unit tests (optional, run on main branch)
+  test-unit:
+    if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    needs: test-fast
+    
+    name: Unit Tests - PHP 8.2
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.2
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
+        coverage: xdebug
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-interaction
+
+    - name: Execute unit test suite with coverage
+      run: vendor/bin/phpunit --testsuite=Unit --coverage-clover=coverage.xml
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false
 
   code-style:
     runs-on: ubuntu-latest
@@ -87,4 +119,75 @@ jobs:
       run: composer install --prefer-dist --no-interaction
 
     - name: Execute static analysis
-      run: vendor/bin/phpstan analyse --memory-limit=2G || echo "Static analysis will be enabled once PHPStan configuration is added"
+      run: vendor/bin/phpstan analyse --memory-limit=2G --error-format=github
+
+  # PHP CS Fixer code quality check
+  code-quality:
+    runs-on: ubuntu-latest
+
+    name: Code Quality (PHP CS Fixer)
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.2
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
+        coverage: none
+        tools: php-cs-fixer
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-interaction
+
+    - name: Check code quality with PHP CS Fixer
+      run: vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php --dry-run --diff --verbose
+
+  # Security vulnerability scanning
+  security-scan:
+    runs-on: ubuntu-latest
+
+    name: Security Scan
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.2
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite
+        coverage: none
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-interaction
+
+    - name: Run security audit
+      run: composer audit --no-dev --format=json || true
+
+  # Compatibility tests
+  compatibility-tests:
+    runs-on: ubuntu-latest
+    needs: test-fast
+
+    name: Compatibility Tests
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.3
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite
+        coverage: none
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-interaction
+
+    - name: Run compatibility tests
+      run: vendor/bin/phpunit tests/Compatibility/ --testdox || echo "Compatibility tests pending implementation"

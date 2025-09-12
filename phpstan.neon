@@ -1,0 +1,30 @@
+parameters:
+    level: 8
+    paths:
+        - src
+        - tests
+    excludePaths:
+        - tests/Fixtures/*
+        - tests/reports/*
+    reportUnmatchedIgnoredErrors: false
+    treatPhpDocTypesAsCertain: false
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
+    ignoreErrors:
+        # Ignore specific Laravel/Testbench issues
+        - '#Call to an undefined method Illuminate\\Contracts\\Foundation\\Application::#'
+        - '#Access to an undefined property Mockery\\#'
+        - '#Call to an undefined method Mockery\\#'
+        # Ignore test-specific patterns
+        - 
+            message: '#PHPDoc tag @var#'
+            path: tests/*
+        # Ignore dynamic property access in tests
+        -
+            message: '#Access to an undefined property#'
+            path: tests/*
+    parallel:
+        processTimeout: 300.0
+        maximumNumberOfProcesses: 4
+        minimumNumberOfJobsPerProcess: 2
+    tmpDir: %currentWorkingDirectory%/tests/reports/phpstan

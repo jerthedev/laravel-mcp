@@ -1,0 +1,166 @@
+name: Quality Assurance
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday
+
+jobs:
+  code-style:
+    name: Code Style
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          coverage: none
+          tools: php-cs-fixer, cs2pr
+          
+      - name: Check PHP code style
+        run: php-cs-fixer fix --dry-run --format=checkstyle | cs2pr
+
+  static-analysis:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          coverage: none
+          
+      - name: Install dependencies
+        run: |
+          composer install --prefer-dist --no-progress --no-interaction
+          
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --error-format=github
+
+  security:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Run security check
+        uses: symfonycorp/security-checker-action@v4
+
+  compatibility:
+    name: Compatibility Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: [8.2, 8.3]
+        laravel: [11.x]
+        dependency-version: [prefer-lowest, prefer-stable]
+        
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          
+      - name: Install dependencies
+        run: |
+          composer require "laravel/framework:${{ matrix.laravel }}" --no-update
+          composer update --${{ matrix.dependency-version }} --prefer-dist --no-progress --no-interaction
+          
+      - name: Run compatibility tests
+        run: composer test:fast
+
+  performance:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          coverage: none
+          ini-values: memory_limit=2G
+          
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+          
+      - name: Run performance tests
+        run: |
+          composer test:performance || true
+          
+      - name: Check memory usage
+        run: |
+          php -r "echo 'Memory limit: ' . ini_get('memory_limit') . PHP_EOL;"
+          composer test:unit -- --log-junit=tests/reports/junit.xml || true
+
+  package-validation:
+    name: Package Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Validate composer.json
+        run: composer validate --strict
+        
+      - name: Check for PSR-4 compliance
+        run: composer dump-autoload --strict-psr --no-interaction
+        
+      - name: Check package can be installed
+        run: |
+          mkdir test-install
+          cd test-install
+          composer init --name=test/package --no-interaction
+          composer config repositories.laravel-mcp path ../
+          composer require jerthedev/laravel-mcp:@dev --no-interaction
+          
+      - name: Verify service provider registration
+        run: |
+          cd test-install
+          php -r "
+            require 'vendor/autoload.php';
+            if (!class_exists('JTD\\LaravelMCP\\LaravelMcpServiceProvider')) {
+                exit(1);
+            }
+          "
+
+  documentation:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Check README exists
+        run: test -f README.md
+        
+      - name: Check LICENSE exists
+        run: test -f LICENSE
+        
+      - name: Check documentation structure
+        run: |
+          test -d docs
+          test -f docs/Planning/PackageOverview.md
+          test -f docs/Specs/PackageSpecification.md

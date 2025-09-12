@@ -9,7 +9,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use JTD\LaravelMCP\Http\Middleware\McpRateLimitMiddleware;
-use JTD\LaravelMCP\Tests\Support\MocksLaravelServices;
 use JTD\LaravelMCP\Tests\UnitTestCase;
 use Mockery;
 use PHPUnit\Framework\Attributes\CoversClass;

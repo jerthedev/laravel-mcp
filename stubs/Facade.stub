@@ -1,0 +1,28 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Illuminate\Support\Facades;
+
+/**
+ * @template T
+ */
+abstract class Facade
+{
+    /**
+     * @param string $method
+     * @param array<mixed> $args
+     * @return mixed
+     */
+    public static function __callStatic(string $method, array $args) {}
+
+    /**
+     * @return T|object
+     */
+    protected static function getFacadeRoot() {}
+
+    /**
+     * @return string
+     */
+    protected static function getFacadeAccessor() {}
+}

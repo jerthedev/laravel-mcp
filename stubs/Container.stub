@@ -1,0 +1,34 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Illuminate\Container;
+
+/**
+ * @template T
+ */
+class Container
+{
+    /**
+     * @template TClass
+     * @param class-string<TClass>|string $abstract
+     * @return ($abstract is class-string<TClass> ? TClass : mixed)
+     */
+    public function make($abstract, array $parameters = []) {}
+
+    /**
+     * @template TClass
+     * @param class-string<TClass>|string $abstract
+     * @param \Closure|string|null $concrete
+     * @return void
+     */
+    public function bind($abstract, $concrete = null, $shared = false) {}
+
+    /**
+     * @template TClass
+     * @param class-string<TClass>|string $abstract
+     * @param \Closure|string|null $concrete
+     * @return void
+     */
+    public function singleton($abstract, $concrete = null) {}
+}

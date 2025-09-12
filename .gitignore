@@ -91,6 +91,10 @@ telescope.json
 
 # PHPStan Cache  
 .phpstan.cache
+.phpstan/
+
+# PHP CS Fixer Cache
+.php-cs-fixer.cache
 
 # Pest Cache
 .pest

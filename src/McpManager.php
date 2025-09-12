@@ -648,12 +648,12 @@ class McpManager
     public function asyncResult(string $requestId)
     {
         $result = $this->getAsyncResult($requestId);
-        
+
         // If result is an array with a 'result' key, return just the result
         if (is_array($result) && isset($result['result'])) {
             return $result['result'];
         }
-        
+
         return $result;
     }
 }
