@@ -214,7 +214,7 @@ class ServeCommand extends BaseCommand
      */
     protected function buildTransportConfig(string $transportType): array
     {
-        $baseConfig = $this->getTransportConfig($transportType, []);
+        $baseConfig = config("mcp-transports.{$transportType}", []);
 
         $config = array_merge($baseConfig, [
             'timeout' => (int) $this->option('timeout'),

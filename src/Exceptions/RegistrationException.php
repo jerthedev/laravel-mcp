@@ -22,10 +22,20 @@ class RegistrationException extends McpException
     protected ?string $componentName = null;
 
     /**
+     * Error code from RegistrationErrorCodes.
+     */
+    protected ?string $errorCode = null;
+
+    /**
+     * Whether the error is recoverable.
+     */
+    protected bool $recoverable = true;
+
+    /**
      * Create a new registration exception instance.
      *
      * @param  string  $message  Error message
-     * @param  int  $code  Error code
+     * @param  int|string  $code  Error code (numeric or string from RegistrationErrorCodes)
      * @param  string|null  $componentType  Component type
      * @param  string|null  $componentName  Component name
      * @param  mixed  $data  Additional error data
@@ -34,14 +44,30 @@ class RegistrationException extends McpException
      */
     public function __construct(
         string $message = '',
-        int $code = 0,
+        $code = 0,
         ?string $componentType = null,
         ?string $componentName = null,
         $data = null,
         array $context = [],
         ?\Throwable $previous = null
     ) {
-        parent::__construct($message, $code, $data, $context, $previous);
+        // If code is a string error code, store it and use a numeric code
+        if (is_string($code)) {
+            $this->errorCode = $code;
+            $this->recoverable = RegistrationErrorCodes::isRecoverable($code);
+
+            // Use default message if not provided
+            if (empty($message)) {
+                $message = RegistrationErrorCodes::getMessage($code);
+            }
+
+            // Convert to numeric code for parent
+            $numericCode = hexdec(substr(md5($code), 0, 8)) * -1;
+        } else {
+            $numericCode = $code;
+        }
+
+        parent::__construct($message, $numericCode, $data, $context, $previous);
         $this->componentType = $componentType;
         $this->componentName = $componentName;
     }
@@ -87,6 +113,34 @@ class RegistrationException extends McpException
     }
 
     /**
+     * Get the error code.
+     */
+    public function getErrorCode(): ?string
+    {
+        return $this->errorCode;
+    }
+
+    /**
+     * Check if the error is recoverable.
+     */
+    public function isRecoverable(): bool
+    {
+        return $this->recoverable;
+    }
+
+    /**
+     * Get the error severity.
+     */
+    public function getSeverity(): string
+    {
+        if ($this->errorCode) {
+            return RegistrationErrorCodes::getSeverity($this->errorCode);
+        }
+
+        return 'error';
+    }
+
+    /**
      * Convert exception to array format with component info.
      */
     public function toArray(): array
@@ -99,6 +153,12 @@ class RegistrationException extends McpException
 
         if ($this->componentName) {
             $result['component_name'] = $this->componentName;
+        }
+
+        if ($this->errorCode) {
+            $result['error_code'] = $this->errorCode;
+            $result['severity'] = $this->getSeverity();
+            $result['recoverable'] = $this->recoverable;
         }
 
         return $result;
@@ -116,7 +176,7 @@ class RegistrationException extends McpException
     {
         return new static(
             "Component '{$name}' of type '{$type}' is already registered",
-            -32030,
+            RegistrationErrorCodes::COMPONENT_ALREADY_EXISTS,
             $type,
             $name,
             $data
@@ -174,7 +234,7 @@ class RegistrationException extends McpException
     {
         return new static(
             "Component class '{$className}' not found for type '{$type}'",
-            -32033,
+            RegistrationErrorCodes::HANDLER_CLASS_NOT_FOUND,
             $type,
             $className,
             array_merge($data ?? [], ['class_name' => $className])
@@ -194,7 +254,7 @@ class RegistrationException extends McpException
     {
         return new static(
             "Class '{$className}' for type '{$type}' must extend '{$expectedBase}'",
-            -32034,
+            RegistrationErrorCodes::HANDLER_INTERFACE_MISMATCH,
             $type,
             $className,
             array_merge($data ?? [], ['class_name' => $className, 'expected_base' => $expectedBase])
@@ -213,7 +273,7 @@ class RegistrationException extends McpException
     {
         return new static(
             "Component discovery failed for path '{$path}': {$reason}",
-            -32035,
+            RegistrationErrorCodes::DISCOVERY_FAILED,
             null,
             null,
             array_merge($data ?? [], ['path' => $path, 'reason' => $reason])
@@ -255,7 +315,7 @@ class RegistrationException extends McpException
 
         return new static(
             $message,
-            -32037,
+            RegistrationErrorCodes::INVALID_COMPONENT_TYPE,
             $type,
             null,
             array_merge($data ?? [], ['supported_types' => $supportedTypes])
@@ -295,7 +355,7 @@ class RegistrationException extends McpException
     {
         return new static(
             "Component '{$name}' of type '{$type}' failed validation",
-            -32039,
+            RegistrationErrorCodes::VALIDATION_FAILED,
             $type,
             $name,
             array_merge($data ?? [], ['validation_errors' => $validationErrors])
@@ -344,6 +404,48 @@ class RegistrationException extends McpException
             ],
             [],
             $throwable
+        );
+    }
+
+    /**
+     * Create a lock acquisition failure exception.
+     *
+     * @param  string  $reason  Failure reason
+     * @param  mixed  $data  Additional data
+     * @return static
+     */
+    public static function lockAcquisitionFailed(string $reason = '', $data = null): self
+    {
+        $message = 'Failed to acquire registry lock';
+        if (! empty($reason)) {
+            $message .= ': '.$reason;
+        }
+
+        return new static(
+            $message,
+            RegistrationErrorCodes::LOCK_ACQUISITION_FAILED,
+            null,
+            null,
+            $data
+        );
+    }
+
+    /**
+     * Create a middleware execution failure exception.
+     *
+     * @param  string  $middlewareName  Middleware name
+     * @param  string  $reason  Failure reason
+     * @param  mixed  $data  Additional data
+     * @return static
+     */
+    public static function middlewareExecutionFailed(string $middlewareName, string $reason, $data = null): self
+    {
+        return new static(
+            "Middleware '{$middlewareName}' execution failed: {$reason}",
+            RegistrationErrorCodes::MIDDLEWARE_EXECUTION_FAILED,
+            null,
+            $middlewareName,
+            array_merge($data ?? [], ['middleware' => $middlewareName, 'reason' => $reason])
         );
     }
 }

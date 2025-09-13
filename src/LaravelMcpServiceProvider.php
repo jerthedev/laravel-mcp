@@ -53,6 +53,128 @@ class LaravelMcpServiceProvider extends ServiceProvider
         $this->registerCaching();
     }
 
+    /**
+     * Get comprehensive configuration for MCP package.
+     */
+    private function registerConfig(): array
+    {
+        return [
+            'enabled' => env('MCP_ENABLED', true),
+            'server' => [
+                'name' => env('MCP_SERVER_NAME', 'Laravel MCP Server'),
+                'version' => '1.0.0',
+                'description' => env('MCP_SERVER_DESCRIPTION', 'MCP Server built with Laravel'),
+                'vendor' => 'JTD/LaravelMCP',
+            ],
+            'transports' => [
+                'default' => env('MCP_DEFAULT_TRANSPORT', 'stdio'),
+                'http' => [
+                    'enabled' => env('MCP_HTTP_ENABLED', true),
+                    'host' => env('MCP_HTTP_HOST', '127.0.0.1'),
+                    'port' => env('MCP_HTTP_PORT', 8000),
+                    'middleware' => ['mcp'],
+                ],
+                'stdio' => [
+                    'enabled' => env('MCP_STDIO_ENABLED', true),
+                    'timeout' => env('MCP_STDIO_TIMEOUT', 30),
+                ],
+            ],
+            'discovery' => [
+                'enabled' => env('MCP_AUTO_DISCOVERY', true),
+                'paths' => [
+                    app_path('Mcp/Tools'),
+                    app_path('Mcp/Resources'),
+                    app_path('Mcp/Prompts'),
+                ],
+                'cache_enabled' => env('MCP_DISCOVERY_CACHE', true),
+            ],
+            'routes' => [
+                'prefix' => env('MCP_ROUTES_PREFIX', 'mcp'),
+                'middleware' => ['mcp'],
+                'auto_register' => env('MCP_AUTO_REGISTER_ROUTES', true),
+            ],
+            'events' => [
+                'enabled' => env('MCP_EVENTS_ENABLED', true),
+                'listeners' => [
+                    'activity' => env('MCP_LOG_ACTIVITY', true),
+                    'metrics' => env('MCP_TRACK_METRICS', true),
+                    'registration' => env('MCP_LOG_REGISTRATION', true),
+                ],
+            ],
+            'queue' => [
+                'enabled' => env('MCP_QUEUE_ENABLED', false),
+                'default' => env('MCP_QUEUE_NAME', 'mcp'),
+                'connection' => env('MCP_QUEUE_CONNECTION', null),
+                'retry_after' => env('MCP_QUEUE_RETRY_AFTER', 90),
+                'timeout' => env('MCP_QUEUE_TIMEOUT', 300),
+            ],
+            'notifications' => [
+                'enabled' => env('MCP_NOTIFICATIONS_ENABLED', true),
+                'channels' => ['database'],
+                'notifiable' => null,
+                'admin_email' => env('MCP_ADMIN_EMAIL'),
+                'severity_threshold' => env('MCP_NOTIFICATION_SEVERITY', 'error'),
+                'slack' => [
+                    'enabled' => env('MCP_SLACK_ENABLED', false),
+                    'webhook_url' => env('MCP_SLACK_WEBHOOK_URL'),
+                    'channel' => env('MCP_SLACK_CHANNEL', '#mcp-errors'),
+                    'username' => env('MCP_SLACK_USERNAME', 'MCP Error Bot'),
+                ],
+            ],
+            'performance' => [
+                'enabled' => env('MCP_PERFORMANCE_MONITORING', false),
+                'auto_start' => env('MCP_AUTO_START_MONITORING', true),
+                'metrics_collection' => env('MCP_COLLECT_METRICS', true),
+                'memory_threshold' => env('MCP_MEMORY_THRESHOLD', 128),
+            ],
+            'capabilities' => [
+                'tools' => [
+                    'enabled' => env('MCP_TOOLS_ENABLED', true),
+                    'list_changed_notifications' => true,
+                ],
+                'resources' => [
+                    'enabled' => env('MCP_RESOURCES_ENABLED', true),
+                    'list_changed_notifications' => true,
+                    'subscriptions' => env('MCP_RESOURCE_SUBSCRIPTIONS', false),
+                ],
+                'prompts' => [
+                    'enabled' => env('MCP_PROMPTS_ENABLED', true),
+                    'list_changed_notifications' => true,
+                ],
+                'logging' => [
+                    'enabled' => env('MCP_LOGGING_ENABLED', true),
+                    'level' => env('MCP_LOG_LEVEL', 'info'),
+                ],
+            ],
+            'middleware' => [
+                'auto_register' => true,
+            ],
+            'auth' => [
+                'enabled' => env('MCP_AUTH_ENABLED', false),
+                'api_key' => env('MCP_API_KEY'),
+            ],
+            'cors' => [
+                'allowed_origins' => explode(',', env('MCP_CORS_ALLOWED_ORIGINS', '*')),
+                'allowed_methods' => ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+                'allowed_headers' => [
+                    'Content-Type',
+                    'Authorization',
+                    'X-Requested-With',
+                    'X-MCP-API-Key',
+                ],
+                'max_age' => env('MCP_CORS_MAX_AGE', 86400),
+            ],
+            'cache' => [
+                'store' => env('MCP_CACHE_STORE', 'file'),
+                'ttl' => env('MCP_CACHE_TTL', 3600),
+            ],
+            'validation' => [
+                'validate_handlers' => env('MCP_VALIDATE_HANDLERS', true),
+                'strict_mode' => env('MCP_STRICT_MODE', false),
+            ],
+        ];
+    }
+
     private function registerConfiguration(): void
     {
         // Ensure configuration is an array before merging
@@ -76,10 +198,41 @@ class LaravelMcpServiceProvider extends ServiceProvider
 
     private function registerServices(): void
     {
-        // Register registry services first (no dependencies)
-        $this->app->singleton(ToolRegistry::class);
-        $this->app->singleton(ResourceRegistry::class);
-        $this->app->singleton(PromptRegistry::class);
+        $this->registerCoreServices();
+        $this->registerAdvancedServices();
+        $this->registerEventListeners();
+        $this->registerJobBindings();
+    }
+
+    /**
+     * Register core MCP services.
+     */
+    private function registerCoreServices(): void
+    {
+        // Register ComponentFactory first (shared by all registries)
+        $this->app->singleton(\JTD\LaravelMCP\Registry\ComponentFactory::class);
+
+        // Register registry services with dependencies
+        $this->app->singleton(ToolRegistry::class, function ($app) {
+            return new ToolRegistry(
+                $app,
+                $app->make(\JTD\LaravelMCP\Registry\ComponentFactory::class)
+            );
+        });
+
+        $this->app->singleton(ResourceRegistry::class, function ($app) {
+            return new ResourceRegistry(
+                $app,
+                $app->make(\JTD\LaravelMCP\Registry\ComponentFactory::class)
+            );
+        });
+
+        $this->app->singleton(PromptRegistry::class, function ($app) {
+            return new PromptRegistry(
+                $app,
+                $app->make(\JTD\LaravelMCP\Registry\ComponentFactory::class)
+            );
+        });
 
         // Register core MCP services with explicit factory for McpRegistry
         $this->app->singleton(McpRegistry::class, function ($app) {
@@ -135,8 +288,6 @@ class LaravelMcpServiceProvider extends ServiceProvider
             return new TransportManager($app);
         });
 
-        // Support services will be registered lazily in registerLazyServices()
-
         // Register facade accessor - should point to McpManager that provides both interfaces
         $this->app->singleton('laravel-mcp', function ($app) {
             return $app->make(McpManager::class);
@@ -158,6 +309,83 @@ class LaravelMcpServiceProvider extends ServiceProvider
         $this->app->singleton('mcp.registry.prompt', function ($app) {
             return $app->make(PromptRegistry::class);
         });
+    }
+
+    /**
+     * Register advanced MCP services and generators.
+     */
+    private function registerAdvancedServices(): void
+    {
+        // Register advanced services (only if classes exist)
+        $advancedServices = [
+            'JTD\LaravelMCP\Support\PerformanceMonitor',
+            'JTD\LaravelMCP\Support\SchemaValidator',
+            'JTD\LaravelMCP\Support\MessageSerializer',
+            'JTD\LaravelMCP\Support\AdvancedDocumentationGenerator',
+            'JTD\LaravelMCP\Support\Debugger',
+            'JTD\LaravelMCP\Support\ExampleCompiler',
+            'JTD\LaravelMCP\Support\ExtensionGuideBuilder',
+        ];
+
+        foreach ($advancedServices as $serviceClass) {
+            if (class_exists($serviceClass)) {
+                $this->app->singleton($serviceClass);
+            }
+        }
+
+        // Register client generators (bind as needed, not singletons)
+        $clientGenerators = [
+            'JTD\LaravelMCP\Support\ClientGenerators\ClaudeDesktopGenerator',
+            'JTD\LaravelMCP\Support\ClientGenerators\ClaudeCodeGenerator',
+            'JTD\LaravelMCP\Support\ClientGenerators\ChatGptGenerator',
+        ];
+
+        foreach ($clientGenerators as $generatorClass) {
+            if (class_exists($generatorClass)) {
+                $this->app->bind($generatorClass);
+            }
+        }
+
+        // Register notification handler if available
+        if (class_exists('JTD\LaravelMCP\Protocol\NotificationHandler')) {
+            $this->app->singleton('JTD\LaravelMCP\Protocol\NotificationHandler');
+        }
+    }
+
+    /**
+     * Register event listeners for MCP events.
+     */
+    private function registerEventListeners(): void
+    {
+        $listeners = [
+            'JTD\LaravelMCP\Listeners\LogMcpActivity',
+            'JTD\LaravelMCP\Listeners\LogMcpComponentRegistration',
+            'JTD\LaravelMCP\Listeners\TrackMcpRequestMetrics',
+            'JTD\LaravelMCP\Listeners\TrackMcpUsage',
+        ];
+
+        foreach ($listeners as $listenerClass) {
+            if (class_exists($listenerClass)) {
+                $this->app->bind($listenerClass);
+            }
+        }
+    }
+
+    /**
+     * Register job bindings for async processing.
+     */
+    private function registerJobBindings(): void
+    {
+        $jobs = [
+            'JTD\LaravelMCP\Jobs\ProcessMcpRequest',
+            'JTD\LaravelMCP\Jobs\ProcessNotificationDelivery',
+        ];
+
+        foreach ($jobs as $jobClass) {
+            if (class_exists($jobClass)) {
+                $this->app->bind($jobClass);
+            }
+        }
     }
 
     private function registerInterfaces(): void
@@ -201,6 +429,10 @@ class LaravelMcpServiceProvider extends ServiceProvider
             $this->bootDiscovery();
             $this->bootMcpRoutes();
             $this->bootViews();
+            $this->bootEvents();
+            $this->bootJobs();
+            $this->bootNotifications();
+            $this->bootPerformanceMonitoring();
 
             if ($this->app->runningInConsole()) {
                 $this->bootConsole();
@@ -210,16 +442,62 @@ class LaravelMcpServiceProvider extends ServiceProvider
         }
     }
 
+    /**
+     * Detect the current runtime environment.
+     */
     private function validateDependencies(): void
     {
         $required = [
             'Symfony\\Component\\Process\\Process' => 'Symfony Process component is required for stdio transport',
+            'Illuminate\\Support\\ServiceProvider' => 'Laravel Framework 11.x is required',
         ];
 
+        $optional = [
+            'Predis\\Client' => 'Redis support for caching and queues',
+            'Pusher\\Pusher' => 'Pusher support for real-time notifications',
+        ];
+
+        // Validate required dependencies
         foreach ($required as $class => $message) {
             if (! class_exists($class)) {
                 throw new \RuntimeException($message);
             }
+        }
+
+        // Check optional dependencies and log warnings
+        foreach ($optional as $class => $description) {
+            if (! class_exists($class)) {
+                $this->logOptionalDependencyWarning($class, $description);
+            }
+        }
+    }
+
+    /**
+     * Get the primary class for a package.
+     */
+    private function getPackageClass(string $package): string
+    {
+        $classMap = [
+            'symfony/process' => 'Symfony\\Component\\Process\\Process',
+            'laravel/framework' => 'Illuminate\\Support\\ServiceProvider',
+            'predis/predis' => 'Predis\\Client',
+            'pusher/pusher-php-server' => 'Pusher\\Pusher',
+        ];
+
+        return $classMap[$package] ?? '';
+    }
+
+    /**
+     * Log warning for missing optional dependency.
+     */
+    private function logOptionalDependencyWarning(string $class, string $description): void
+    {
+        if ($this->app->bound('log')) {
+            $this->app['log']->info("Optional MCP dependency not found: {$class}", [
+                'class' => $class,
+                'description' => $description,
+                'impact' => 'Some features may not be available',
+            ]);
         }
     }
 
@@ -254,6 +532,27 @@ class LaravelMcpServiceProvider extends ServiceProvider
 
         // Register MCP-specific event listeners
         $this->registerMcpEventListeners();
+        $this->registerApplicationEventHooks();
+    }
+
+    /**
+     * Register application-level event hooks.
+     */
+    private function registerApplicationEventHooks(): void
+    {
+        // Hook into Laravel application events
+        $this->app['events']->listen('bootstrapped: Illuminate\\Foundation\\Bootstrap\\BootProviders', function () {
+            $this->onProvidersBooted();
+        });
+
+        $this->app['events']->listen('kernel.handled', function () {
+            $this->onRequestHandled();
+        });
+
+        // Listen for Laravel terminating event
+        $this->app->terminating(function () {
+            $this->onApplicationTerminating();
+        });
     }
 
     private function registerMcpEventListeners(): void
@@ -345,6 +644,9 @@ class LaravelMcpServiceProvider extends ServiceProvider
         }
     }
 
+    /**
+     * Called when all service providers have been booted.
+     */
     private function onProvidersBooted(): void
     {
         // All providers have been booted - finalize component discovery
@@ -353,12 +655,18 @@ class LaravelMcpServiceProvider extends ServiceProvider
         }
     }
 
+    /**
+     * Called when a request has been handled.
+     */
     private function onRequestHandled(): void
     {
         // Request has been handled - cleanup resources if needed
         $this->cleanupResources();
     }
 
+    /**
+     * Called when the application is terminating.
+     */
     private function onApplicationTerminating(): void
     {
         // Application is terminating - perform final cleanup
@@ -497,13 +805,6 @@ class LaravelMcpServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../resources/stubs' => resource_path('stubs/mcp'),
         ], 'laravel-mcp-stubs');
-
-        $this->publishes([
-            __DIR__.'/../config/laravel-mcp.php' => config_path('laravel-mcp.php'),
-            __DIR__.'/../config/mcp-transports.php' => config_path('mcp-transports.php'),
-            __DIR__.'/../routes/mcp.php' => base_path('routes/mcp.php'),
-            __DIR__.'/../resources/stubs' => resource_path('stubs/mcp'),
-        ], 'laravel-mcp');
     }
 
     private function bootRoutes(): void
@@ -769,5 +1070,201 @@ class LaravelMcpServiceProvider extends ServiceProvider
                 config('laravel-mcp.cache.store', 'file')
             )->tags(['mcp', 'components']);
         });
+    }
+
+    /**
+     * Boot the events system for MCP components.
+     */
+    private function bootEvents(): void
+    {
+        // Events are already registered in registerMcpEventListeners()
+        // This method exists for specification compliance
+        if (! config('laravel-mcp.events.enabled', true)) {
+            return;
+        }
+
+        // Additional event system initialization if needed
+        if ($this->app->bound('log')) {
+            $this->app['log']->debug('MCP event system initialized');
+        }
+    }
+
+    /**
+     * Boot the jobs system for async MCP processing.
+     */
+    private function bootJobs(): void
+    {
+        if (! config('laravel-mcp.queue.enabled', false)) {
+            return;
+        }
+
+        // Register job event listeners for monitoring
+        $this->app['events']->listen('queue.job.failed', function ($event) {
+            if ($this->isMcpJob($event->job)) {
+                $this->handleMcpJobFailure($event);
+            }
+        });
+
+        // Register job processing listeners
+        $this->app['events']->listen('queue.job.processing', function ($event) {
+            if ($this->isMcpJob($event->job)) {
+                if ($this->app->bound('log')) {
+                    $this->app['log']->info('MCP job processing started', [
+                        'job' => $event->job->resolveName(),
+                        'queue' => $event->job->getQueue(),
+                    ]);
+                }
+            }
+        });
+
+        if ($this->app->bound('log')) {
+            $this->app['log']->debug('MCP jobs system initialized');
+        }
+    }
+
+    /**
+     * Boot the notifications system for MCP.
+     */
+    private function bootNotifications(): void
+    {
+        if (! config('laravel-mcp.notifications.enabled', true)) {
+            return;
+        }
+
+        // Register notification channels
+        $this->registerNotificationChannels();
+
+        // Set up notification event listeners
+        $this->registerNotificationEventListeners();
+
+        if ($this->app->bound('log')) {
+            $this->app['log']->debug('MCP notifications system initialized');
+        }
+    }
+
+    /**
+     * Boot the performance monitoring system.
+     */
+    private function bootPerformanceMonitoring(): void
+    {
+        if (! config('laravel-mcp.performance.enabled', false)) {
+            return;
+        }
+
+        // Register performance monitoring service if it exists
+        if (class_exists('JTD\LaravelMCP\Support\PerformanceMonitor')) {
+            $this->app->singleton('JTD\LaravelMCP\Support\PerformanceMonitor');
+
+            // Start monitoring if configured
+            if (config('laravel-mcp.performance.auto_start', true)) {
+                $monitor = $this->app->make('JTD\LaravelMCP\Support\PerformanceMonitor');
+                $monitor->start();
+
+                // Register shutdown handler for performance cleanup
+                register_shutdown_function(function () use ($monitor) {
+                    $monitor->stop();
+                });
+            }
+        }
+
+        if ($this->app->bound('log')) {
+            $this->app['log']->debug('MCP performance monitoring initialized');
+        }
+    }
+
+    /**
+     * Check if a job is an MCP-related job.
+     */
+    private function isMcpJob($job): bool
+    {
+        $mcpJobClasses = [
+            'JTD\LaravelMCP\Jobs\ProcessMcpRequest',
+            'JTD\LaravelMCP\Jobs\ProcessNotificationDelivery',
+        ];
+
+        $jobName = is_object($job) ? get_class($job) : (string) $job;
+        if (method_exists($job, 'resolveName')) {
+            $jobName = $job->resolveName();
+        }
+
+        return in_array($jobName, $mcpJobClasses);
+    }
+
+    /**
+     * Handle MCP job failures.
+     */
+    private function handleMcpJobFailure($event): void
+    {
+        if ($this->app->bound('log')) {
+            $this->app['log']->error('MCP job failed', [
+                'job' => $event->job->resolveName(),
+                'exception' => $event->exception->getMessage(),
+                'queue' => $event->job->getQueue(),
+                'attempts' => $event->job->attempts(),
+            ]);
+        }
+
+        // Dispatch notification about job failure if notifications are enabled
+        if (config('laravel-mcp.notifications.enabled', true) &&
+            class_exists('JTD\LaravelMCP\Events\NotificationFailed')) {
+            $this->app['events']->dispatch(new \JTD\LaravelMCP\Events\NotificationFailed(
+                'MCP job failed: '.$event->job->resolveName(),
+                $event->exception
+            ));
+        }
+    }
+
+    /**
+     * Register notification channels for MCP.
+     */
+    private function registerNotificationChannels(): void
+    {
+        $channels = config('laravel-mcp.notifications.channels', ['database']);
+
+        if (! $this->app->bound('notification.channel.manager')) {
+            return;
+        }
+
+        foreach ($channels as $channel) {
+            if ($channel === 'slack' && config('laravel-mcp.notifications.slack.enabled', false)) {
+                // Register Slack channel if configuration exists
+                if (class_exists('JTD\LaravelMCP\Notifications\Channels\SlackChannel')) {
+                    $this->app->make('notification.channel.manager')
+                        ->extend('mcp-slack', function () {
+                            return new \JTD\LaravelMCP\Notifications\Channels\SlackChannel(
+                                config('laravel-mcp.notifications.slack')
+                            );
+                        });
+                }
+            }
+        }
+    }
+
+    /**
+     * Register notification event listeners.
+     */
+    private function registerNotificationEventListeners(): void
+    {
+        // Register listeners for notification events if they exist
+        $notificationEvents = [
+            'JTD\LaravelMCP\Events\NotificationQueued',
+            'JTD\LaravelMCP\Events\NotificationSent',
+            'JTD\LaravelMCP\Events\NotificationFailed',
+            'JTD\LaravelMCP\Events\NotificationDelivered',
+            'JTD\LaravelMCP\Events\NotificationBroadcast',
+        ];
+
+        foreach ($notificationEvents as $eventClass) {
+            if (class_exists($eventClass)) {
+                $this->app['events']->listen($eventClass, function ($event) {
+                    if ($this->app->bound('log')) {
+                        $this->app['log']->info('MCP notification event fired', [
+                            'event' => get_class($event),
+                            'timestamp' => now()->toISOString(),
+                        ]);
+                    }
+                });
+            }
+        }
     }
 }

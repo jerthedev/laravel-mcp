@@ -165,6 +165,44 @@ class PackageInstallationTest extends TestCase
     }
 
     /**
+     * Test composer.json extra.laravel configuration
+     */
+    #[Test]
+    public function composer_extra_laravel_configuration_is_correct(): void
+    {
+        $composerPath = dirname(dirname(__DIR__)).'/composer.json';
+        $this->assertFileExists($composerPath, 'composer.json should exist');
+
+        $composer = json_decode(File::get($composerPath), true);
+        $this->assertIsArray($composer, 'composer.json should be valid JSON');
+
+        // Verify extra.laravel section exists
+        $this->assertArrayHasKey('extra', $composer, 'composer.json should have extra section');
+        $this->assertArrayHasKey('laravel', $composer['extra'], 'extra should have laravel section');
+
+        $laravel = $composer['extra']['laravel'];
+
+        // Verify providers are correctly configured
+        $this->assertArrayHasKey('providers', $laravel, 'laravel section should have providers');
+        $this->assertIsArray($laravel['providers'], 'providers should be an array');
+        $this->assertContains(
+            LaravelMcpServiceProvider::class,
+            $laravel['providers'],
+            'LaravelMcpServiceProvider should be in providers array'
+        );
+
+        // Verify aliases are correctly configured
+        $this->assertArrayHasKey('aliases', $laravel, 'laravel section should have aliases');
+        $this->assertIsArray($laravel['aliases'], 'aliases should be an array');
+        $this->assertArrayHasKey('Mcp', $laravel['aliases'], 'Mcp alias should be configured');
+        $this->assertEquals(
+            'JTD\\LaravelMCP\\Facades\\Mcp',
+            $laravel['aliases']['Mcp'],
+            'Mcp alias should point to correct facade class'
+        );
+    }
+
+    /**
      * Test package upgrade scenario
      */
     #[Test]

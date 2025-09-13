@@ -2,6 +2,7 @@
 
 namespace JTD\LaravelMCP\Registry;
 
+use Illuminate\Container\Container;
 use JTD\LaravelMCP\Exceptions\RegistrationException;
 use JTD\LaravelMCP\Registry\Contracts\RegistryInterface;
 
@@ -14,9 +15,14 @@ use JTD\LaravelMCP\Registry\Contracts\RegistryInterface;
 class ToolRegistry implements RegistryInterface
 {
     /**
-     * Registered tools storage.
+     * Component factory for lazy loading.
      */
-    protected array $tools = [];
+    protected ComponentFactory $factory;
+
+    /**
+     * Container instance.
+     */
+    protected Container $container;
 
     /**
      * Tool metadata storage.
@@ -27,6 +33,15 @@ class ToolRegistry implements RegistryInterface
      * Registry type identifier.
      */
     protected string $type = 'tools';
+
+    /**
+     * Create a new tool registry.
+     */
+    public function __construct(Container $container, ?ComponentFactory $factory = null)
+    {
+        $this->container = $container;
+        $this->factory = $factory ?? new ComponentFactory($container);
+    }
 
     /**
      * Initialize the tool registry.
@@ -40,13 +55,17 @@ class ToolRegistry implements RegistryInterface
     /**
      * Register a tool with the registry.
      */
-    public function register(string $name, $tool, array $metadata = []): void
+    public function register(string $name, $tool, $metadata = []): void
     {
         if ($this->has($name)) {
             throw new RegistrationException("Tool '{$name}' is already registered");
         }
 
-        $this->tools[$name] = $tool;
+        // Ensure metadata is an array
+        $metadata = is_array($metadata) ? $metadata : [];
+
+        // Use factory for lazy loading
+        $this->factory->register('tool', $name, $tool, $metadata);
         $this->metadata[$name] = array_merge([
             'name' => $name,
             'type' => 'tool',
@@ -66,7 +85,8 @@ class ToolRegistry implements RegistryInterface
             return false;
         }
 
-        unset($this->tools[$name], $this->metadata[$name]);
+        $this->factory->unregister('tool', $name);
+        unset($this->metadata[$name]);
 
         return true;
     }
@@ -76,7 +96,7 @@ class ToolRegistry implements RegistryInterface
      */
     public function has(string $name): bool
     {
-        return array_key_exists($name, $this->tools);
+        return $this->factory->has('tool', $name);
     }
 
     /**
@@ -88,7 +108,7 @@ class ToolRegistry implements RegistryInterface
             throw new RegistrationException("Tool '{$name}' is not registered");
         }
 
-        return $this->tools[$name];
+        return $this->factory->get('tool', $name);
     }
 
     /**
@@ -96,7 +116,7 @@ class ToolRegistry implements RegistryInterface
      */
     public function all(): array
     {
-        return $this->tools;
+        return $this->factory->getAllOfType('tool');
     }
 
     /**
@@ -112,7 +132,7 @@ class ToolRegistry implements RegistryInterface
      */
     public function names(): array
     {
-        return array_keys($this->tools);
+        return array_keys($this->metadata);
     }
 
     /**
@@ -120,7 +140,7 @@ class ToolRegistry implements RegistryInterface
      */
     public function count(): int
     {
-        return count($this->tools);
+        return count($this->metadata);
     }
 
     /**
@@ -128,7 +148,7 @@ class ToolRegistry implements RegistryInterface
      */
     public function clear(): void
     {
-        $this->tools = [];
+        $this->factory->clearCache('tool');
         $this->metadata = [];
     }
 

@@ -9,6 +9,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Log;
 use JTD\LaravelMCP\Exceptions\TransportException;
 use JTD\LaravelMCP\Protocol\MessageProcessor;
+use JTD\LaravelMCP\Support\McpConstants;
 use JTD\LaravelMCP\Transport\HttpTransport;
 use JTD\LaravelMCP\Transport\TransportManager;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -251,7 +252,7 @@ class McpController extends Controller
                     'vendor' => $config['server']['vendor'] ?? 'JTD/LaravelMCP',
                 ],
                 'protocol' => [
-                    'version' => '1.0',
+                    'version' => McpConstants::getMcpVersion(),
                     'transport' => 'http',
                 ],
                 'capabilities' => [

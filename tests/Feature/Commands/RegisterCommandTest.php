@@ -105,7 +105,7 @@ class RegisterCommandTest extends TestCase
     public function it_registers_chatgpt_desktop_configuration(): void
     {
         $this->artisan('mcp:register', [
-            'client' => 'chatgpt',
+            'client' => 'chatgpt-desktop',
             '--name' => 'test-chatgpt',
             '--description' => 'Test ChatGPT MCP Server',
             '--force' => true,
@@ -292,7 +292,7 @@ class RegisterCommandTest extends TestCase
     public function it_shows_next_steps_for_chatgpt(): void
     {
         $this->artisan('mcp:register', [
-            'client' => 'chatgpt',
+            'client' => 'chatgpt-desktop',
             '--name' => 'test',
             '--force' => true,
         ])

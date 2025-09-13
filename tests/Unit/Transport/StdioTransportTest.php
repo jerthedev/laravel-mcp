@@ -386,4 +386,49 @@ class StdioTransportTest extends TestCase
         $this->assertEquals('[REDACTED]', $safeConfig['token']);
         $this->assertEquals(8192, $safeConfig['buffer_size']);
     }
+
+    #[Test]
+    public function it_uses_custom_configuration_options(): void
+    {
+        $customConfig = [
+            'use_content_length' => true,
+            'blocking_mode' => true,
+            'read_timeout' => 0.5,
+            'write_timeout' => 10,
+            'enable_keepalive' => false,
+            'keepalive_interval' => 60,
+            'process_timeout' => 120,
+            'line_delimiter' => "\r\n",
+        ];
+
+        $this->transport->initialize($customConfig);
+        $config = $this->transport->getConfig();
+
+        // Verify custom config values are used
+        $this->assertTrue($config['use_content_length']);
+        $this->assertTrue($config['blocking_mode']);
+        $this->assertEquals(0.5, $config['read_timeout']);
+        $this->assertEquals(10, $config['write_timeout']);
+        $this->assertFalse($config['enable_keepalive']);
+        $this->assertEquals(60, $config['keepalive_interval']);
+        $this->assertEquals(120, $config['process_timeout']);
+        $this->assertEquals("\r\n", $config['line_delimiter']);
+    }
+
+    #[Test]
+    public function it_uses_default_configuration_when_not_specified(): void
+    {
+        $this->transport->initialize([]);
+        $config = $this->transport->getConfig();
+
+        // Verify default values are used
+        $this->assertFalse($config['use_content_length']);
+        $this->assertFalse($config['blocking_mode']);
+        $this->assertEquals(0.1, $config['read_timeout']);
+        $this->assertEquals(5, $config['write_timeout']);
+        $this->assertTrue($config['enable_keepalive']);
+        $this->assertEquals(30, $config['keepalive_interval']);
+        $this->assertNull($config['process_timeout']);
+        $this->assertEquals("\n", $config['line_delimiter']);
+    }
 }

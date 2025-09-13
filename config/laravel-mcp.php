@@ -124,4 +124,80 @@ return [
         ],
         'dashboard_url' => env('MCP_DASHBOARD_URL'),
     ],
+
+    // Laravel Integration Settings
+    'laravel_integration' => [
+        'dependency_injection' => [
+            'enabled' => env('MCP_DI_ENABLED', true),
+            'auto_inject' => env('MCP_AUTO_INJECT', true),
+        ],
+
+        'validation' => [
+            'use_laravel_validator' => env('MCP_USE_LARAVEL_VALIDATION', true),
+            'custom_rules_path' => env('MCP_CUSTOM_RULES_PATH', 'app/Rules'),
+        ],
+
+        'middleware' => [
+            'enabled' => env('MCP_MIDDLEWARE_ENABLED', true),
+            'global_middleware' => explode(',', env('MCP_GLOBAL_MIDDLEWARE', '')),
+            'aliases' => [
+                'auth' => \JTD\LaravelMCP\Middleware\AuthenticationMiddleware::class,
+                'rate_limit' => \JTD\LaravelMCP\Middleware\RateLimitMiddleware::class,
+                'cache' => \JTD\LaravelMCP\Middleware\CacheMiddleware::class,
+            ],
+        ],
+
+        'events' => [
+            'enabled' => env('MCP_EVENTS_ENABLED', true),
+            'async' => env('MCP_EVENTS_ASYNC', true),
+            'listeners' => [
+                \JTD\LaravelMCP\Events\McpToolExecuted::class => [
+                    \JTD\LaravelMCP\Listeners\LogMcpActivity::class,
+                    \JTD\LaravelMCP\Listeners\TrackMcpUsage::class,
+                ],
+                \JTD\LaravelMCP\Events\McpRequestProcessed::class => [
+                    \JTD\LaravelMCP\Listeners\TrackMcpRequestMetrics::class,
+                ],
+                \JTD\LaravelMCP\Events\McpComponentRegistered::class => [
+                    \JTD\LaravelMCP\Listeners\LogMcpComponentRegistration::class,
+                ],
+            ],
+        ],
+
+        'notifications' => [
+            'enabled' => env('MCP_NOTIFICATIONS_ENABLED', true),
+            'channels' => [
+                'mail' => [
+                    'enabled' => env('MCP_MAIL_NOTIFICATIONS', true),
+                    'to' => env('MCP_ADMIN_EMAIL'),
+                ],
+                'slack' => [
+                    'enabled' => env('MCP_SLACK_NOTIFICATIONS', false),
+                    'webhook' => env('MCP_SLACK_WEBHOOK'),
+                ],
+            ],
+        ],
+
+        'performance' => [
+            'monitoring_enabled' => env('MCP_PERFORMANCE_MONITORING', true),
+            'slow_threshold' => env('MCP_SLOW_THRESHOLD', 1000), // milliseconds
+            'memory_threshold' => env('MCP_MEMORY_THRESHOLD', 128 * 1024 * 1024), // bytes
+            'telescope_integration' => env('MCP_TELESCOPE_ENABLED', false),
+        ],
+
+        'database' => [
+            'allowed_tables' => explode(',', env('MCP_ALLOWED_TABLES', '')),
+            'forbidden_tables' => explode(',', env('MCP_FORBIDDEN_TABLES', 'password_resets,sessions')),
+            'max_query_limit' => env('MCP_MAX_QUERY_LIMIT', 100),
+        ],
+
+        'queue' => [
+            'enabled' => env('MCP_QUEUE_ENABLED', true),
+            'default_queue' => env('MCP_DEFAULT_QUEUE', 'mcp'),
+            'timeout' => env('MCP_QUEUE_TIMEOUT', 300),
+            'retry_after' => env('MCP_RETRY_AFTER', 90),
+            'max_retries' => env('MCP_MAX_RETRIES', 3),
+            'backoff' => [60, 120, 300],
+        ],
+    ],
 ];

@@ -57,7 +57,8 @@ This Laravel package implements the Model Context Protocol (MCP) 1.0 specificati
 2. **Protocol Layer**: Implements JSON-RPC 2.0 and MCP 1.0 message handling
 3. **Registry System**: Auto-discovers and manages Tools, Resources, and Prompts
 4. **Base Classes**: Abstract classes for creating MCP components
-5. **Laravel Integration**: Service provider, facades, middleware, and Artisan commands
+5. **Command Layer**: Comprehensive Artisan commands with trait-based architecture
+6. **Laravel Integration**: Service provider, facades, middleware, and full Laravel ecosystem support
 
 ### Service Provider Structure
 `LaravelMcpServiceProvider` is the main integration point:
@@ -103,6 +104,40 @@ Three core MCP component types with Laravel integration:
 - **Event System**: Component registration and request processing events
 - **Job Integration**: Async MCP request processing
 - **Validation**: Laravel validation for MCP request parameters
+
+### Command Architecture ✅ **FULLY IMPLEMENTED**
+The package provides a comprehensive Artisan command system following the specification in `docs/Specs/04-ArtisanCommands.md`:
+
+**Command Hierarchy:**
+```
+BaseCommand (with traits)
+├── FormatsOutput: table/json/yaml formatting
+├── HandlesConfiguration: OS detection, client paths
+└── HandlesCommandErrors: validation, error handling
+
+BaseMcpGeneratorCommand
+├── Extends BaseCommand
+└── Shared generator functionality
+
+Implemented Commands:
+├── mcp:serve - Start MCP server
+├── mcp:list - List components (table/json/yaml)
+├── mcp:register - Register with AI clients
+├── mcp:docs - Generate documentation
+├── make:mcp-tool - Generate tool classes
+├── make:mcp-resource - Generate resource classes
+└── make:mcp-prompt - Generate prompt classes
+```
+
+**Testing Support:**
+- `CommandTestCase` base class in `tests/Support/` for consistent command testing
+- Helper methods: `executeAndAssertSuccess()`, `assertOutputContains()`, etc.
+
+**Key Features:**
+- **Trait-based Architecture**: Reusable functionality across commands
+- **Security**: Input validation, path security, confirmation prompts
+- **Multi-format Output**: Table, JSON, YAML support for all listing commands
+- **Cross-platform**: Windows, macOS, Linux client registration support
 
 ## Namespace Structure
 

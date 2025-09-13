@@ -2,9 +2,6 @@
 
 namespace JTD\LaravelMCP\Commands;
 
-use Illuminate\Console\GeneratorCommand;
-use Illuminate\Support\Str;
-use JTD\LaravelMCP\Commands\Concerns\McpMakeCommand;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
@@ -17,10 +14,8 @@ use Symfony\Component\Console\Input\InputOption;
  * and stub variable replacement.
  */
 #[AsCommand(name: 'make:mcp-prompt')]
-class MakePromptCommand extends GeneratorCommand
+class MakePromptCommand extends BaseMcpGeneratorCommand
 {
-    use McpMakeCommand;
-
     /**
      * The name and signature of the console command.
      *
@@ -47,66 +42,28 @@ class MakePromptCommand extends GeneratorCommand
     protected $type = 'MCP Prompt';
 
     /**
+     * Get the stub name for this generator.
+     *
+     * @return string The stub filename
+     */
+    protected function getStubName(): string
+    {
+        return 'prompt';
+    }
+
+    /**
+     * Get the component type for this generator.
+     *
+     * @return string The component type
+     */
+    protected function getComponentType(): string
+    {
+        return 'prompt';
+    }
+
+    /**
      * Execute the console command.
      */
-    public function handle(): int
-    {
-        try {
-            // Validate and sanitize all inputs
-            $this->validateAndSanitizeInputs();
-
-            // Validate file creation is safe
-            $this->validateFileCreation($this->getPath($this->qualifyClass($this->getNameInput())));
-
-            // Call parent handle to generate the file
-            $result = parent::handle();
-
-            if ($result === false) {
-                return self::FAILURE;
-            }
-
-            $this->displaySuccessMessage();
-
-            return self::SUCCESS;
-        } catch (\InvalidArgumentException $e) {
-            $this->error("Validation error: {$e->getMessage()}");
-
-            return self::FAILURE;
-        } catch (\Throwable $e) {
-            $this->error("Failed to create prompt: {$e->getMessage()}");
-
-            return self::FAILURE;
-        }
-    }
-
-    /**
-     * Get the stub file for the generator.
-     */
-    protected function getStub(): string
-    {
-        return $this->getStubPath('prompt');
-    }
-
-    /**
-     * Get the default namespace for the class.
-     */
-    protected function getDefaultNamespace($rootNamespace): string
-    {
-        return $this->getMcpNamespace($rootNamespace, 'prompt');
-    }
-
-    /**
-     * Get the destination class path.
-     */
-    protected function getPath($name): string
-    {
-        $name = Str::replaceFirst($this->rootNamespace(), '', $name);
-        $relativePath = str_replace('\\', '/', $name).'.php';
-        $fullPath = $this->laravel['path'].'/'.$relativePath;
-
-        // Validate path security
-        return $this->validateAndSecurePath($fullPath);
-    }
 
     /**
      * Build the class with the given name.
@@ -206,7 +163,7 @@ class MakePromptCommand extends GeneratorCommand
     /**
      * Display success message with details.
      */
-    protected function displaySuccessMessage(): void
+    protected function displaySuccessMessage(?string $componentType = null, array $details = []): void
     {
         $className = $this->getClassName($this->qualifyClass($this->getNameInput()));
         $promptName = $this->getPromptName($className);

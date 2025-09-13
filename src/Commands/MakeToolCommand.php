@@ -2,9 +2,6 @@
 
 namespace JTD\LaravelMCP\Commands;
 
-use Illuminate\Console\GeneratorCommand;
-use Illuminate\Support\Str;
-use JTD\LaravelMCP\Commands\Concerns\McpMakeCommand;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
@@ -16,10 +13,8 @@ use Symfony\Component\Console\Input\InputOption;
  * handling namespace resolution, file placement, and stub variable replacement.
  */
 #[AsCommand(name: 'make:mcp-tool')]
-class MakeToolCommand extends GeneratorCommand
+class MakeToolCommand extends BaseMcpGeneratorCommand
 {
-    use McpMakeCommand;
-
     /**
      * The name and signature of the console command.
      *
@@ -46,65 +41,23 @@ class MakeToolCommand extends GeneratorCommand
     protected $type = 'MCP Tool';
 
     /**
-     * Execute the console command.
+     * Get the stub name for this generator.
+     *
+     * @return string The stub filename
      */
-    public function handle(): int
+    protected function getStubName(): string
     {
-        try {
-            // Validate and sanitize all inputs
-            $this->validateAndSanitizeInputs();
-
-            // Validate file creation is safe
-            $this->validateFileCreation($this->getPath($this->qualifyClass($this->getNameInput())));
-
-            // Call parent handle to generate the file
-            $result = parent::handle();
-
-            if ($result === false) {
-                return self::FAILURE;
-            }
-
-            $this->displaySuccessMessage();
-
-            return self::SUCCESS;
-        } catch (\InvalidArgumentException $e) {
-            $this->error("Validation error: {$e->getMessage()}");
-
-            return self::FAILURE;
-        } catch (\Throwable $e) {
-            $this->error("Failed to create tool: {$e->getMessage()}");
-
-            return self::FAILURE;
-        }
+        return 'tool';
     }
 
     /**
-     * Get the stub file for the generator.
+     * Get the component type for this generator.
+     *
+     * @return string The component type
      */
-    protected function getStub(): string
+    protected function getComponentType(): string
     {
-        return $this->getStubPath('tool');
-    }
-
-    /**
-     * Get the default namespace for the class.
-     */
-    protected function getDefaultNamespace($rootNamespace): string
-    {
-        return $this->getMcpNamespace($rootNamespace, 'tool');
-    }
-
-    /**
-     * Get the destination class path.
-     */
-    protected function getPath($name): string
-    {
-        $name = Str::replaceFirst($this->rootNamespace(), '', $name);
-        $relativePath = str_replace('\\', '/', $name).'.php';
-        $fullPath = $this->laravel['path'].'/'.$relativePath;
-
-        // Validate path security
-        return $this->validateAndSecurePath($fullPath);
+        return 'tool';
     }
 
     /**
@@ -173,12 +126,12 @@ class MakeToolCommand extends GeneratorCommand
     /**
      * Display success message with details.
      */
-    protected function displaySuccessMessage(): void
+    protected function displaySuccessMessage(?string $componentType = null, array $details = []): void
     {
         $className = $this->getClassName($this->qualifyClass($this->getNameInput()));
         $toolName = $this->getToolName($className);
 
-        $this->displayMcpSuccessMessage('tool', [
+        parent::displaySuccessMessage('tool', [
             'Tool Name' => $toolName,
         ]);
     }

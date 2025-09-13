@@ -2,9 +2,160 @@
 
 ## Overview
 
-The base classes provide the foundation for MCP Tools, Resources, and Prompts in Laravel applications. They extend the official MCP PHP SDK while adding Laravel-specific features like dependency injection, validation, authorization, and integration with Laravel's ecosystem.
+The base classes provide the foundation for MCP Tools, Resources, and Prompts in Laravel applications. They implement the MCP 1.0 specification while adding Laravel-specific features like dependency injection, validation, authorization, and integration with Laravel's ecosystem.
 
 ## Abstract Base Classes Architecture
+
+### BaseComponent Abstract Class
+
+The `BaseComponent` class provides shared functionality for all MCP components, including dependency injection, validation, authorization, and Laravel integration.
+
+```php
+<?php
+
+namespace JTD\LaravelMCP\Abstracts;
+
+use Illuminate\Container\Container;
+use Illuminate\Contracts\Validation\Factory as ValidationFactory;
+use Illuminate\Support\Str;
+use JTD\LaravelMCP\Traits\HandlesMcpRequests;
+use JTD\LaravelMCP\Traits\ManagesCapabilities;
+use JTD\LaravelMCP\Traits\ValidatesParameters;
+
+abstract class BaseComponent
+{
+    use HandlesMcpRequests, ManagesCapabilities, ValidatesParameters;
+
+    protected Container $container;
+    protected ValidationFactory $validator;
+    protected string $name;
+    protected string $description;
+    protected array $middleware = [];
+    protected bool $requiresAuth = false;
+
+    public function __construct()
+    {
+        $this->container = Container::getInstance();
+        $this->validator = $this->container->make(ValidationFactory::class);
+
+        $this->boot();
+    }
+
+    protected function boot(): void
+    {
+        // Override in child classes for initialization
+    }
+
+    public function getName(): string
+    {
+        return $this->name ?? $this->generateNameFromClass();
+    }
+
+    public function getDescription(): string
+    {
+        return $this->description ?? 'MCP Component';
+    }
+
+    public function getMiddleware(): array
+    {
+        return $this->middleware;
+    }
+
+    public function requiresAuth(): bool
+    {
+        return $this->requiresAuth;
+    }
+
+    protected function authorize(array $params = [], ?string $action = null): bool
+    {
+        if (!$this->requiresAuth) {
+            return true;
+        }
+
+        // Default authorization logic - can be overridden in child classes
+        return true;
+    }
+
+    private function generateNameFromClass(): string
+    {
+        $className = class_basename($this);
+
+        // Remove common suffixes
+        $suffixes = ['Tool', 'Resource', 'Prompt', 'Component'];
+        foreach ($suffixes as $suffix) {
+            if (Str::endsWith($className, $suffix)) {
+                $className = str_replace($suffix, '', $className);
+                break;
+            }
+        }
+
+        return Str::snake($className);
+    }
+
+    protected function make(string $abstract, array $parameters = [])
+    {
+        return $this->container->make($abstract, $parameters);
+    }
+
+    protected function resolve(string $abstract)
+    {
+        return $this->container->make($abstract);
+    }
+
+    protected function applyComponentMiddleware(array $params): array
+    {
+        foreach ($this->middleware as $middleware) {
+            $params = $this->applyMiddleware($middleware, $params);
+        }
+
+        return $params;
+    }
+
+    protected function log(string $level, string $message, array $context = []): void
+    {
+        if (config('laravel-mcp.logging.enabled', false)) {
+            logger()->{$level}($message, array_merge([
+                'component' => static::class,
+                'name' => $this->getName(),
+            ], $context));
+        }
+    }
+
+    protected function fireEvent(string $event, array $payload = []): void
+    {
+        if (function_exists('event')) {
+            event($event, array_merge(['component' => $this], $payload));
+        }
+    }
+
+    public function getMetadata(): array
+    {
+        return [
+            'name' => $this->getName(),
+            'description' => $this->getDescription(),
+            'class' => static::class,
+            'requiresAuth' => $this->requiresAuth(),
+            'middleware' => $this->getMiddleware(),
+            'capabilities' => $this->getCapabilities(),
+        ];
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'name' => $this->getName(),
+            'description' => $this->getDescription(),
+        ];
+    }
+
+    /**
+     * Get the component type for this MCP component.
+     * 
+     * @return string The component type (e.g., 'tool', 'resource', 'prompt')
+     */
+    abstract protected function getComponentType(): string;
+}
+```
 
 ### McpTool Base Class
 ```php
@@ -12,14 +163,15 @@ The base classes provide the foundation for MCP Tools, Resources, and Prompts in
 
 namespace JTD\LaravelMCP\Abstracts;
 
-use MCP\Tool as McpSdkTool;
 use JTD\LaravelMCP\Traits\HandlesMcpRequests;
 use JTD\LaravelMCP\Traits\ValidatesParameters;
 use JTD\LaravelMCP\Traits\ManagesCapabilities;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
+use Illuminate\Support\Str;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
-abstract class McpTool extends McpSdkTool
+abstract class McpTool extends BaseComponent
 {
     use HandlesMcpRequests, ValidatesParameters, ManagesCapabilities;
 
@@ -79,7 +231,7 @@ abstract class McpTool extends McpSdkTool
     {
         // 1. Authorize the request
         if (!$this->authorize($parameters)) {
-            throw new \UnauthorizedHttpException('Unauthorized tool execution');
+            throw new UnauthorizedHttpException('Unauthorized tool execution');
         }
 
         // 2. Validate parameters
@@ -130,13 +282,14 @@ abstract class McpTool extends McpSdkTool
 
 namespace JTD\LaravelMCP\Abstracts;
 
-use MCP\Resource as McpSdkResource;
 use JTD\LaravelMCP\Traits\HandlesMcpRequests;
 use JTD\LaravelMCP\Traits\ValidatesParameters;
 use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
-abstract class McpResource extends McpSdkResource
+abstract class McpResource extends BaseComponent
 {
     use HandlesMcpRequests, ValidatesParameters;
 
@@ -177,7 +330,7 @@ abstract class McpResource extends McpSdkResource
     public function read(array $params): mixed
     {
         if (!$this->authorize('read', $params)) {
-            throw new \UnauthorizedHttpException('Unauthorized resource access');
+            throw new UnauthorizedHttpException('Unauthorized resource access');
         }
 
         $validatedParams = $this->validateParameters($params, 'read');
@@ -188,7 +341,7 @@ abstract class McpResource extends McpSdkResource
     public function list(array $params = []): array
     {
         if (!$this->authorize('list', $params)) {
-            throw new \UnauthorizedHttpException('Unauthorized resource listing');
+            throw new UnauthorizedHttpException('Unauthorized resource listing');
         }
 
         $validatedParams = $this->validateParameters($params, 'list');
@@ -203,7 +356,7 @@ abstract class McpResource extends McpSdkResource
         }
 
         if (!$this->authorize('subscribe', $params)) {
-            throw new \UnauthorizedHttpException('Unauthorized subscription');
+            throw new UnauthorizedHttpException('Unauthorized subscription');
         }
 
         return $this->handleSubscribe($params);
@@ -313,13 +466,14 @@ abstract class McpResource extends McpSdkResource
 
 namespace JTD\LaravelMCP\Abstracts;
 
-use MCP\Prompt as McpSdkPrompt;
 use JTD\LaravelMCP\Traits\HandlesMcpRequests;
 use JTD\LaravelMCP\Traits\ValidatesParameters;
 use Illuminate\Container\Container;
 use Illuminate\View\Factory as ViewFactory;
+use Illuminate\Support\Str;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
-abstract class McpPrompt extends McpSdkPrompt
+abstract class McpPrompt extends BaseComponent
 {
     use HandlesMcpRequests, ValidatesParameters;
 
@@ -362,7 +516,7 @@ abstract class McpPrompt extends McpSdkPrompt
     public function get(array $arguments = []): array
     {
         if (!$this->authorize($arguments)) {
-            throw new \UnauthorizedHttpException('Unauthorized prompt access');
+            throw new UnauthorizedHttpException('Unauthorized prompt access');
         }
 
         $validatedArgs = $this->validateArguments($arguments);
@@ -591,10 +745,6 @@ trait ValidatesParameters
             return $this->{"get{$context}ValidationRules"}();
         }
 
-        if (method_exists($this, 'getValidationRules')) {
-            return $this->getValidationRules();
-        }
-
         return $this->buildRulesFromSchema();
     }
 
@@ -703,12 +853,424 @@ trait ManagesCapabilities
 
     protected function getDefaultCapabilities(): array
     {
-        return match (static::class) {
-            McpTool::class => ['execute'],
-            McpResource::class => ['read', 'list'],
-            McpPrompt::class => ['get'],
+        return match (true) {
+            is_subclass_of(static::class, McpTool::class) => ['execute'],
+            is_subclass_of(static::class, McpResource::class) => ['read', 'list'],
+            is_subclass_of(static::class, McpPrompt::class) => ['get'],
             default => [],
         };
+    }
+}
+```
+
+### FormatsResponses Trait
+
+The `FormatsResponses` trait provides comprehensive response formatting functionality for MCP components, ensuring consistent response structures across all tools, resources, and prompts.
+
+```php
+<?php
+
+namespace JTD\LaravelMCP\Traits;
+
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Config;
+
+trait FormatsResponses
+{
+    protected function formatSuccess($data = null, array $meta = []): array
+    {
+        $response = [
+            'success' => true,
+        ];
+
+        if ($data !== null) {
+            $response['data'] = $this->formatData($data);
+        }
+
+        if (!empty($meta)) {
+            $response['meta'] = $meta;
+        }
+
+        if ($this->shouldIncludeTimestamp()) {
+            $response['timestamp'] = now()->toIso8601String();
+        }
+
+        if ($this->isDebugMode()) {
+            $response['_debug'] = $this->getDebugInfo();
+        }
+
+        return $response;
+    }
+
+    protected function formatError(
+        string $message,
+        int $code = -32603,
+        $data = null,
+        array $meta = []
+    ): array {
+        $response = [
+            'success' => false,
+            'error' => [
+                'code' => $code,
+                'message' => $message,
+            ],
+        ];
+
+        if ($data !== null) {
+            $response['error']['data'] = $this->formatData($data);
+        }
+
+        if (!empty($meta)) {
+            $response['meta'] = $meta;
+        }
+
+        if ($this->shouldIncludeTimestamp()) {
+            $response['timestamp'] = now()->toIso8601String();
+        }
+
+        if ($this->isDebugMode()) {
+            $response['_debug'] = $this->getDebugInfo();
+        }
+
+        return $response;
+    }
+
+    protected function formatToolResponse($result, array $meta = []): array
+    {
+        return [
+            'content' => [
+                [
+                    'type' => 'text',
+                    'text' => $this->formatToolResult($result),
+                ],
+            ],
+            'meta' => array_merge([
+                'tool' => $this->getName(),
+                'executed_at' => now()->toIso8601String(),
+            ], $meta),
+        ];
+    }
+
+    protected function formatResourceReadResponse($data, string $uri, array $meta = []): array
+    {
+        return [
+            'contents' => [
+                [
+                    'uri' => $uri,
+                    'mimeType' => $this->getMimeType($data),
+                    'text' => $this->formatResourceData($data),
+                ],
+            ],
+            'meta' => array_merge([
+                'resource' => $this->getName(),
+                'read_at' => now()->toIso8601String(),
+            ], $meta),
+        ];
+    }
+
+    protected function formatResourceListResponse(array $items, array $meta = []): array
+    {
+        $formattedItems = [];
+
+        foreach ($items as $item) {
+            $formattedItems[] = $this->formatResourceListItem($item);
+        }
+
+        return [
+            'resources' => $formattedItems,
+            'meta' => array_merge([
+                'resource' => $this->getName(),
+                'count' => count($formattedItems),
+                'listed_at' => now()->toIso8601String(),
+            ], $meta),
+        ];
+    }
+
+    protected function formatPromptResponse(string $content, array $meta = []): array
+    {
+        return [
+            'description' => $this->getDescription(),
+            'messages' => [
+                [
+                    'role' => 'user',
+                    'content' => [
+                        'type' => 'text',
+                        'text' => $content,
+                    ],
+                ],
+            ],
+            'meta' => array_merge([
+                'prompt' => $this->getName(),
+                'generated_at' => now()->toIso8601String(),
+            ], $meta),
+        ];
+    }
+
+    protected function formatJsonRpcResponse($result, $id = null): array
+    {
+        $response = [
+            'jsonrpc' => '2.0',
+        ];
+
+        if ($result instanceof \Throwable) {
+            $response['error'] = [
+                'code' => $result->getCode() ?: -32603,
+                'message' => $result->getMessage(),
+            ];
+
+            if ($this->isDebugMode()) {
+                $response['error']['data'] = [
+                    'type' => get_class($result),
+                    'trace' => $result->getTraceAsString(),
+                ];
+            }
+        } else {
+            $response['result'] = $result;
+        }
+
+        if ($id !== null) {
+            $response['id'] = $id;
+        }
+
+        return $response;
+    }
+
+    protected function formatData($data)
+    {
+        if (is_object($data)) {
+            if (method_exists($data, 'toArray')) {
+                return $data->toArray();
+            }
+
+            if ($data instanceof \JsonSerializable) {
+                return $data->jsonSerialize();
+            }
+
+            return (array) $data;
+        }
+
+        if (is_iterable($data) && !is_array($data)) {
+            return collect($data)->toArray();
+        }
+
+        return $data;
+    }
+
+    protected function shouldIncludeTimestamp(): bool
+    {
+        return Config::get('laravel-mcp.response.include_timestamp', true);
+    }
+
+    protected function isDebugMode(): bool
+    {
+        return Config::get('app.debug', false) && Config::get('laravel-mcp.debug', false);
+    }
+
+    protected function getDebugInfo(): array
+    {
+        return [
+            'component' => static::class,
+            'type' => $this->getComponentType(),
+            'name' => $this->getName(),
+            'memory_usage' => memory_get_usage(true),
+            'execution_time' => defined('LARAVEL_START')
+                ? microtime(true) - LARAVEL_START
+                : null,
+        ];
+    }
+}
+```
+
+### LogsOperations Trait
+
+The `LogsOperations` trait provides comprehensive logging functionality for MCP components, including request/response logging, performance tracking, error logging, and debug information collection.
+
+```php
+<?php
+
+namespace JTD\LaravelMCP\Traits;
+
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
+use Psr\Log\LogLevel;
+
+trait LogsOperations
+{
+    protected ?string $logChannel = null;
+    protected array $performanceData = [];
+    protected ?float $operationStartTime = null;
+
+    protected function logOperation(string $operation, array $data = [], string $level = LogLevel::INFO): void
+    {
+        if (!$this->shouldLog($level)) {
+            return;
+        }
+
+        $context = $this->buildLogContext($operation, $data);
+
+        $this->getLogger()->log($level, "MCP Operation: {$operation}", $context);
+    }
+
+    protected function logOperationStart(string $operation, array $params = []): void
+    {
+        $this->operationStartTime = microtime(true);
+
+        $this->logOperation("{$operation}.start", [
+            'parameters' => $this->sanitizeForLogging($params),
+            'component' => $this->getComponentIdentifier(),
+        ], LogLevel::DEBUG);
+    }
+
+    protected function logOperationComplete(string $operation, $result = null): void
+    {
+        $duration = $this->operationStartTime
+            ? (microtime(true) - $this->operationStartTime) * 1000
+            : null;
+
+        $this->logOperation("{$operation}.complete", [
+            'duration_ms' => $duration,
+            'result_type' => gettype($result),
+            'component' => $this->getComponentIdentifier(),
+        ], LogLevel::DEBUG);
+
+        if ($duration !== null) {
+            $this->trackPerformance($operation, $duration);
+        }
+    }
+
+    protected function logOperationError(string $operation, \Throwable $error, array $context = []): void
+    {
+        $duration = $this->operationStartTime
+            ? (microtime(true) - $this->operationStartTime) * 1000
+            : null;
+
+        $this->logOperation("{$operation}.error", array_merge([
+            'error_message' => $error->getMessage(),
+            'error_code' => $error->getCode(),
+            'error_type' => get_class($error),
+            'duration_ms' => $duration,
+            'component' => $this->getComponentIdentifier(),
+            'trace' => $this->shouldLogStackTrace() ? $error->getTraceAsString() : null,
+        ], $context), LogLevel::ERROR);
+    }
+
+    protected function logRequest(string $method, array $params = []): void
+    {
+        if (!$this->shouldLogRequests()) {
+            return;
+        }
+
+        $this->logOperation('request', [
+            'method' => $method,
+            'parameters' => $this->sanitizeForLogging($params),
+            'component' => $this->getComponentIdentifier(),
+            'request_id' => $this->generateRequestId(),
+        ], LogLevel::INFO);
+    }
+
+    protected function logResponse(string $method, $response = null): void
+    {
+        if (!$this->shouldLogResponses()) {
+            return;
+        }
+
+        $this->logOperation('response', [
+            'method' => $method,
+            'response_type' => gettype($response),
+            'response_size' => $this->getDataSize($response),
+            'component' => $this->getComponentIdentifier(),
+        ], LogLevel::INFO);
+    }
+
+    protected function buildLogContext(string $operation, array $data = []): array
+    {
+        $context = [
+            'operation' => $operation,
+            'component_type' => $this->getComponentType(),
+            'component_name' => $this->getName(),
+            'timestamp' => now()->toIso8601String(),
+        ];
+
+        if (app()->has('request')) {
+            $request = app('request');
+            $context['request_id'] = $request->header('X-Request-ID');
+            $context['user_agent'] = $request->userAgent();
+            $context['ip'] = $request->ip();
+        }
+
+        if ($userId = $this->getCurrentUserId()) {
+            $context['user_id'] = $userId;
+        }
+
+        return array_merge($context, $data);
+    }
+
+    protected function sanitizeForLogging($data): array
+    {
+        if (!is_array($data)) {
+            return ['value' => '[non-array data]'];
+        }
+
+        $sensitiveFields = Config::get('laravel-mcp.logging.sensitive_fields', [
+            'password', 'token', 'secret', 'api_key', 'private_key',
+            'access_token', 'refresh_token', 'credit_card', 'ssn',
+        ]);
+
+        $sanitized = $data;
+
+        array_walk_recursive($sanitized, function (&$value, $key) use ($sensitiveFields) {
+            foreach ($sensitiveFields as $field) {
+                if (stripos($key, $field) !== false) {
+                    $value = '[REDACTED]';
+                    break;
+                }
+            }
+        });
+
+        return $sanitized;
+    }
+
+    protected function getLogger(): \Psr\Log\LoggerInterface
+    {
+        $channel = $this->logChannel ?? Config::get('laravel-mcp.logging.channel', 'mcp');
+
+        if (!Config::has("logging.channels.{$channel}")) {
+            Config::set("logging.channels.{$channel}", [
+                'driver' => 'daily',
+                'path' => storage_path("logs/{$channel}.log"),
+                'level' => 'debug',
+                'days' => 14,
+            ]);
+        }
+
+        return Log::channel($channel);
+    }
+
+    protected function shouldLog(string $level): bool
+    {
+        if (!Config::get('laravel-mcp.logging.enabled', true)) {
+            return false;
+        }
+
+        $configuredLevel = Config::get('laravel-mcp.logging.level', LogLevel::INFO);
+        $levels = [
+            LogLevel::EMERGENCY => 0, LogLevel::ALERT => 1, LogLevel::CRITICAL => 2,
+            LogLevel::ERROR => 3, LogLevel::WARNING => 4, LogLevel::NOTICE => 5,
+            LogLevel::INFO => 6, LogLevel::DEBUG => 7,
+        ];
+
+        return ($levels[$level] ?? 6) <= ($levels[$configuredLevel] ?? 6);
+    }
+
+    protected function shouldLogRequests(): bool
+    {
+        return Config::get('laravel-mcp.logging.log_requests', true);
+    }
+
+    protected function shouldLogResponses(): bool
+    {
+        return Config::get('laravel-mcp.logging.log_responses', false);
     }
 }
 ```
@@ -750,13 +1312,23 @@ class CalculatorTool extends McpTool
     {
         ['operation' => $op, 'a' => $a, 'b' => $b] = $parameters;
 
-        return match ($op) {
+        $result = match ($op) {
             'add' => $a + $b,
             'subtract' => $a - $b,
             'multiply' => $a * $b,
             'divide' => $b !== 0 ? $a / $b : throw new \InvalidArgumentException('Division by zero'),
             default => throw new \InvalidArgumentException('Unknown operation'),
         };
+
+        return $this->formatToolResponse($result, [
+            'operation' => $op,
+            'operands' => [$a, $b],
+        ]);
+    }
+
+    protected function getComponentType(): string
+    {
+        return 'tool';
     }
 }
 ```
@@ -778,7 +1350,7 @@ class UserResource extends McpResource
     protected string $modelClass = User::class;
     protected bool $requiresAuth = true;
 
-    protected function authorize(string $action, array $params): bool
+    protected function authorize(array $params = [], ?string $action = null): bool
     {
         // Custom authorization logic
         return auth()->check();
@@ -787,14 +1359,36 @@ class UserResource extends McpResource
     protected function customList(array $params): array
     {
         // Add custom filtering or transformation
-        $users = parent::listFromModel($params);
+        $users = $this->listFromModel($params);
         
         // Remove sensitive data
         foreach ($users['data'] as &$user) {
             unset($user['password'], $user['remember_token']);
         }
         
-        return $users;
+        return $this->formatResourceListResponse($users['data'], [
+            'total' => $users['total'] ?? count($users['data']),
+            'filtered' => true,
+        ]);
+    }
+
+    protected function customRead(array $params): mixed
+    {
+        $user = $this->readFromModel($params);
+        
+        // Remove sensitive data
+        unset($user['password'], $user['remember_token']);
+        
+        return $this->formatResourceReadResponse(
+            $user,
+            "users/{$user['id']}",
+            ['read_at' => now()->toIso8601String()]
+        );
+    }
+
+    protected function getComponentType(): string
+    {
+        return 'resource';
     }
 }
 ```
@@ -837,12 +1431,30 @@ class EmailTemplatePrompt extends McpPrompt
             default => "Hello {$name}, this is a generic email template.",
         };
     }
+
+    protected function handleGet(array $arguments): array
+    {
+        $content = $this->generateContent($arguments);
+        
+        return $this->formatPromptResponse($content, [
+            'template_type' => $arguments['type'] ?? 'generic',
+            'character_count' => strlen($content),
+        ]);
+    }
+
+    protected function getComponentType(): string
+    {
+        return 'prompt';
+    }
 }
 ```
 
 ## Testing Support
 
 ### Base Test Case
+
+The package provides comprehensive testing support through the `McpComponentTestCase` class located in `src/Tests/McpComponentTestCase.php`.
+
 ```php
 <?php
 
@@ -850,6 +1462,9 @@ namespace JTD\LaravelMCP\Tests;
 
 use Orchestra\Testbench\TestCase;
 use JTD\LaravelMCP\LaravelMcpServiceProvider;
+use JTD\LaravelMCP\Abstracts\McpTool;
+use JTD\LaravelMCP\Abstracts\McpResource;
+use JTD\LaravelMCP\Abstracts\McpPrompt;
 
 abstract class McpComponentTestCase extends TestCase
 {
@@ -861,29 +1476,167 @@ abstract class McpComponentTestCase extends TestCase
     protected function getEnvironmentSetUp($app): void
     {
         $app['config']->set('laravel-mcp.discovery.enabled', false);
+        $app['config']->set('laravel-mcp.logging.enabled', false);
     }
 
-    protected function createMockTool(string $name = 'test_tool'): McpTool
+    protected function createMockTool(string $name = 'test_tool', array $schema = []): McpTool
     {
-        return new class($name) extends McpTool {
+        return new class($name, $schema) extends McpTool {
             private string $toolName;
+            private array $toolSchema;
 
-            public function __construct(string $name)
+            public function __construct(string $name, array $schema = [])
             {
                 $this->toolName = $name;
+                $this->toolSchema = $schema;
                 parent::__construct();
             }
 
             protected function handle(array $parameters): mixed
             {
-                return ['result' => 'test'];
+                return ['result' => 'test', 'parameters' => $parameters];
             }
 
             public function getName(): string
             {
                 return $this->toolName;
             }
+
+            protected function getParameterSchema(): array
+            {
+                return $this->toolSchema;
+            }
+
+            protected function getComponentType(): string
+            {
+                return 'tool';
+            }
         };
+    }
+
+    protected function createMockResource(string $name = 'test_resource', string $uriTemplate = null): McpResource
+    {
+        return new class($name, $uriTemplate) extends McpResource {
+            private string $resourceName;
+            private ?string $resourceUriTemplate;
+
+            public function __construct(string $name, ?string $uriTemplate = null)
+            {
+                $this->resourceName = $name;
+                $this->resourceUriTemplate = $uriTemplate;
+                parent::__construct();
+            }
+
+            protected function customRead(array $params): mixed
+            {
+                return ['data' => 'test', 'params' => $params];
+            }
+
+            protected function customList(array $params): array
+            {
+                return [
+                    'data' => [['id' => 1, 'name' => 'Test Item']],
+                    'params' => $params
+                ];
+            }
+
+            public function getName(): string
+            {
+                return $this->resourceName;
+            }
+
+            public function getUriTemplate(): string
+            {
+                return $this->resourceUriTemplate ?? parent::getUriTemplate();
+            }
+
+            protected function getComponentType(): string
+            {
+                return 'resource';
+            }
+        };
+    }
+
+    protected function createMockPrompt(string $name = 'test_prompt', array $arguments = []): McpPrompt
+    {
+        return new class($name, $arguments) extends McpPrompt {
+            private string $promptName;
+            private array $promptArguments;
+
+            public function __construct(string $name, array $arguments = [])
+            {
+                $this->promptName = $name;
+                $this->promptArguments = $arguments;
+                parent::__construct();
+            }
+
+            protected function customContent(array $arguments): string
+            {
+                return "Test prompt content with arguments: " . json_encode($arguments);
+            }
+
+            public function getName(): string
+            {
+                return $this->promptName;
+            }
+
+            public function getArguments(): array
+            {
+                return $this->promptArguments;
+            }
+
+            protected function getComponentType(): string
+            {
+                return 'prompt';
+            }
+        };
+    }
+
+    protected function assertValidMcpResponse(array $response): void
+    {
+        $this->assertIsArray($response);
+        
+        if (isset($response['error'])) {
+            $this->assertArrayHasKey('code', $response['error']);
+            $this->assertArrayHasKey('message', $response['error']);
+        } else {
+            $this->assertTrue(true); // Valid non-error response
+        }
+    }
+
+    protected function assertValidToolResponse(array $response): void
+    {
+        $this->assertArrayHasKey('content', $response);
+        $this->assertIsArray($response['content']);
+        
+        foreach ($response['content'] as $content) {
+            $this->assertArrayHasKey('type', $content);
+            $this->assertArrayHasKey('text', $content);
+        }
+    }
+
+    protected function assertValidResourceResponse(array $response): void
+    {
+        $this->assertArrayHasKey('contents', $response);
+        $this->assertIsArray($response['contents']);
+        
+        foreach ($response['contents'] as $content) {
+            $this->assertArrayHasKey('uri', $content);
+            $this->assertArrayHasKey('mimeType', $content);
+            $this->assertArrayHasKey('text', $content);
+        }
+    }
+
+    protected function assertValidPromptResponse(array $response): void
+    {
+        $this->assertArrayHasKey('description', $response);
+        $this->assertArrayHasKey('messages', $response);
+        $this->assertIsArray($response['messages']);
+        
+        foreach ($response['messages'] as $message) {
+            $this->assertArrayHasKey('role', $message);
+            $this->assertArrayHasKey('content', $message);
+        }
     }
 }
 ```

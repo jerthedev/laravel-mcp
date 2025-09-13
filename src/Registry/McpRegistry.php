@@ -2,6 +2,7 @@
 
 namespace JTD\LaravelMCP\Registry;
 
+use Illuminate\Support\Facades\Cache;
 use JTD\LaravelMCP\Abstracts\McpPrompt;
 use JTD\LaravelMCP\Abstracts\McpResource;
 use JTD\LaravelMCP\Abstracts\McpTool;
@@ -32,9 +33,14 @@ class McpRegistry
     protected array $typeRegistries = [];
 
     /**
-     * Lock for thread-safe operations.
+     * Lock key for thread-safe operations.
      */
-    private mixed $lock = null;
+    private string $lockKey = 'mcp_registry_lock';
+
+    /**
+     * Lock timeout in seconds.
+     */
+    private int $lockTimeout = 30;
 
     /**
      * Create a new MCP registry instance.
@@ -622,23 +628,67 @@ class McpRegistry
 
     /**
      * Execute a closure with thread-safe locking.
+     *
+     * Uses Laravel's atomic lock mechanism for thread safety.
+     *
+     * @param  callable  $callback  The callback to execute with lock
+     * @param  int|null  $timeout  Optional custom timeout in seconds
+     * @return mixed The result of the callback
+     *
+     * @throws RegistrationException If lock cannot be acquired
      */
-    private function withLock(callable $callback): mixed
+    private function withLock(callable $callback, ?int $timeout = null): mixed
     {
-        if ($this->lock === null) {
-            $this->lock = new \stdClass;
-        }
-
-        // Use synchronized block for thread-safety
-        // In production, this could use a proper mutex or semaphore
-        $lockId = spl_object_id($this->lock);
+        $timeout = $timeout ?? $this->lockTimeout;
+        $lock = Cache::lock($this->lockKey, $timeout);
 
         try {
-            // In a real implementation, acquire lock here
-            return $callback();
-        } finally {
-            // Release lock here
+            // Try to acquire the lock with a wait time
+            if ($lock->block($timeout)) {
+                try {
+                    return $callback();
+                } finally {
+                    // Always release the lock after callback execution
+                    $lock->release();
+                }
+            } else {
+                throw RegistrationException::lockAcquisitionFailed(
+                    "Timeout after {$timeout} seconds",
+                    ['timeout' => $timeout, 'lock_key' => $this->lockKey]
+                );
+            }
+        } catch (RegistrationException $e) {
+            // Re-throw registration exceptions
+            throw $e;
+        } catch (\Throwable $e) {
+            // Wrap other exceptions in registration exception
+            throw RegistrationException::lockAcquisitionFailed(
+                $e->getMessage(),
+                ['original_exception' => get_class($e)]
+            );
         }
+    }
+
+    /**
+     * Try to execute a closure with lock, returning false on failure.
+     *
+     * @param  callable  $callback  The callback to execute
+     * @param  int  $timeout  Timeout in seconds
+     * @return mixed|false Result of callback or false if lock cannot be acquired
+     */
+    private function tryWithLock(callable $callback, int $timeout = 5): mixed
+    {
+        $lock = Cache::lock($this->lockKey, $timeout);
+
+        if ($lock->get()) {
+            try {
+                return $callback();
+            } finally {
+                $lock->release();
+            }
+        }
+
+        return false;
     }
 
     public function getTools(): array

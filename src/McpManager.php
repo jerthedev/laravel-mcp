@@ -10,6 +10,7 @@ use JTD\LaravelMCP\Jobs\ProcessMcpRequest;
 use JTD\LaravelMCP\Notifications\McpErrorNotification;
 use JTD\LaravelMCP\Registry\McpRegistry;
 use JTD\LaravelMCP\Registry\RouteRegistrar;
+use JTD\LaravelMCP\Support\McpConstants;
 
 /**
  * MCP Manager - Bridge between facade and services.
@@ -496,7 +497,7 @@ class McpManager
         return [
             'name' => config('laravel-mcp.server.name', 'Laravel MCP Server'),
             'version' => config('laravel-mcp.server.version', '1.0.0'),
-            'protocol_version' => '1.0',
+            'protocol_version' => McpConstants::getMcpVersion(),
             'capabilities' => $this->getCapabilities(),
             'components' => [
                 'tools' => count($this->listTools()),

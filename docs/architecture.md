@@ -183,6 +183,81 @@ abstract class McpPrompt {
 }
 ```
 
+## Command Architecture
+
+The package provides a comprehensive Artisan command system built on a modular architecture with shared traits and base classes.
+
+### Command Hierarchy
+
+```
+BaseCommand (Abstract)
+├── Uses FormatsOutput trait
+├── Uses HandlesConfiguration trait
+├── Uses HandlesCommandErrors trait
+└── Provides common command functionality
+
+BaseMcpGeneratorCommand (Abstract)
+├── Extends BaseCommand
+├── Adds generator-specific functionality
+└── Used by all make:mcp-* commands
+
+Concrete Commands:
+├── ServeCommand extends BaseCommand
+├── ListCommand extends BaseCommand
+├── RegisterCommand extends BaseCommand
+├── DocumentationCommand extends BaseCommand
+├── MakeToolCommand extends BaseMcpGeneratorCommand
+├── MakeResourceCommand extends BaseMcpGeneratorCommand
+└── MakePromptCommand extends BaseMcpGeneratorCommand
+```
+
+### Command Traits
+
+The package uses three key traits to provide shared functionality:
+
+#### FormatsOutput Trait
+- `formatTable()` - Display data in table format
+- `formatJson()` - Output JSON formatted data  
+- `formatYaml()` - Output YAML formatted data
+- `displayInFormat()` - Dynamic format selection
+
+#### HandlesConfiguration Trait
+- `getClientConfigPath()` - Locate client configuration files
+- `detectOS()` - Operating system detection
+- `getMcpConfig()` - Configuration with environment overrides
+
+#### HandlesCommandErrors Trait
+- `handleError()` - Exception handling with debug output
+- `validateInput()` - Input validation framework
+- `confirmDestructiveAction()` - User confirmation prompts
+
+### Generator Command Pattern
+
+All `make:mcp-*` commands extend `BaseMcpGeneratorCommand`:
+
+```php
+abstract class BaseMcpGeneratorCommand extends GeneratorCommand
+{
+    abstract protected function getStubName(): string;
+    abstract protected function getComponentType(): string;
+}
+```
+
+### Testing Support
+
+Commands are tested using `CommandTestCase` base class:
+
+```php
+class MyCommandTest extends CommandTestCase
+{
+    public function test_command_works(): void
+    {
+        $this->executeAndAssertSuccess('mcp:list');
+        $this->assertOutputContains('Component listing');
+    }
+}
+```
+
 ## Design Patterns
 
 ### 1. Factory Pattern

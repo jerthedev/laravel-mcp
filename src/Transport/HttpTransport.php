@@ -5,7 +5,9 @@ namespace JTD\LaravelMCP\Transport;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 use JTD\LaravelMCP\Exceptions\TransportException;
+use JTD\LaravelMCP\Http\Controllers\McpController;
 
 /**
  * HTTP transport implementation for MCP.
@@ -29,6 +31,11 @@ class HttpTransport extends BaseTransport
      * Server started status.
      */
     protected bool $serverStarted = false;
+
+    /**
+     * Whether routes have been registered.
+     */
+    protected bool $routesRegistered = false;
 
     /**
      * Statistics tracking properties.
@@ -92,6 +99,11 @@ class HttpTransport extends BaseTransport
      */
     protected function doStart(): void
     {
+        // Register routes if not already registered and configuration allows it
+        if (! $this->routesRegistered && ($this->config['auto_register_routes'] ?? false)) {
+            $this->registerRoutes();
+        }
+
         // For HTTP transport, starting means the web server is ready to accept requests
         // The actual HTTP server is managed by Laravel/web server, not this transport
         $this->serverStarted = true;
@@ -101,6 +113,7 @@ class HttpTransport extends BaseTransport
                 'host' => $this->config['host'],
                 'port' => $this->config['port'],
                 'path' => $this->config['path'],
+                'routes_registered' => $this->routesRegistered,
             ]);
         }
     }
@@ -764,6 +777,75 @@ class HttpTransport extends BaseTransport
             'healthy' => $healthy,
             'checks' => $checks,
             'errors' => $errors,
+        ];
+    }
+
+    /**
+     * Register HTTP routes for MCP endpoints.
+     *
+     * This method registers the routes defined in the Transport Layer specification
+     * to maintain compatibility with the spec while supporting centralized routing.
+     */
+    public function registerRoutes(): void
+    {
+        if ($this->routesRegistered) {
+            return;
+        }
+
+        $middleware = $this->config['middleware'] ?? ['api'];
+        $pathPrefix = ltrim($this->config['path'] ?? '/mcp', '/');
+
+        Route::group([
+            'middleware' => $middleware,
+            'prefix' => $pathPrefix,
+        ], function () {
+            // JSON-RPC endpoint
+            Route::post('/', [McpController::class, 'handle'])->name('mcp.handle');
+
+            // Server-Sent Events endpoint for notifications
+            Route::get('/events', [McpController::class, 'events'])->name('mcp.events');
+
+            // Health check endpoint
+            Route::get('/health', [McpController::class, 'health'])->name('mcp.health');
+
+            // Server info endpoint
+            Route::get('/info', [McpController::class, 'info'])->name('mcp.info');
+
+            // OPTIONS endpoint for CORS preflight
+            Route::options('/{any?}', [McpController::class, 'options'])
+                ->where('any', '.*')
+                ->name('mcp.options');
+        });
+
+        $this->routesRegistered = true;
+
+        if ($this->config['debug']) {
+            Log::info('MCP HTTP routes registered by transport', [
+                'transport' => $this->getTransportType(),
+                'path_prefix' => $pathPrefix,
+                'middleware' => $middleware,
+            ]);
+        }
+    }
+
+    /**
+     * Check if routes are registered.
+     */
+    public function areRoutesRegistered(): bool
+    {
+        return $this->routesRegistered;
+    }
+
+    /**
+     * Get route configuration information.
+     */
+    public function getRouteInfo(): array
+    {
+        return [
+            'routes_registered' => $this->routesRegistered,
+            'path_prefix' => ltrim($this->config['path'] ?? '/mcp', '/'),
+            'middleware' => $this->config['middleware'] ?? ['api'],
+            'auto_register_routes' => $this->config['auto_register_routes'] ?? false,
         ];
     }
 }

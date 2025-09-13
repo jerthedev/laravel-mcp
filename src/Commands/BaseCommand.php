@@ -3,7 +3,9 @@
 namespace JTD\LaravelMCP\Commands;
 
 use Illuminate\Console\Command;
-use Symfony\Component\Console\Output\OutputInterface;
+use JTD\LaravelMCP\Commands\Traits\FormatsOutput;
+use JTD\LaravelMCP\Commands\Traits\HandlesCommandErrors;
+use JTD\LaravelMCP\Commands\Traits\HandlesConfiguration;
 
 /**
  * Abstract base class for all MCP commands.
@@ -13,6 +15,8 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 abstract class BaseCommand extends Command
 {
+    use FormatsOutput, HandlesCommandErrors, HandlesConfiguration;
+
     /**
      * The exit code for successful execution.
      */
@@ -27,45 +31,6 @@ abstract class BaseCommand extends Command
      * The exit code for invalid input.
      */
     protected const EXIT_INVALID_INPUT = 2;
-
-    /**
-     * Handle command errors with proper formatting and debugging support.
-     *
-     * @param  string|null  $context  Additional context for the error
-     * @return int Exit code
-     */
-    protected function handleError(\Throwable $exception, ?string $context = null): int
-    {
-        $message = $exception->getMessage();
-
-        if ($context) {
-            $message = "$context: $message";
-        }
-
-        $this->error($message);
-
-        // Show stack trace in debug or verbose mode
-        if ($this->isDebug() || $this->isVerbose()) {
-            $this->newLine();
-            $this->error('Stack trace:');
-            $this->line($exception->getTraceAsString());
-
-            // Show previous exceptions if available
-            if ($previous = $exception->getPrevious()) {
-                $this->newLine();
-                $this->error('Previous exception:');
-                $this->error($previous->getMessage());
-
-                if ($this->output->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE) {
-                    $this->line($previous->getTraceAsString());
-                }
-            }
-        } else {
-            $this->comment('Run with --debug or -v for more details.');
-        }
-
-        return self::EXIT_ERROR;
-    }
 
     /**
      * Display a success message with consistent formatting.
@@ -143,114 +108,11 @@ abstract class BaseCommand extends Command
     }
 
     /**
-     * Validate command input and options.
-     */
-    protected function validateInput(): bool
-    {
-        // Default implementation - override in child classes
-        return true;
-    }
-
-    /**
-     * Validate that a required option is present.
-     */
-    protected function validateRequiredOption(string $option, ?string $message = null): bool
-    {
-        if (empty($this->option($option))) {
-            $message = $message ?: "The --$option option is required.";
-            $this->displayError($message);
-
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Validate that an option value is in a list of allowed values.
-     */
-    protected function validateOptionInList(string $option, array $allowedValues, ?string $message = null): bool
-    {
-        $value = $this->option($option);
-
-        if ($value && ! in_array($value, $allowedValues)) {
-            $message = $message ?: sprintf(
-                'Invalid value for --%s. Allowed values: %s',
-                $option,
-                implode(', ', $allowedValues)
-            );
-            $this->displayError($message);
-
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Validate that a numeric option is within a range.
-     */
-    protected function validateNumericOption(string $option, ?int $min = null, ?int $max = null, ?string $message = null): bool
-    {
-        $value = $this->option($option);
-
-        if ($value === null) {
-            return true;
-        }
-
-        if (! is_numeric($value)) {
-            $this->displayError("The --$option option must be numeric.");
-
-            return false;
-        }
-
-        $numericValue = (int) $value;
-
-        if ($min !== null && $numericValue < $min) {
-            $message = $message ?: "The --$option option must be at least $min.";
-            $this->displayError($message);
-
-            return false;
-        }
-
-        if ($max !== null && $numericValue > $max) {
-            $message = $message ?: "The --$option option must be no more than $max.";
-            $this->displayError($message);
-
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Get MCP configuration value.
-     *
-     * @param  mixed  $default
-     * @return mixed
-     */
-    protected function getConfig(string $key, $default = null)
-    {
-        return config("laravel-mcp.$key", $default);
-    }
-
-    /**
-     * Get transport configuration value.
-     *
-     * @param  mixed  $default
-     * @return mixed
-     */
-    protected function getTransportConfig(string $key, $default = null)
-    {
-        return config("mcp-transports.$key", $default);
-    }
-
-    /**
      * Check if MCP is enabled.
      */
     protected function isMcpEnabled(): bool
     {
-        return (bool) $this->getConfig('enabled', true);
+        return (bool) config('laravel-mcp.enabled', true);
     }
 
     /**
@@ -258,7 +120,7 @@ abstract class BaseCommand extends Command
      */
     protected function getDefaultTransport(): string
     {
-        return $this->getConfig('transports.default', 'stdio');
+        return config('laravel-mcp.transports.default', 'stdio');
     }
 
     /**
@@ -266,7 +128,7 @@ abstract class BaseCommand extends Command
      */
     protected function isTransportEnabled(string $transport): bool
     {
-        return (bool) $this->getTransportConfig("$transport.enabled", false);
+        return (bool) config("mcp-transports.{$transport}.enabled", false);
     }
 
     /**
@@ -274,29 +136,11 @@ abstract class BaseCommand extends Command
      */
     protected function getDiscoveryPaths(): array
     {
-        return $this->getConfig('discovery.paths', [
+        return config('laravel-mcp.discovery.paths', [
             app_path('Mcp/Tools'),
             app_path('Mcp/Resources'),
             app_path('Mcp/Prompts'),
         ]);
-    }
-
-    /**
-     * Confirm a destructive action with the user.
-     */
-    protected function confirmDestructiveAction(string $message, bool $default = false): bool
-    {
-        // In non-interactive mode, use the default
-        if (! $this->input->isInteractive()) {
-            return $default;
-        }
-
-        // If force option is set, skip confirmation
-        if ($this->hasOption('force') && $this->option('force')) {
-            return true;
-        }
-
-        return $this->confirm($message, $default);
     }
 
     /**
@@ -337,23 +181,6 @@ abstract class BaseCommand extends Command
     }
 
     /**
-     * Format data as a table for display.
-     */
-    protected function displayTable(array $headers, array $rows, string $style = 'default'): void
-    {
-        $this->table($headers, $rows, $style);
-    }
-
-    /**
-     * Format data as JSON for display.
-     */
-    protected function displayJson(array $data, bool $pretty = true): void
-    {
-        $flags = $pretty ? JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES : 0;
-        $this->line(json_encode($data, $flags));
-    }
-
-    /**
      * Check if the command should run in quiet mode.
      */
     protected function isQuiet(): bool
@@ -367,14 +194,6 @@ abstract class BaseCommand extends Command
     protected function isVerbose(): bool
     {
         return $this->output->isVerbose();
-    }
-
-    /**
-     * Check if the command is running in debug mode.
-     */
-    protected function isDebug(): bool
-    {
-        return $this->hasOption('debug') && $this->option('debug');
     }
 
     /**

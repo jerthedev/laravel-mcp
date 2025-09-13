@@ -241,7 +241,7 @@ class ConfigGenerator
             return $errors;
         }
 
-        if ($client === 'chatgpt') {
+        if ($client === 'chatgpt' || $client === 'chatgpt-desktop') {
             if (! isset($config['mcp_servers']) || ! is_array($config['mcp_servers'])) {
                 return ['Configuration must contain mcp_servers array'];
             }
@@ -479,6 +479,7 @@ class ConfigGenerator
             'claude-desktop' => new ClaudeDesktopGenerator($this->registry),
             'claude-code' => new ClaudeCodeGenerator($this->registry),
             'chatgpt' => new ChatGptGenerator($this->registry),
+            'chatgpt-desktop' => new ChatGptGenerator($this->registry), // Alias for consistency
         ];
     }
 
@@ -528,6 +529,69 @@ class ConfigGenerator
     public function setTemplate(string $key, array $template): void
     {
         $this->configTemplates[$key] = $template;
+    }
+
+    /**
+     * Generate configuration for a specific client (Specification-compliant wrapper).
+     *
+     * This method provides the API defined in the specification while delegating
+     * to the existing client-specific methods.
+     *
+     * @param  string  $client  Client type (claude-desktop, claude-code, chatgpt-desktop)
+     * @param  array  $options  Configuration options
+     * @return array Generated configuration
+     *
+     * @throws ConfigurationException If client is not supported
+     */
+    public function generateConfig(string $client, array $options = []): array
+    {
+        return match ($client) {
+            'claude-desktop' => $this->generateClaudeDesktopConfig($options),
+            'claude-code' => $this->generateClaudeCodeConfig($options),
+            'chatgpt', 'chatgpt-desktop' => $this->generateChatGptDesktopConfig($options),
+            default => throw new ConfigurationException("Unsupported client: $client")
+        };
+    }
+
+    /**
+     * Write configuration to file (Specification-compliant wrapper).
+     *
+     * This method provides the API defined in the specification while delegating
+     * to the existing saveClientConfig method.
+     *
+     * @param  string  $client  Client type (claude-desktop, claude-code, chatgpt-desktop)
+     * @param  string  $path  File path to write configuration
+     * @param  array  $options  Configuration options
+     * @return bool True if successful, false otherwise
+     */
+    public function writeConfig(string $client, string $path, array $options = []): bool
+    {
+        try {
+            $config = $this->generateConfig($client, $options);
+
+            return $this->saveClientConfig($config, $path, $options['force'] ?? false);
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Get default configuration path for a client (Specification-compliant wrapper).
+     *
+     * This method provides the API defined in the specification while delegating
+     * to the existing getClientConfigPath method.
+     *
+     * @param  string  $client  Client type (claude-desktop, claude-code, chatgpt-desktop)
+     * @return string|null Configuration file path or null if not determinable
+     */
+    public function getDefaultConfigPath(string $client): ?string
+    {
+        // Map chatgpt-desktop to chatgpt for backward compatibility
+        if ($client === 'chatgpt-desktop') {
+            $client = 'chatgpt';
+        }
+
+        return $this->getClientConfigPath($client);
     }
 
     /**

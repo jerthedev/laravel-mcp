@@ -19,14 +19,20 @@ class RegisterCommand extends BaseCommand
      * @var string
      */
     protected $signature = 'mcp:register 
-        {client : Client type (claude-desktop|claude-code|chatgpt)} 
+        {client : Client type (claude-desktop|claude-code|chatgpt-desktop)} 
         {--name= : Server name} 
         {--description= : Server description} 
+        {--transport=stdio : Transport type (stdio|http)}
+        {--cwd= : Working directory}
+        {--command=php : Command to execute}
         {--path= : Custom server path} 
         {--args=* : Additional arguments} 
         {--env-var=* : Environment variables} 
+        {--host=127.0.0.1 : HTTP host}
+        {--port=8000 : HTTP port}
         {--output= : Output configuration file} 
-        {--force : Overwrite existing configuration}';
+        {--force : Overwrite existing configuration}
+        {--dry-run : Show configuration without writing}';
 
     /**
      * The console command description.
@@ -43,7 +49,7 @@ class RegisterCommand extends BaseCommand
     /**
      * Valid client types.
      */
-    protected array $validClients = ['claude-desktop', 'claude-code', 'chatgpt'];
+    protected array $validClients = ['claude-desktop', 'claude-code', 'chatgpt-desktop'];
 
     /**
      * Create a new command instance.
@@ -82,6 +88,11 @@ class RegisterCommand extends BaseCommand
             $outputPath = $this->determineOutputPath($client, $options);
 
             // Save configuration
+            // Handle dry-run mode
+            if ($this->option('dry-run')) {
+                return $this->showDryRun($client, $config, $outputPath);
+            }
+
             $saveResult = $this->saveConfiguration($config, $outputPath, $client);
 
             if ($saveResult === true) {
@@ -158,9 +169,13 @@ class RegisterCommand extends BaseCommand
         $options = [
             'server_name' => $this->getServerName(),
             'description' => $this->getServerDescription($client),
+            'transport' => $this->option('transport'),
+            'cwd' => $this->option('cwd') ?: getcwd() ?: base_path(),
             'command' => $this->getServerCommand(),
             'args' => $this->getAdditionalArgs(),
             'env' => $this->getEnvironmentVariables(),
+            'host' => $this->option('host'),
+            'port' => $this->option('port'),
         ];
 
         return $options;
@@ -229,13 +244,14 @@ class RegisterCommand extends BaseCommand
     protected function getServerCommand(): array
     {
         $customPath = $this->option('path');
+        $command = $this->option('command');
 
         if ($customPath) {
-            return ['php', $customPath, 'mcp:serve'];
+            return [$command, $customPath, 'mcp:serve'];
         }
 
         // Default to current artisan location
-        return ['php', 'artisan', 'mcp:serve'];
+        return [$command, 'artisan', 'mcp:serve'];
     }
 
     /**
@@ -333,11 +349,13 @@ class RegisterCommand extends BaseCommand
         $generatorOptions = [
             'name' => $options['server_name'],
             'description' => $options['description'],
-            'cwd' => getcwd() ?: base_path(),  // Use current working directory or base path fallback
-            'transport' => 'stdio',
+            'cwd' => $options['cwd'],
+            'transport' => $options['transport'],
             'command' => $options['command'][0] ?? 'php',  // First element is the command
             'args' => array_slice($options['command'], 1),  // Rest are args
             'env' => $options['env'],
+            'host' => $options['host'],
+            'port' => $options['port'],
         ];
 
         // Add any additional args
@@ -359,7 +377,7 @@ class RegisterCommand extends BaseCommand
                 case 'claude-code':
                     return $this->configGenerator->generateClaudeCodeConfig($generatorOptions);
 
-                case 'chatgpt':
+                case 'chatgpt-desktop':
                     return $this->configGenerator->generateChatGptDesktopConfig($generatorOptions);
 
                 default:
@@ -527,7 +545,7 @@ class RegisterCommand extends BaseCommand
                 $this->line('3. Use MCP tools and resources in your coding workflow');
                 break;
 
-            case 'chatgpt':
+            case 'chatgpt-desktop':
                 $this->line('1. Restart ChatGPT Desktop application');
                 $this->line('2. The MCP server will be available in ChatGPT');
                 $this->line('3. Access MCP tools and resources through chat');
@@ -537,5 +555,25 @@ class RegisterCommand extends BaseCommand
         $this->newLine();
         $this->comment('Run "php artisan mcp:serve" to start the MCP server');
         $this->comment('Run "php artisan mcp:list" to see available components');
+    }
+
+    /**
+     * Show dry-run output.
+     */
+    protected function showDryRun(string $client, array $config, string $outputPath): int
+    {
+        $this->sectionHeader('Dry Run - Configuration Preview');
+
+        $this->info("Client: $client");
+        $this->info("Output path: $outputPath");
+        $this->newLine();
+
+        $this->line('Configuration that would be written:');
+        $this->line(json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+        $this->newLine();
+        $this->comment('No files were modified (dry-run mode)');
+
+        return self::EXIT_SUCCESS;
     }
 }

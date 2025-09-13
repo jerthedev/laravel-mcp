@@ -2,9 +2,7 @@
 
 namespace JTD\LaravelMCP\Commands;
 
-use Illuminate\Console\GeneratorCommand;
 use Illuminate\Support\Str;
-use JTD\LaravelMCP\Commands\Concerns\McpMakeCommand;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
@@ -17,10 +15,8 @@ use Symfony\Component\Console\Input\InputOption;
  * and stub variable replacement.
  */
 #[AsCommand(name: 'make:mcp-resource')]
-class MakeResourceCommand extends GeneratorCommand
+class MakeResourceCommand extends BaseMcpGeneratorCommand
 {
-    use McpMakeCommand;
-
     /**
      * The name and signature of the console command.
      *
@@ -45,6 +41,26 @@ class MakeResourceCommand extends GeneratorCommand
      * @var string
      */
     protected $type = 'MCP Resource';
+
+    /**
+     * Get the stub name for this generator.
+     *
+     * @return string The stub filename
+     */
+    protected function getStubName(): string
+    {
+        return 'resource';
+    }
+
+    /**
+     * Get the component type for this generator.
+     *
+     * @return string The component type
+     */
+    protected function getComponentType(): string
+    {
+        return 'resource';
+    }
 
     /**
      * Execute the console command.
@@ -257,7 +273,7 @@ class MakeResourceCommand extends GeneratorCommand
     /**
      * Display success message with details.
      */
-    protected function displaySuccessMessage(): void
+    protected function displaySuccessMessage(?string $componentType = null, array $details = []): void
     {
         $className = $this->getClassName($this->qualifyClass($this->getNameInput()));
         $resourceName = $this->getResourceName($className);

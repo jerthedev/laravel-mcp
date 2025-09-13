@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use JTD\LaravelMCP\Http\Exceptions\McpValidationException;
+use JTD\LaravelMCP\Support\McpConstants;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
@@ -44,7 +45,7 @@ class McpValidationMiddleware
         'strict_content_type' => true,
         'max_request_size' => 10485760,
         'strict_mcp_methods' => false,
-        'supported_protocol_versions' => ['1.0'],
+        'supported_protocol_versions' => [],
         'allow_custom_tools' => true,
         'custom_methods' => [],
         'method_rules' => [],
@@ -104,6 +105,11 @@ class McpValidationMiddleware
         $this->validator = $validator;
         $this->logger = $logger ?? new NullLogger;
 
+        // Initialize supported protocol versions
+        if (empty($this->config['supported_protocol_versions'])) {
+            $this->config['supported_protocol_versions'] = McpConstants::getSupportedVersionsForValidation();
+        }
+
         // Override default config if provided
         if ($config !== null) {
             $this->config = array_replace_recursive($this->config, $config);
@@ -122,7 +128,7 @@ class McpValidationMiddleware
         $this->config['strict_content_type'] = config('laravel-mcp.validation.strict_content_type', true);
         $this->config['max_request_size'] = config('laravel-mcp.validation.max_request_size', 10485760);
         $this->config['strict_mcp_methods'] = config('laravel-mcp.validation.strict_mcp_methods', false);
-        $this->config['supported_protocol_versions'] = config('laravel-mcp.validation.supported_protocol_versions', ['1.0']);
+        $this->config['supported_protocol_versions'] = config('laravel-mcp.validation.supported_protocol_versions', McpConstants::getSupportedVersionsForValidation());
         $this->config['allow_custom_tools'] = config('laravel-mcp.validation.allow_custom_tools', true);
         $this->config['custom_methods'] = config('laravel-mcp.validation.custom_methods', []);
         $this->config['method_rules'] = config('laravel-mcp.validation.method_rules', []);
@@ -439,7 +445,7 @@ class McpValidationMiddleware
 
         // Validate protocol version
         if (isset($params['protocolVersion'])) {
-            $supportedVersions = $this->getConfig('supported_protocol_versions', ['1.0']);
+            $supportedVersions = $this->getConfig('supported_protocol_versions', McpConstants::getSupportedVersionsForValidation());
             if (! in_array($params['protocolVersion'], $supportedVersions)) {
                 throw McpValidationException::withMessages([
                     'protocolVersion' => ["Unsupported protocol version: {$params['protocolVersion']}"],

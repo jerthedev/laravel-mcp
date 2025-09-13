@@ -2,6 +2,7 @@
 
 namespace JTD\LaravelMCP\Registry;
 
+use Illuminate\Container\Container;
 use JTD\LaravelMCP\Exceptions\RegistrationException;
 use JTD\LaravelMCP\Registry\Contracts\RegistryInterface;
 
@@ -14,9 +15,14 @@ use JTD\LaravelMCP\Registry\Contracts\RegistryInterface;
 class ResourceRegistry implements RegistryInterface
 {
     /**
-     * Registered resources storage.
+     * Component factory for lazy loading.
      */
-    protected array $resources = [];
+    protected ComponentFactory $factory;
+
+    /**
+     * Container instance.
+     */
+    protected Container $container;
 
     /**
      * Resource metadata storage.
@@ -27,6 +33,15 @@ class ResourceRegistry implements RegistryInterface
      * Registry type identifier.
      */
     protected string $type = 'resources';
+
+    /**
+     * Create a new resource registry.
+     */
+    public function __construct(Container $container, ?ComponentFactory $factory = null)
+    {
+        $this->container = $container;
+        $this->factory = $factory ?? new ComponentFactory($container);
+    }
 
     /**
      * Initialize the resource registry.
@@ -40,13 +55,17 @@ class ResourceRegistry implements RegistryInterface
     /**
      * Register a resource with the registry.
      */
-    public function register(string $name, $resource, array $metadata = []): void
+    public function register(string $name, $resource, $metadata = []): void
     {
         if ($this->has($name)) {
             throw new RegistrationException("Resource '{$name}' is already registered");
         }
 
-        $this->resources[$name] = $resource;
+        // Ensure metadata is an array
+        $metadata = is_array($metadata) ? $metadata : [];
+
+        // Use factory for lazy loading
+        $this->factory->register('resource', $name, $resource, $metadata);
         $this->metadata[$name] = array_merge([
             'name' => $name,
             'type' => 'resource',
@@ -67,7 +86,8 @@ class ResourceRegistry implements RegistryInterface
             return false;
         }
 
-        unset($this->resources[$name], $this->metadata[$name]);
+        $this->factory->unregister('resource', $name);
+        unset($this->metadata[$name]);
 
         return true;
     }
@@ -77,7 +97,7 @@ class ResourceRegistry implements RegistryInterface
      */
     public function has(string $name): bool
     {
-        return array_key_exists($name, $this->resources);
+        return $this->factory->has('resource', $name);
     }
 
     /**
@@ -89,7 +109,7 @@ class ResourceRegistry implements RegistryInterface
             throw new RegistrationException("Resource '{$name}' is not registered");
         }
 
-        return $this->resources[$name];
+        return $this->factory->get('resource', $name);
     }
 
     /**
@@ -97,7 +117,7 @@ class ResourceRegistry implements RegistryInterface
      */
     public function all(): array
     {
-        return $this->resources;
+        return $this->factory->getAllOfType('resource');
     }
 
     /**
@@ -113,7 +133,7 @@ class ResourceRegistry implements RegistryInterface
      */
     public function names(): array
     {
-        return array_keys($this->resources);
+        return array_keys($this->metadata);
     }
 
     /**
@@ -121,7 +141,7 @@ class ResourceRegistry implements RegistryInterface
      */
     public function count(): int
     {
-        return count($this->resources);
+        return count($this->metadata);
     }
 
     /**
@@ -129,7 +149,7 @@ class ResourceRegistry implements RegistryInterface
      */
     public function clear(): void
     {
-        $this->resources = [];
+        $this->factory->clearCache('resource');
         $this->metadata = [];
     }
 
@@ -150,7 +170,9 @@ class ResourceRegistry implements RegistryInterface
      */
     public function filter(array $criteria): array
     {
-        return array_filter($this->resources, function ($resource, $name) use ($criteria) {
+        $resources = $this->all();
+
+        return array_filter($resources, function ($resource, $name) use ($criteria) {
             $metadata = $this->metadata[$name];
 
             foreach ($criteria as $key => $value) {
@@ -168,7 +190,9 @@ class ResourceRegistry implements RegistryInterface
      */
     public function search(string $pattern): array
     {
-        return array_filter($this->resources, function ($resource, $name) use ($pattern) {
+        $resources = $this->all();
+
+        return array_filter($resources, function ($resource, $name) use ($pattern) {
             return fnmatch($pattern, $name);
         }, ARRAY_FILTER_USE_BOTH);
     }
@@ -188,14 +212,12 @@ class ResourceRegistry implements RegistryInterface
     {
         $templates = [];
 
-        foreach ($this->resources as $name => $resource) {
-            $metadata = $this->metadata[$name];
-
+        foreach ($this->metadata as $name => $metadataItem) {
             $templates[] = [
-                'uriTemplate' => $metadata['uri'] ?? '',
+                'uriTemplate' => $metadataItem['uri'] ?? '',
                 'name' => $name,
-                'description' => $metadata['description'] ?? '',
-                'mimeType' => $metadata['mime_type'] ?? 'application/json',
+                'description' => $metadataItem['description'] ?? '',
+                'mimeType' => $metadataItem['mime_type'] ?? 'application/json',
             ];
         }
 
@@ -259,8 +281,7 @@ class ResourceRegistry implements RegistryInterface
     {
         $resources = [];
 
-        foreach ($this->resources as $name => $resource) {
-            $metadata = $this->metadata[$name];
+        foreach ($this->metadata as $name => $metadata) {
 
             $resources[] = [
                 'uri' => $metadata['uri'] ?? '',
@@ -281,7 +302,9 @@ class ResourceRegistry implements RegistryInterface
      */
     public function getResourcesByUri(string $uriPattern): array
     {
-        return array_filter($this->resources, function ($resource, $name) use ($uriPattern) {
+        $resources = $this->all();
+
+        return array_filter($resources, function ($resource, $name) use ($uriPattern) {
             $metadata = $this->metadata[$name];
             $uri = $metadata['uri'] ?? '';
 

@@ -2,6 +2,7 @@
 
 namespace JTD\LaravelMCP\Registry;
 
+use Illuminate\Container\Container;
 use JTD\LaravelMCP\Exceptions\RegistrationException;
 use JTD\LaravelMCP\Registry\Contracts\RegistryInterface;
 
@@ -14,9 +15,14 @@ use JTD\LaravelMCP\Registry\Contracts\RegistryInterface;
 class PromptRegistry implements RegistryInterface
 {
     /**
-     * Registered prompts storage.
+     * Component factory for lazy loading.
      */
-    protected array $prompts = [];
+    protected ComponentFactory $factory;
+
+    /**
+     * Container instance.
+     */
+    protected Container $container;
 
     /**
      * Prompt metadata storage.
@@ -27,6 +33,15 @@ class PromptRegistry implements RegistryInterface
      * Registry type identifier.
      */
     protected string $type = 'prompts';
+
+    /**
+     * Create a new prompt registry.
+     */
+    public function __construct(Container $container, ?ComponentFactory $factory = null)
+    {
+        $this->container = $container;
+        $this->factory = $factory ?? new ComponentFactory($container);
+    }
 
     /**
      * Initialize the prompt registry.
@@ -40,13 +55,17 @@ class PromptRegistry implements RegistryInterface
     /**
      * Register a prompt with the registry.
      */
-    public function register(string $name, $prompt, array $metadata = []): void
+    public function register(string $name, $prompt, $metadata = []): void
     {
         if ($this->has($name)) {
             throw new RegistrationException("Prompt '{$name}' is already registered");
         }
 
-        $this->prompts[$name] = $prompt;
+        // Ensure metadata is an array
+        $metadata = is_array($metadata) ? $metadata : [];
+
+        // Use factory for lazy loading
+        $this->factory->register('prompt', $name, $prompt, $metadata);
         $this->metadata[$name] = array_merge([
             'name' => $name,
             'type' => 'prompt',
@@ -65,7 +84,8 @@ class PromptRegistry implements RegistryInterface
             return false;
         }
 
-        unset($this->prompts[$name], $this->metadata[$name]);
+        $this->factory->unregister('prompt', $name);
+        unset($this->metadata[$name]);
 
         return true;
     }
@@ -75,7 +95,7 @@ class PromptRegistry implements RegistryInterface
      */
     public function has(string $name): bool
     {
-        return array_key_exists($name, $this->prompts);
+        return $this->factory->has('prompt', $name);
     }
 
     /**
@@ -87,7 +107,7 @@ class PromptRegistry implements RegistryInterface
             throw new RegistrationException("Prompt '{$name}' is not registered");
         }
 
-        return $this->prompts[$name];
+        return $this->factory->get('prompt', $name);
     }
 
     /**
@@ -95,7 +115,7 @@ class PromptRegistry implements RegistryInterface
      */
     public function all(): array
     {
-        return $this->prompts;
+        return $this->factory->getAllOfType('prompt');
     }
 
     /**
@@ -111,7 +131,7 @@ class PromptRegistry implements RegistryInterface
      */
     public function names(): array
     {
-        return array_keys($this->prompts);
+        return array_keys($this->metadata);
     }
 
     /**
@@ -119,7 +139,7 @@ class PromptRegistry implements RegistryInterface
      */
     public function count(): int
     {
-        return count($this->prompts);
+        return count($this->metadata);
     }
 
     /**
@@ -127,7 +147,7 @@ class PromptRegistry implements RegistryInterface
      */
     public function clear(): void
     {
-        $this->prompts = [];
+        $this->factory->clearCache('prompt');
         $this->metadata = [];
     }
 

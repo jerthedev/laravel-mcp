@@ -14,11 +14,16 @@ interface RegistryInterface
     /**
      * Register a component with the registry.
      *
-     * @param  string  $name  Component name/identifier
-     * @param  mixed  $component  The component to register
-     * @param  array  $metadata  Optional metadata about the component
+     * Supports two signatures:
+     * 1. register($name, $component, $metadata) - Standard interface signature
+     * 2. register($type, $name, $handler, $options) - Spec-compliant signature
+     *
+     * @param  string  $name  Component name/identifier or type (for spec signature)
+     * @param  mixed  $component  The component to register or name (for spec signature)
+     * @param  array|mixed  $metadata  Optional metadata or handler (for spec signature)
+     * @param  array|null  $options  Optional options (for spec signature only)
      */
-    public function register(string $name, $component, array $metadata = []): void;
+    public function register(string $name, $component, $metadata = []): void;
 
     /**
      * Unregister a component from the registry.
