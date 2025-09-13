@@ -103,4 +103,31 @@ trait FormatsOutput
 
         $this->formatTable(['Item', 'Count'], $rows, 'compact');
     }
+
+    /**
+     * Display data as a table.
+     *
+     * Wrapper method for formatTable to maintain compatibility.
+     *
+     * @param  array  $headers  Table column headers
+     * @param  array  $rows  Table row data
+     * @param  string  $style  Table style (default, compact, borderless, etc.)
+     */
+    protected function displayTable(array $headers, array $rows, string $style = 'default'): void
+    {
+        $this->formatTable($headers, $rows, $style);
+    }
+
+    /**
+     * Display data as JSON.
+     *
+     * Wrapper method for formatJson to maintain compatibility.
+     *
+     * @param  array  $data  Data to format as JSON
+     * @param  bool  $pretty  Whether to use pretty printing
+     */
+    protected function displayJson(array $data, bool $pretty = true): void
+    {
+        $this->formatJson($data, $pretty);
+    }
 }
