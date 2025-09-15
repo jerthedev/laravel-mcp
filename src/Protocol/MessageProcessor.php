@@ -302,7 +302,7 @@ class MessageProcessor implements MessageHandlerInterface
         return [
             'protocolVersion' => $negotiatedProtocolVersion,
             'capabilities' => [
-                'tools' => []
+                'tools' => (object)[]  // Empty object {}, not array []
             ],
             'serverInfo' => $this->serverInfo,
         ];

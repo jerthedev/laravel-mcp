@@ -45,7 +45,7 @@ if (isset($data['method']) && $data['method'] === 'initialize') {
         'result' => [
             'protocolVersion' => $data['params']['protocolVersion'] ?? '2025-06-18',
             'capabilities' => [
-                'tools' => []
+                'tools' => (object)[]  // Empty object {}, not array []
             ],
             'serverInfo' => [
                 'name' => 'Laravel MCP Server',
