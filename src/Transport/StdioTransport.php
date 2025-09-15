@@ -194,11 +194,12 @@ class StdioTransport extends BaseTransport
                 throw new TransportException('Failed to encode received message: '.json_last_error_msg());
             }
 
-            Log::debug('Message received via stdio', [
+            Log::info('StdioTransport: Message received via stdio', [
                 'message_length' => strlen($messageJson),
                 'method' => $firstMessage['method'] ?? null,
                 'id' => $firstMessage['id'] ?? null,
                 'buffered_messages' => count($messages),
+                'raw_data_length' => strlen($data),
             ]);
 
             return $messageJson;
@@ -406,7 +407,18 @@ class StdioTransport extends BaseTransport
                             throw new TransportException('Invalid JSON message: '.json_last_error_msg());
                         }
 
+                        Log::info('StdioTransport: Processing message', [
+                            'method' => $messageData['method'] ?? 'no method',
+                            'id' => $messageData['id'] ?? 'no id',
+                            'message_length' => strlen($message),
+                        ]);
+
                         $response = $this->messageHandler->handle($messageData, $this);
+
+                        Log::info('StdioTransport: Handler response', [
+                            'response_type' => $response ? 'has response' : 'no response',
+                            'response_keys' => $response ? array_keys($response) : [],
+                        ]);
 
                         if ($response) {
                             $responseJson = json_encode($response, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
@@ -416,6 +428,10 @@ class StdioTransport extends BaseTransport
                             $this->send($responseJson);
                         }
                     } catch (\Throwable $e) {
+                        Log::error('StdioTransport: Message processing error', [
+                            'error' => $e->getMessage(),
+                            'message' => $message,
+                        ]);
                         if ($this->messageHandler) {
                             $this->messageHandler->handleError($e, $this);
                         }
