@@ -96,9 +96,17 @@ abstract class McpTool
      */
     public function getInputSchema(): array
     {
+        // Clean the parameter schema for JSON Schema compliance
+        $cleanProperties = [];
+        foreach ($this->getParameterSchema() as $key => $schema) {
+            $cleanProperties[$key] = $schema;
+            // Remove 'required' field from individual properties - it belongs in root required array
+            unset($cleanProperties[$key]['required']);
+        }
+
         return [
             'type' => 'object',
-            'properties' => $this->getParameterSchema(),
+            'properties' => $cleanProperties,
             'required' => $this->getRequiredParameters(),
             'additionalProperties' => false,
             '$schema' => 'http://json-schema.org/draft-07/schema#',
@@ -118,26 +126,9 @@ abstract class McpTool
      */
     protected function getRequiredParameters(): array
     {
-        $required = array_keys(array_filter($this->parameterSchema, function ($schema) {
+        return array_keys(array_filter($this->parameterSchema, function ($schema) {
             return $schema['required'] ?? false;
         }));
-
-        // Remove 'required' field from individual properties since it belongs in the root required array
-        $this->cleanParameterSchema();
-
-        return $required;
-    }
-
-    /**
-     * Clean parameter schema by removing invalid 'required' fields from properties.
-     */
-    private function cleanParameterSchema(): void
-    {
-        foreach ($this->parameterSchema as $key => $schema) {
-            if (isset($schema['required'])) {
-                unset($this->parameterSchema[$key]['required']);
-            }
-        }
     }
 
     /**
