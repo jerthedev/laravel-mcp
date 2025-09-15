@@ -41,8 +41,7 @@ class ConfigGeneratorWrapperTest extends TestCase
         $config = $this->generator->generateConfig('claude-code', $options);
 
         $this->assertIsArray($config);
-        $this->assertArrayHasKey('mcp', $config);
-        $this->assertArrayHasKey('servers', $config['mcp']);
+        $this->assertArrayHasKey('mcpServers', $config);
     }
 
     public function test_generate_config_wrapper_method_works_for_chatgpt_desktop()

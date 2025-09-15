@@ -48,11 +48,7 @@ class ClaudeCodeGenerator implements ClientGeneratorInterface
             default => throw new \InvalidArgumentException("Unsupported transport: $transport"),
         };
 
-        // Add description and metadata
-        $serverConfig['description'] = $options['description'] ?? $this->getDefaultDescription();
-        $serverConfig['transport'] = $transport;
-
-        $config['mcp']['servers'][$serverName] = $serverConfig;
+        $config['mcpServers'][$serverName] = $serverConfig;
 
         return $config;
     }
@@ -115,19 +111,13 @@ class ClaudeCodeGenerator implements ClientGeneratorInterface
     {
         $errors = [];
 
-        if (! isset($config['mcp']) || ! is_array($config['mcp'])) {
-            $errors[] = 'Configuration must contain mcp object';
+        if (! isset($config['mcpServers']) || ! is_array($config['mcpServers'])) {
+            $errors[] = 'Configuration must contain mcpServers object';
 
             return $errors;
         }
 
-        if (! isset($config['mcp']['servers']) || ! is_array($config['mcp']['servers'])) {
-            $errors[] = 'Configuration must contain mcp.servers object';
-
-            return $errors;
-        }
-
-        foreach ($config['mcp']['servers'] as $serverName => $serverConfig) {
+        foreach ($config['mcpServers'] as $serverName => $serverConfig) {
             $serverErrors = $this->validateServerConfig($serverName, $serverConfig);
             $errors = array_merge($errors, $serverErrors);
         }
@@ -151,17 +141,14 @@ class ClaudeCodeGenerator implements ClientGeneratorInterface
         $merged = $existingConfig;
 
         // Ensure proper structure exists
-        if (! isset($merged['mcp'])) {
-            $merged['mcp'] = [];
-        }
-        if (! isset($merged['mcp']['servers'])) {
-            $merged['mcp']['servers'] = [];
+        if (! isset($merged['mcpServers'])) {
+            $merged['mcpServers'] = [];
         }
 
         // Merge servers
-        $merged['mcp']['servers'] = array_merge(
-            $merged['mcp']['servers'],
-            $newConfig['mcp']['servers'] ?? []
+        $merged['mcpServers'] = array_merge(
+            $merged['mcpServers'],
+            $newConfig['mcpServers'] ?? []
         );
 
         return $merged;
@@ -178,7 +165,6 @@ class ClaudeCodeGenerator implements ClientGeneratorInterface
         $command = $options['command'] ?? 'php';
         $args = $options['args'] ?? ['artisan', 'mcp:serve'];
         $cwd = $options['cwd'] ?? base_path();
-        $env = $options['env'] ?? [];
 
         // Handle when command is already an array
         if (is_array($command)) {
@@ -189,12 +175,15 @@ class ClaudeCodeGenerator implements ClientGeneratorInterface
             $allArgs = $args;
         }
 
+        // Ensure --transport=stdio is included in args
+        if (!in_array('--transport=stdio', $allArgs)) {
+            $allArgs[] = '--transport=stdio';
+        }
+
         return [
             'command' => $baseCommand,
             'args' => $allArgs,
             'cwd' => $cwd,
-            'env' => $env,
-            'timeout' => $options['timeout'] ?? 30,
         ];
     }
 
@@ -244,7 +233,7 @@ class ClaudeCodeGenerator implements ClientGeneratorInterface
     protected function loadExistingConfig(?string $path): array
     {
         if (! $path || ! file_exists($path)) {
-            return ['mcp' => ['servers' => []]];
+            return ['mcpServers' => []];
         }
 
         try {
@@ -256,17 +245,14 @@ class ClaudeCodeGenerator implements ClientGeneratorInterface
             }
 
             // Ensure proper structure
-            if (! isset($config['mcp'])) {
-                $config['mcp'] = [];
-            }
-            if (! isset($config['mcp']['servers']) || ! is_array($config['mcp']['servers'])) {
-                $config['mcp']['servers'] = [];
+            if (! isset($config['mcpServers']) || ! is_array($config['mcpServers'])) {
+                $config['mcpServers'] = [];
             }
 
             return $config;
         } catch (\Throwable $e) {
             // Return empty template if file cannot be read/parsed
-            return ['mcp' => ['servers' => []]];
+            return ['mcpServers' => []];
         }
     }
 

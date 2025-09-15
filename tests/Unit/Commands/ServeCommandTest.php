@@ -116,7 +116,7 @@ class ServeCommandTest extends TestCase
         $stdioTransport->shouldReceive('setMessageHandler')
             ->once()
             ->with($this->messageProcessor);
-        $stdioTransport->shouldReceive('start')
+        $stdioTransport->shouldReceive('listen')
             ->once();
         $stdioTransport->shouldReceive('stop')
             ->once();
@@ -362,7 +362,7 @@ class ServeCommandTest extends TestCase
         // Create stdio transport mock
         $stdioTransport = Mockery::mock(StdioTransport::class);
         $stdioTransport->shouldReceive('setMessageHandler')->once();
-        $stdioTransport->shouldReceive('start')->once();
+        $stdioTransport->shouldReceive('listen')->once();
         $stdioTransport->shouldReceive('stop')->once();
 
         $this->transportManager->shouldReceive('hasDriver')
@@ -414,7 +414,7 @@ class ServeCommandTest extends TestCase
     {
         $stdioTransport = Mockery::mock(StdioTransport::class);
         $stdioTransport->shouldReceive('setMessageHandler')->once();
-        $stdioTransport->shouldReceive('start')
+        $stdioTransport->shouldReceive('listen')
             ->once()
             ->andThrow(new \RuntimeException('Connection lost'));
         $stdioTransport->shouldReceive('stop')->once();
@@ -528,7 +528,7 @@ class ServeCommandTest extends TestCase
     {
         $stdioTransport = Mockery::mock(StdioTransport::class);
         $stdioTransport->shouldReceive('setMessageHandler')->once();
-        $stdioTransport->shouldReceive('start')
+        $stdioTransport->shouldReceive('listen')
             ->once()
             ->andReturnUsing(function () {
                 // Simulate receiving SIGINT
@@ -560,7 +560,7 @@ class ServeCommandTest extends TestCase
 
         $stdioTransport = Mockery::mock(StdioTransport::class);
         $stdioTransport->shouldReceive('setMessageHandler')->once();
-        $stdioTransport->shouldReceive('start')->once();
+        $stdioTransport->shouldReceive('listen')->once();
         $stdioTransport->shouldReceive('stop')->once();
 
         $this->transportManager->shouldReceive('hasDriver')->andReturn(true);
@@ -589,7 +589,7 @@ class ServeCommandTest extends TestCase
     {
         $stdioTransport = Mockery::mock(StdioTransport::class);
         $stdioTransport->shouldReceive('setMessageHandler')->once();
-        $stdioTransport->shouldReceive('start')->once();
+        $stdioTransport->shouldReceive('listen')->once();
         $stdioTransport->shouldReceive('stop')->once();
         $stdioTransport->shouldReceive('getStats')
             ->andReturn([

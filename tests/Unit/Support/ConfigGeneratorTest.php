@@ -84,17 +84,15 @@ class ConfigGeneratorTest extends TestCase
 
         $config = $this->configGenerator->generateClaudeCodeConfig($options);
 
-        $this->assertArrayHasKey('mcp', $config);
-        $this->assertArrayHasKey('servers', $config['mcp']);
-        $this->assertArrayHasKey('test-server', $config['mcp']['servers']);
+        $this->assertArrayHasKey('mcpServers', $config);
+        $this->assertArrayHasKey('test-server', $config['mcpServers']);
 
-        $server = $config['mcp']['servers']['test-server'];
+        $server = $config['mcpServers']['test-server'];
         $this->assertEquals('php', $server['command']);
         $this->assertContains('artisan', $server['args']);
         $this->assertContains('mcp:serve', $server['args']);
         $this->assertContains('--debug', $server['args']);
-        $this->assertEquals(['APP_ENV' => 'testing'], $server['env']);
-        $this->assertEquals('Test MCP Server', $server['description']);
+        $this->assertContains('--transport=stdio', $server['args']);
     }
 
     #[Test]
@@ -102,15 +100,14 @@ class ConfigGeneratorTest extends TestCase
     {
         $config = $this->configGenerator->generateClaudeCodeConfig();
 
-        $this->assertArrayHasKey('mcp', $config);
-        $this->assertArrayHasKey('servers', $config['mcp']);
-        $this->assertArrayHasKey('laravel-mcp', $config['mcp']['servers']);
+        $this->assertArrayHasKey('mcpServers', $config);
+        $this->assertArrayHasKey('laravel-mcp', $config['mcpServers']);
 
-        $server = $config['mcp']['servers']['laravel-mcp'];
+        $server = $config['mcpServers']['laravel-mcp'];
         $this->assertEquals('php', $server['command']);
-        $this->assertEquals(['artisan', 'mcp:serve'], $server['args']);
-        $this->assertEquals([], $server['env']);
-        $this->assertEquals('Laravel MCP Server', $server['description']);
+        $this->assertContains('artisan', $server['args']);
+        $this->assertContains('mcp:serve', $server['args']);
+        $this->assertContains('--transport=stdio', $server['args']);
     }
 
     #[Test]
@@ -169,14 +166,14 @@ class ConfigGeneratorTest extends TestCase
     #[Test]
     public function it_validates_claude_code_configuration(): void
     {
-        $validConfig = ['mcp' => ['servers' => ['test' => []]]];
+        $validConfig = ['mcpServers' => ['test' => []]];
         $errors = $this->configGenerator->validateClientConfig('claude-code', $validConfig);
         $this->assertEmpty($errors);
 
         $invalidConfig = ['invalid' => 'config'];
         $errors = $this->configGenerator->validateClientConfig('claude-code', $invalidConfig);
         $this->assertNotEmpty($errors);
-        $this->assertContains('Configuration must contain mcp.servers object', $errors);
+        $this->assertContains('Configuration must contain mcpServers object', $errors);
     }
 
     #[Test]
@@ -228,27 +225,22 @@ class ConfigGeneratorTest extends TestCase
     public function it_merges_claude_code_configurations(): void
     {
         $existing = [
-            'mcp' => [
-                'servers' => [
-                    'server1' => ['command' => 'node', 'args' => ['server1.js']],
-                ],
+            'mcpServers' => [
+                'server1' => ['command' => 'node', 'args' => ['server1.js']],
             ],
         ];
 
         $new = [
-            'mcp' => [
-                'servers' => [
-                    'server2' => ['command' => 'php', 'args' => ['artisan', 'mcp:serve']],
-                ],
+            'mcpServers' => [
+                'server2' => ['command' => 'php', 'args' => ['artisan', 'mcp:serve']],
             ],
         ];
 
         $merged = $this->configGenerator->mergeClientConfig('claude-code', $new, $existing);
 
-        $this->assertArrayHasKey('mcp', $merged);
-        $this->assertArrayHasKey('servers', $merged['mcp']);
-        $this->assertArrayHasKey('server1', $merged['mcp']['servers']);
-        $this->assertArrayHasKey('server2', $merged['mcp']['servers']);
+        $this->assertArrayHasKey('mcpServers', $merged);
+        $this->assertArrayHasKey('server1', $merged['mcpServers']);
+        $this->assertArrayHasKey('server2', $merged['mcpServers']);
     }
 
     #[Test]

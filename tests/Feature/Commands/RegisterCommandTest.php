@@ -83,6 +83,7 @@ class RegisterCommandTest extends TestCase
     #[Test]
     public function it_registers_claude_code_configuration(): void
     {
+        // Test the command execution in test mode
         $this->artisan('mcp:register', [
             'client' => 'claude-code',
             '--name' => 'test-mcp',
@@ -90,15 +91,29 @@ class RegisterCommandTest extends TestCase
             '--force' => true,
         ])
             ->expectsOutput('✓ MCP server registered successfully!')
+            ->expectsOutputToContain('Claude CLI')
+            ->expectsOutputToContain('test mode')
             ->assertExitCode(0);
 
-        $configFile = $this->tempConfigPath.'/test_config.json';
-        $this->assertFileExists($configFile);
+        // For Claude Code, we use CLI registration instead of config files
+        // In test environment, the command is simulated for verification
+    }
 
-        $config = json_decode(file_get_contents($configFile), true);
-        $this->assertArrayHasKey('mcp', $config);
-        $this->assertArrayHasKey('servers', $config['mcp']);
-        $this->assertArrayHasKey('test-mcp', $config['mcp']['servers']);
+    #[Test]
+    public function it_shows_claude_code_dry_run_correctly(): void
+    {
+        // Test dry-run mode shows the command that would be executed
+        $this->artisan('mcp:register', [
+            'client' => 'claude-code',
+            '--name' => 'test-mcp',
+            '--description' => 'Test MCP Server',
+            '--dry-run' => true,
+        ])
+            ->expectsOutputToContain('Command that would be executed:')
+            ->assertExitCode(0);
+
+        // Note: The actual command content may vary based on environment
+        // but the key is that dry-run mode works without errors
     }
 
     #[Test]

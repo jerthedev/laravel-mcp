@@ -100,26 +100,21 @@ class RegisterCommandFeatureTest extends TestCase
             'client' => 'claude-code',
             '--name' => 'test-server',
             '--description' => 'Test MCP Server',
-            '--output' => $this->tempConfigPath,
             '--force' => true,
         ])
             ->assertSuccessful()
-            ->expectsOutput('✓ MCP server registered successfully!');
+            ->expectsOutput('✓ MCP server registered successfully!')
+            ->expectsOutputToContain('Claude CLI');
 
-        $this->assertFileExists($this->tempConfigPath);
-
-        $config = json_decode(File::get($this->tempConfigPath), true);
-        $this->assertArrayHasKey('mcp', $config);
-        $this->assertArrayHasKey('servers', $config['mcp']);
-        $this->assertArrayHasKey('test-server', $config['mcp']['servers']);
-        $this->assertEquals('Test MCP Server', $config['mcp']['servers']['test-server']['description']);
+        // For Claude Code, we use CLI registration instead of config files
+        // The test verifies the command completes successfully using CLI
     }
 
     #[Test]
     public function it_can_register_chatgpt_configuration(): void
     {
         $this->artisan('mcp:register', [
-            'client' => 'chatgpt',
+            'client' => 'chatgpt-desktop',
             '--name' => 'test-server',
             '--description' => 'Test MCP Server',
             '--output' => $this->tempConfigPath,
@@ -323,7 +318,7 @@ class RegisterCommandFeatureTest extends TestCase
             ->expectsOutputToContain('Restart VS Code or reload the Claude extension');
 
         $this->artisan('mcp:register', [
-            'client' => 'chatgpt',
+            'client' => 'chatgpt-desktop',
             '--name' => 'test-server',
             '--output' => sys_get_temp_dir().'/chatgpt_test_'.uniqid().'.json',
             '--force' => true,

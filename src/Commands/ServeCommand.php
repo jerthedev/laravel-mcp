@@ -252,7 +252,7 @@ class ServeCommand extends BaseCommand
 
         try {
             // Start listening (blocking call)
-            $this->transport->start();
+            $this->transport->listen();
 
             return self::EXIT_SUCCESS;
         } catch (\Throwable $e) {

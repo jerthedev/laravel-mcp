@@ -231,11 +231,8 @@ class ConfigGenerator
 
         if ($client === 'claude-code') {
             $errors = [];
-            if (! isset($config['mcp']) || ! is_array($config['mcp'])) {
-                $errors[] = 'Configuration must contain mcp object';
-            }
-            if (! isset($config['mcp']['servers']) || ! is_array($config['mcp']['servers'])) {
-                $errors[] = 'Configuration must contain mcp.servers object';
+            if (! isset($config['mcpServers']) || ! is_array($config['mcpServers'])) {
+                $errors[] = 'Configuration must contain mcpServers object';
             }
 
             return $errors;

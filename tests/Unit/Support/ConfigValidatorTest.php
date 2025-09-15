@@ -141,28 +141,26 @@ class ConfigValidatorTest extends TestCase
 
         $errors = $this->validator->validate('claude-code', $config);
 
-        $this->assertContains('Configuration must contain mcp object', $errors);
+        $this->assertContains('Configuration must contain mcpServers object', $errors);
     }
 
     public function test_validates_claude_code_missing_servers()
     {
-        $config = ['mcp' => ['other' => 'data']];
+        $config = ['other' => 'data'];
 
         $errors = $this->validator->validate('claude-code', $config);
 
-        $this->assertContains('Configuration must contain mcp.servers object', $errors);
+        $this->assertContains('Configuration must contain mcpServers object', $errors);
     }
 
     public function test_validates_claude_code_stdio_configuration()
     {
         $config = [
-            'mcp' => [
-                'servers' => [
-                    'test-server' => [
-                        'command' => ['php', 'artisan', 'mcp:serve'],
-                        'cwd' => '/path/to/project',
-                        'env' => ['APP_ENV' => 'local'],
-                    ],
+            'mcpServers' => [
+                'test-server' => [
+                    'command' => 'php',
+                    'args' => ['artisan', 'mcp:serve', '--transport=stdio'],
+                    'cwd' => '/path/to/project',
                 ],
             ],
         ];
@@ -175,30 +173,27 @@ class ConfigValidatorTest extends TestCase
     public function test_validates_claude_code_command_not_array()
     {
         $config = [
-            'mcp' => [
-                'servers' => [
-                    'test-server' => [
-                        'command' => 'php',
-                        'cwd' => '/path',
-                    ],
+            'mcpServers' => [
+                'test-server' => [
+                    'command' => 'php',
+                    'cwd' => '/path',
                 ],
             ],
         ];
 
         $errors = $this->validator->validate('claude-code', $config);
 
-        $this->assertContains("Command must be a non-empty array for server 'test-server'", $errors);
+        // In Claude Code format, this should be valid since command is a string and args is separate
+        $this->assertEmpty($errors);
     }
 
     public function test_validates_claude_code_http_configuration()
     {
         $config = [
-            'mcp' => [
-                'servers' => [
-                    'test-server' => [
-                        'url' => 'http://localhost:8000/mcp',
-                        'headers' => ['Content-Type' => 'application/json'],
-                    ],
+            'mcpServers' => [
+                'test-server' => [
+                    'url' => 'http://localhost:8000/mcp',
+                    'headers' => ['Content-Type' => 'application/json'],
                 ],
             ],
         ];

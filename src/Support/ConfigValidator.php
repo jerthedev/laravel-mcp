@@ -142,21 +142,15 @@ class ConfigValidator
     {
         $errors = [];
 
-        // Check for required mcp.servers structure
-        if (! isset($config['mcp']) || ! is_array($config['mcp'])) {
-            $errors[] = 'Configuration must contain mcp object';
-
-            return $errors;
-        }
-
-        if (! isset($config['mcp']['servers']) || ! is_array($config['mcp']['servers'])) {
-            $errors[] = 'Configuration must contain mcp.servers object';
+        // Check for required mcpServers structure
+        if (! isset($config['mcpServers']) || ! is_array($config['mcpServers'])) {
+            $errors[] = 'Configuration must contain mcpServers object';
 
             return $errors;
         }
 
         // Validate each server configuration
-        foreach ($config['mcp']['servers'] as $serverName => $serverConfig) {
+        foreach ($config['mcpServers'] as $serverName => $serverConfig) {
             if (! is_array($serverConfig)) {
                 $errors[] = "Server configuration for '$serverName' must be an array";
 
@@ -165,9 +159,9 @@ class ConfigValidator
 
             // Check for required fields based on transport type
             if (isset($serverConfig['command'])) {
-                // Stdio transport validation
-                if (! is_array($serverConfig['command']) || empty($serverConfig['command'])) {
-                    $errors[] = "Command must be a non-empty array for server '$serverName'";
+                // Stdio transport validation - command should be a string in Claude Code format
+                if (! is_string($serverConfig['command']) || empty($serverConfig['command'])) {
+                    $errors[] = "Command must be a non-empty string for server '$serverName'";
                 }
 
                 if (empty($serverConfig['cwd']) || ! is_string($serverConfig['cwd'])) {
