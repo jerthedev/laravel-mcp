@@ -206,10 +206,14 @@ class ServeCommand extends BaseCommand
         $config = $this->buildTransportConfig($transportType);
 
         // Create transport instance with custom configuration
+        error_log('ServeCommand: Creating transport of type: ' . $transportType);
         $this->transport = $this->transportManager->createCustomTransport($transportType, $config);
+        error_log('ServeCommand: Created transport class: ' . get_class($this->transport));
 
         // Set the message handler
+        error_log('ServeCommand: Setting message handler');
         $this->transport->setMessageHandler($this->messageProcessor);
+        error_log('ServeCommand: Message handler set');
 
         // Configure server information
         $this->messageProcessor->setServerInfo([
@@ -270,9 +274,16 @@ class ServeCommand extends BaseCommand
         }
 
         try {
+            // Debug transport information
+            error_log('ServeCommand: About to call transport->listen()');
+            error_log('ServeCommand: Transport class: ' . get_class($this->transport));
+            error_log('ServeCommand: Transport connected: ' . ($this->transport->isConnected() ? 'YES' : 'NO'));
+
             // Start listening (blocking call)
+            error_log('ServeCommand: Calling transport->listen()');
             $this->transport->listen();
 
+            error_log('ServeCommand: transport->listen() returned');
             return self::EXIT_SUCCESS;
         } catch (\Throwable $e) {
             $this->displayError('Stdio transport error', [
