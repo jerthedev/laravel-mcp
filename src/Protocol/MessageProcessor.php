@@ -438,18 +438,7 @@ class MessageProcessor implements MessageHandlerInterface
             $result = $this->toolHandler->handle('tools/list', $params, $context);
 
             error_log('=== CRITICAL: toolHandler->handle() RETURNED ===');
-
-            try {
-                Log::info('MessageProcessor: tools/list result', [
-                    'result_keys' => array_keys($result),
-                    'tool_count' => isset($result['tools']) ? count($result['tools']) : 'no tools key',
-                ]);
-                error_log('MessageProcessor: CHECKPOINT 1 - Log::info succeeded');
-            } catch (\Throwable $e) {
-                error_log('MessageProcessor: CHECKPOINT 1 - Log::info FAILED: ' . $e->getMessage());
-            }
-
-            error_log('MessageProcessor: CHECKPOINT 2 - After try-catch block');
+            error_log('MessageProcessor: SKIPPING Log::info - proceeding directly to emergency test');
 
             // EMERGENCY TEST: Direct output to see if we can reach Claude Code at all
             $emergencyResponse = [
