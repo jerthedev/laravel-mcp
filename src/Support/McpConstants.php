@@ -45,7 +45,7 @@ class McpConstants
      *
      * Array of protocol versions this package can handle.
      */
-    public const SUPPORTED_MCP_VERSIONS = ['2024-11-05'];
+    public const SUPPORTED_MCP_VERSIONS = ['2024-11-05', '2025-06-18'];
 
     /**
      * Supported JSON-RPC protocol versions.

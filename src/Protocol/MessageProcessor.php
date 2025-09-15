@@ -261,6 +261,10 @@ class MessageProcessor implements MessageHandlerInterface
     {
         $this->clientCapabilities = $params['capabilities'] ?? [];
 
+        // Negotiate protocol version - use client's requested version if supported
+        $clientProtocolVersion = $params['protocolVersion'] ?? '2024-11-05';
+        $negotiatedProtocolVersion = $this->negotiateProtocolVersion($clientProtocolVersion);
+
         // Negotiate capabilities
         $negotiatedCapabilities = $this->capabilityNegotiator->negotiate(
             $this->clientCapabilities,
@@ -271,16 +275,34 @@ class MessageProcessor implements MessageHandlerInterface
 
         Log::info('MCP initialization', [
             'client_info' => $params['clientInfo'] ?? 'Unknown client',
-            'protocol_version' => $params['protocolVersion'] ?? 'Unknown',
+            'client_protocol_version' => $clientProtocolVersion,
+            'negotiated_protocol_version' => $negotiatedProtocolVersion,
             'client_capabilities' => $this->clientCapabilities,
             'server_capabilities' => $this->serverCapabilities,
         ]);
 
         return [
-            'protocolVersion' => '2024-11-05',
+            'protocolVersion' => $negotiatedProtocolVersion,
             'capabilities' => $this->serverCapabilities,
             'serverInfo' => $this->serverInfo,
         ];
+    }
+
+    /**
+     * Negotiate protocol version with client.
+     */
+    protected function negotiateProtocolVersion(string $clientVersion): string
+    {
+        // Use supported versions from constants
+        $supportedVersions = \JTD\LaravelMCP\Support\McpConstants::SUPPORTED_MCP_VERSIONS;
+
+        // If client requests a supported version, use it
+        if (in_array($clientVersion, $supportedVersions)) {
+            return $clientVersion;
+        }
+
+        // Fall back to default MCP version for compatibility
+        return \JTD\LaravelMCP\Support\McpConstants::MCP_PROTOCOL_VERSION;
     }
 
     /**
