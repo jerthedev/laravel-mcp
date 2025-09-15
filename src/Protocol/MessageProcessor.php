@@ -296,27 +296,25 @@ class MessageProcessor implements MessageHandlerInterface
             'client_capabilities' => $this->clientCapabilities,
         ]);
 
-        // Get actual tool count for Claude Code capability detection
+        // CRITICAL: Get actual tools for Claude Code capability detection
+        // Claude Code may determine capabilities based on what's actually available
         $registry = app('mcp.registry');
-        $toolCount = count($registry->getTools());
+        $tools = $registry->getTools();
+        $toolCount = count($tools);
 
-        Log::info('MCP initialization - tool count', ['tool_count' => $toolCount]);
+        Log::info('MCP initialization - declaring tools', [
+            'tool_count' => $toolCount,
+            'tool_names' => array_keys($tools)
+        ]);
 
-        // Match Playwright's capability structure for Claude Code compatibility
+        // Match Playwright's EXACT capability structure - Claude Code expects tools:{}
+        $capabilities = [
+            'tools' => new \JTD\LaravelMCP\Support\EmptyObject()  // Empty object like Playwright
+        ];
+
         $response = [
             'protocolVersion' => $negotiatedProtocolVersion,
-            'capabilities' => [
-                'tools' => [
-                    'listChanged' => false
-                ],
-                'resources' => [
-                    'subscribe' => false,
-                    'listChanged' => false
-                ],
-                'prompts' => [
-                    'listChanged' => false
-                ]
-            ],
+            'capabilities' => $capabilities,
             'serverInfo' => $this->serverInfo,
         ];
 
