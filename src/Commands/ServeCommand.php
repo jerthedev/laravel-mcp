@@ -73,6 +73,7 @@ class ServeCommand extends BaseCommand
      */
     protected function executeCommand(): int
     {
+        error_log('=== ServeCommand: executeCommand() STARTED ===');
         try {
             // Suppress all logging unless debug mode is enabled (for clean JSON-RPC)
             if (!$this->option('debug')) {
@@ -93,10 +94,13 @@ class ServeCommand extends BaseCommand
 
             // Get and validate transport type
             $transportType = $this->option('transport');
+            error_log('ServeCommand: Transport type: ' . $transportType);
 
             if (! $this->validateTransportType($transportType)) {
+                error_log('ServeCommand: Transport validation FAILED');
                 return self::EXIT_INVALID_INPUT;
             }
+            error_log('ServeCommand: Transport validation PASSED');
 
             // Display startup information (only in debug mode)
             if ($this->option('debug')) {
@@ -104,7 +108,9 @@ class ServeCommand extends BaseCommand
             }
 
             // Start the appropriate transport
+            error_log('ServeCommand: About to call startTransport()');
             $exitCode = $this->startTransport($transportType);
+            error_log('ServeCommand: startTransport() returned: ' . $exitCode);
 
             // Display shutdown message (only in debug mode)
             if ($exitCode === self::EXIT_SUCCESS && $this->option('debug')) {
