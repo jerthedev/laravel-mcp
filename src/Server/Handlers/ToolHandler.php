@@ -356,19 +356,14 @@ class ToolHandler extends BaseHandler
             }
         }
 
-        // TEMPORARY DEBUG: Always apply pagination with small limit (3 tools) to test if response size is the issue
-        $defaultLimit = 3;
-
         if ($cursor !== null) {
             $paginated = $this->applyCursorPagination($definitions, $cursor);
             error_log('ToolHandler: Returning paginated definitions: ' . count($paginated) . ' tools');
             return $paginated;
         } else {
-            // Apply default pagination even without cursor to limit response size
-            $limited = array_slice($definitions, 0, $defaultLimit);
-            error_log('ToolHandler: DEBUGGING - Limiting to first ' . $defaultLimit . ' tools out of ' . count($definitions));
-            error_log('ToolHandler: Limited tool names: ' . json_encode(array_column($limited, 'name')));
-            return $limited;
+            // Return all definitions without artificial limits
+            error_log('ToolHandler: Returning all ' . count($definitions) . ' tools');
+            return $definitions;
         }
     }
 
