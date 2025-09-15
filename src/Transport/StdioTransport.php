@@ -110,46 +110,36 @@ class StdioTransport extends BaseTransport
     /**
      * Perform transport-specific send operations.
      *
+     * FIXED: Use simple fwrite() + fflush() instead of complex OutputHandler
+     * This matches our working minimal server approach.
+     *
      * @param  string  $message  The message to send
      *
      * @throws \Throwable If send fails
      */
     protected function doSend(string $message): void
     {
-        if (! $this->outputHandler || ! $this->outputHandler->isOpen()) {
-            throw new TransportException('Output stream not available');
-        }
+        error_log('StdioTransport: doSend() called with message: ' . $message);
 
         try {
-            // Parse message to ensure it's valid JSON-RPC
-            $messageData = json_decode($message, true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new TransportException('Invalid JSON message: '.json_last_error_msg());
+            // SIMPLE APPROACH: Direct fwrite() + fflush() like our working minimal server
+            // Add newline for proper message framing
+            $messageWithNewline = $message . "\n";
+
+            error_log('StdioTransport: Writing to STDOUT: ' . trim($messageWithNewline));
+
+            $written = fwrite(STDOUT, $messageWithNewline);
+            if ($written === false) {
+                throw new TransportException('Failed to write message to stdout');
             }
 
-            // Frame the message using MessageFramer
-            $framedMessage = $this->messageFramer->frame($messageData);
-
-            // Write with timeout handling
-            if (! $this->outputHandler->waitForWritable($this->config['write_timeout'])) {
-                throw new TransportException('Output stream write timeout');
-            }
-
-            $written = $this->outputHandler->write($framedMessage);
-
-            if ($written < strlen($framedMessage)) {
-                throw new TransportException('Incomplete message write to stdout');
-            }
-
-            // Flush output immediately to prevent buffering delays
+            // Immediately flush to prevent buffering
             fflush(STDOUT);
 
-            Log::debug('Message sent via stdio', [
-                'message_length' => strlen($framedMessage),
-                'method' => $messageData['method'] ?? null,
-                'id' => $messageData['id'] ?? null,
-            ]);
+            error_log('StdioTransport: Message sent and flushed successfully');
+
         } catch (\Throwable $e) {
+            error_log('StdioTransport: Send error: ' . $e->getMessage());
             Log::error('Failed to send message via stdio', [
                 'error' => $e->getMessage(),
             ]);
@@ -160,52 +150,45 @@ class StdioTransport extends BaseTransport
     /**
      * Perform transport-specific receive operations.
      *
+     * FIXED: Use simple blocking fgets() instead of complex non-blocking stream_select()
+     * This matches our working minimal server approach.
+     *
      * @return string|null The received message, or null if none available
      *
      * @throws \Throwable If receive fails
      */
     protected function doReceive(): ?string
     {
-        if (! $this->inputHandler || ! $this->inputHandler->isOpen()) {
-            return null;
-        }
+        error_log('StdioTransport: doReceive() called');
 
         try {
-            // Read data with timeout
-            $data = $this->inputHandler->read($this->config['buffer_size']);
+            // SIMPLE APPROACH: Use blocking fgets() like our working minimal server
+            // This eliminates the complex stream_select() timeout issues
+            $line = fgets(STDIN);
 
-            if ($data === null) {
-                // For STDIO transport, never treat stdin EOF as disconnection
-                // stdin EOF just means no data is currently available
-                // The server should keep running and waiting for input
+            if ($line === false) {
+                error_log('StdioTransport: fgets() returned false (EOF)');
                 return null;
             }
 
-            // Parse messages using MessageFramer
-            $messages = $this->messageFramer->parse($data);
-
-            if (empty($messages)) {
-                // No complete messages yet
+            $message = trim($line);
+            if (empty($message)) {
+                error_log('StdioTransport: Empty line received');
                 return null;
             }
 
-            // Return the first complete message as JSON
-            $firstMessage = array_shift($messages);
-            $messageJson = json_encode($firstMessage, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            error_log('StdioTransport: Raw message received: ' . $message);
 
+            // Validate JSON format
+            $messageData = json_decode($message, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new TransportException('Failed to encode received message: '.json_last_error_msg());
+                error_log('StdioTransport: Invalid JSON: ' . json_last_error_msg());
+                return null;
             }
 
-            Log::info('StdioTransport: Message received via stdio', [
-                'message_length' => strlen($messageJson),
-                'method' => $firstMessage['method'] ?? null,
-                'id' => $firstMessage['id'] ?? null,
-                'buffered_messages' => count($messages),
-                'raw_data_length' => strlen($data),
-            ]);
+            error_log('StdioTransport: Valid JSON message parsed, method: ' . ($messageData['method'] ?? 'no method'));
 
-            return $messageJson;
+            return $message;
         } catch (\Throwable $e) {
             Log::error('Failed to receive message via stdio', [
                 'error' => $e->getMessage(),
