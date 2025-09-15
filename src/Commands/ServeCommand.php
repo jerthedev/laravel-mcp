@@ -248,6 +248,33 @@ class ServeCommand extends BaseCommand
             'version' => config('laravel-mcp.version', '1.0.0'),
         ]);
 
+        // CRITICAL: Pre-load all MCP components before starting server
+        // This ensures tools are available when Claude Code calls tools/list
+        error_log('ServeCommand: Pre-loading MCP components');
+        try {
+            $registry = app('mcp.registry');
+            $discovery = app('mcp.component-discovery');
+
+            // Force component discovery to run synchronously
+            $discovery->discoverComponents();
+            $discovery->registerDiscoveredComponents();
+
+            $toolCount = count($registry->getTools());
+            $resourceCount = count($registry->getResources());
+            $promptCount = count($registry->getPrompts());
+
+            error_log("ServeCommand: Pre-loaded {$toolCount} tools, {$resourceCount} resources, {$promptCount} prompts");
+
+            if ($this->option('debug')) {
+                $this->info("Pre-loaded {$toolCount} tools, {$resourceCount} resources, {$promptCount} prompts");
+            }
+        } catch (\Throwable $e) {
+            error_log('ServeCommand: Component pre-loading failed: ' . $e->getMessage());
+            if ($this->option('debug')) {
+                $this->warning('Component pre-loading failed: ' . $e->getMessage());
+            }
+        }
+
         // Start based on transport type
         if ($transportType === 'stdio') {
             return $this->startStdioTransport();
