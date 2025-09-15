@@ -76,8 +76,16 @@ class ServeCommand extends BaseCommand
         try {
             // Suppress all logging unless debug mode is enabled (for clean JSON-RPC)
             if (!$this->option('debug')) {
-                // Set log level to emergency to suppress most logs
-                Log::getLogger()->setLevel(\Monolog\Level::Emergency);
+                // Set minimum log level to emergency to suppress most logs
+                $logger = Log::getLogger();
+                if (method_exists($logger, 'setLevel')) {
+                    $logger->setLevel(\Monolog\Level::Emergency);
+                } else {
+                    // For newer Monolog versions, we need to modify handlers
+                    foreach ($logger->getHandlers() as $handler) {
+                        $handler->setLevel(\Monolog\Level::Emergency);
+                    }
+                }
             }
 
             // Register signal handlers for graceful shutdown
