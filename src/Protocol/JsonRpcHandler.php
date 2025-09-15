@@ -66,7 +66,16 @@ class JsonRpcHandler implements JsonRpcHandlerInterface
     public function handleRequest(array $request): array
     {
         try {
+            // Debug: Log all incoming requests
+            Log::info('JsonRpcHandler: incoming request', [
+                'method' => $request['method'] ?? 'missing',
+                'id' => $request['id'] ?? 'missing',
+                'has_params' => isset($request['params']),
+                'full_request' => $request,
+            ]);
+
             if (! $this->isRequest($request)) {
+                Log::error('JsonRpcHandler: Invalid request format', ['request' => $request]);
                 return $this->createErrorResponse(
                     self::ERROR_INVALID_REQUEST,
                     'Invalid request format',
