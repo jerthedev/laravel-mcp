@@ -119,9 +119,10 @@ class ToolHandler extends BaseHandler
                 ]);
             }
 
+            $this->logInfo('About to call getToolDefinitions');
             try {
                 $tools = $this->getToolDefinitions($params['cursor'] ?? null);
-                $this->logInfo('Tool definitions retrieved', [
+                $this->logInfo('Tool definitions retrieved successfully', [
                     'tool_count' => count($tools),
                 ]);
             } catch (\Throwable $e) {
@@ -296,13 +297,28 @@ class ToolHandler extends BaseHandler
      */
     protected function getToolDefinitions(?string $cursor = null): array
     {
-        $this->logDebug('Getting tool definitions');
+        $this->logInfo('getToolDefinitions: Starting');
+
+        // TEMPORARY FIX: Return empty list to debug hanging issue
+        // The hanging might be in tool instantiation during toolRegistry->all()
+        $this->logWarning('getToolDefinitions: Returning empty list temporarily to debug hanging');
+
+        return [];
+
+        // Original code (temporarily disabled):
+        /*
+        $this->logInfo('getToolDefinitions: About to call toolRegistry->all()');
+
         $tools = $this->toolRegistry->all();
-        $this->logDebug('Retrieved tools from registry', [
+
+        $this->logInfo('getToolDefinitions: Retrieved tools from registry', [
             'tool_count' => count($tools),
             'tool_names' => array_keys($tools),
         ]);
+
         $definitions = [];
+        $this->logInfo('getToolDefinitions: Starting foreach loop');
+        */
 
         foreach ($tools as $name => $toolData) {
             try {
@@ -335,11 +351,17 @@ class ToolHandler extends BaseHandler
             }
         }
 
+        $this->logInfo('getToolDefinitions: Finished foreach loop', [
+            'definitions_count' => count($definitions),
+        ]);
+
         // Apply cursor-based pagination if needed
         if ($cursor !== null) {
+            $this->logInfo('getToolDefinitions: Applying cursor pagination');
             return $this->applyCursorPagination($definitions, $cursor);
         }
 
+        $this->logInfo('getToolDefinitions: Returning definitions');
         return $definitions;
     }
 
