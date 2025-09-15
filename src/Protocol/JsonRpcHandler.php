@@ -123,7 +123,9 @@ class JsonRpcHandler implements JsonRpcHandlerInterface
             $handler = $this->requestHandlers[$method];
 
             try {
+                error_log('JsonRpcHandler: About to call handler for method: ' . $method);
                 $result = $handler($params, $request);
+                error_log('JsonRpcHandler: Handler returned result successfully');
 
                 error_log('JsonRpcHandler: Handler returned result, creating success response with ID: ' . $id);
                 $successResponse = $this->createSuccessResponse($result, $id);
