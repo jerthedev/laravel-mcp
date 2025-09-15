@@ -60,14 +60,12 @@ class ToolHandler extends BaseHandler
 
             // Debug the actual response being returned
             if ($method === 'tools/list') {
-                $this->logInfo('[ToolHandler] FINAL RESPONSE BEING RETURNED', [
-                    'response_structure' => array_keys($result),
-                    'tools_count' => count($result['tools'] ?? []),
-                    'sample_tool' => isset($result['tools'][0]) ? array_keys($result['tools'][0]) : 'no tools',
-                    'full_response_json' => json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
-                ]);
+                // USING error_log instead of Laravel Log to avoid process termination
+                error_log('[ToolHandler] FINAL RESPONSE BEING RETURNED - tools_count: ' . count($result['tools'] ?? []));
+                error_log('[ToolHandler] Sample tool: ' . json_encode(isset($result['tools'][0]) ? array_keys($result['tools'][0]) : 'no tools'));
             }
 
+            error_log('ToolHandler: CHECKPOINT - About to return result to MessageProcessor');
             return $result;
         } catch (ProtocolException $e) {
             // Re-throw validation and method not found errors
