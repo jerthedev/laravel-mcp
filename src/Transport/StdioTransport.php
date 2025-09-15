@@ -388,9 +388,11 @@ class StdioTransport extends BaseTransport
             // EMERGENCY: Completely bypass the complex listen loop
             // Use our simple minimal server approach directly
             error_log('StdioTransport: Entering simple blocking loop');
+            Log::info('StdioTransport: STARTING stdio loop - waiting for Claude Code requests');
 
             while (true) {
                 error_log('StdioTransport: Waiting for input with fgets(STDIN)...');
+                Log::debug('StdioTransport: Blocking on fgets(STDIN) for Claude Code input');
 
                 $line = fgets(STDIN);
                 if ($line === false) {
@@ -407,6 +409,7 @@ class StdioTransport extends BaseTransport
                 // LOG RAW INPUT like wrapper script
                 error_log('=== RAW INPUT FROM CLAUDE CODE ===');
                 error_log('INPUT: ' . $message);
+                Log::info('StdioTransport: RECEIVED MESSAGE FROM CLAUDE CODE', ['message' => $message]);
                 error_log('=== END RAW INPUT ===');
 
                 // Process with Laravel's MessageProcessor
