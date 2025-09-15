@@ -220,9 +220,15 @@ class MessageProcessor implements MessageHandlerInterface
         // Tool methods
         $this->jsonRpcHandler->onRequest('tools/list', function (array $params, array $request = []) {
             error_log('MessageProcessor: tools/list callback invoked with request ID: ' . ($request['id'] ?? 'NO ID'));
-            $result = $this->handleToolsList($params, $request);
-            error_log('MessageProcessor: tools/list callback returning result with keys: ' . json_encode(array_keys($result)));
-            return $result;
+            try {
+                $result = $this->handleToolsList($params, $request);
+                error_log('MessageProcessor: tools/list callback returning result with keys: ' . json_encode(array_keys($result)));
+                return $result;
+            } catch (\Throwable $e) {
+                error_log('MessageProcessor: tools/list callback EXCEPTION: ' . $e->getMessage());
+                error_log('MessageProcessor: tools/list callback TRACE: ' . $e->getTraceAsString());
+                throw $e;
+            }
         });
 
         $this->jsonRpcHandler->onRequest('tools/call', function (array $params, array $request = []) {
