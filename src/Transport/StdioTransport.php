@@ -172,12 +172,9 @@ class StdioTransport extends BaseTransport
             $data = $this->inputHandler->read($this->config['buffer_size']);
 
             if ($data === null) {
-                // Check if stream is still open
-                if ($this->inputHandler->isEof()) {
-                    $this->connected = false;
-                    Log::debug('Input stream reached EOF');
-                }
-
+                // For STDIO transport, never treat stdin EOF as disconnection
+                // stdin EOF just means no data is currently available
+                // The server should keep running and waiting for input
                 return null;
             }
 
