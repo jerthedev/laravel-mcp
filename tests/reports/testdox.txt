@@ -1,6 +1,3 @@
-Claude Cli Health Check (JTD\LaravelMCP\Tests\Feature\ClaudeCliHealthCheck)
- [ ] It responds to initialize with exact playwright format
- [ ] It handles notifications initialized and sends proactive roots list
- [x] It matches exact playwright response byte for byte
- [ ] It completes full claude cli handshake flow
+Tools List (JTD\LaravelMCP\Tests\Feature\ToolsList)
+ [x] It returns tools via json rpc request
 

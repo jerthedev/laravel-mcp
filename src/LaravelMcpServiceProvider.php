@@ -756,6 +756,11 @@ class LaravelMcpServiceProvider extends ServiceProvider
             return;
         }
 
+        // EMERGENCY DISABLE: Discovery is causing 60s hangs during JSON-RPC requests
+        // TODO: Fix the root cause of multiple application bootstrapping
+        \Illuminate\Support\Facades\Log::warning('bootDiscovery: Discovery disabled to prevent hanging');
+        return;
+
         if (! config('laravel-mcp.discovery.enabled', true)) {
             return;
         }
