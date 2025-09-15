@@ -645,15 +645,8 @@ class RegisterCommand extends BaseCommand
         // Build the claude mcp add command
         $command = ['claude', 'mcp', 'add'];
 
-        // Add transport if not stdio (stdio is default)
-        if ($transport !== 'stdio') {
-            $command[] = '--transport';
-            $command[] = $transport;
-        }
-
-        // Add scope (default to user scope for cross-project availability)
-        $command[] = '--scope';
-        $command[] = 'user';
+        // Add server name first
+        $command[] = $serverName;
 
         // Add essential Laravel environment variables for Claude Code compatibility
         $essentialEnvVars = $this->getEssentialEnvVars($options['env'] ?? []);
@@ -662,11 +655,11 @@ class RegisterCommand extends BaseCommand
             $command[] = "$key=$value";
         }
 
-        // Add server name (comes right before command according to help)
-        $command[] = $serverName;
+        // Add separator
+        $command[] = '--';
 
         if ($transport === 'stdio') {
-            // For stdio transport, add command and args with absolute paths
+            // For stdio transport, add individual command parts after --
             $baseCommand = $options['command'][0] ?? 'php';
             $args = array_slice($options['command'], 1);
 
@@ -683,9 +676,7 @@ class RegisterCommand extends BaseCommand
                 $args = array_merge($args, $options['args']);
             }
 
-            // Note: --transport=stdio is the default, so we don't need to specify it
-
-            // Add command and args (no separator needed according to help)
+            // Add command and args as separate elements (not quoted as single string)
             $command[] = $baseCommand;
             $command = array_merge($command, $args);
         } else {
