@@ -78,9 +78,13 @@ class ClaudeCliHealthCheckTest extends TestCase
         // Step 4: Validate complete response JSON matches Playwright format
         $responseJson = json_encode($response, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-        // Parse back and verify tools is still an object
-        $parsed = json_decode($responseJson, true);
-        $parsedToolsJson = json_encode($parsed['result']['capabilities']['tools']);
+        // Check if the raw JSON contains {} for tools (this is what matters for Claude CLI)
+        $this->assertStringContainsString('"tools":{}', $responseJson,
+            'Raw JSON must contain "tools":{} for Claude CLI compatibility');
+
+        // Parse back without converting to arrays to preserve objects
+        $parsed = json_decode($responseJson, false);  // false = keep objects as objects
+        $parsedToolsJson = json_encode($parsed->result->capabilities->tools);
 
         $this->assertEquals('{}', $parsedToolsJson,
             'After full JSON encode/decode cycle, tools must still be {}');

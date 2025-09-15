@@ -302,17 +302,10 @@ class MessageProcessor implements MessageHandlerInterface
         $response = [
             'protocolVersion' => $negotiatedProtocolVersion,
             'capabilities' => [
-                'tools' => new \stdClass()  // Empty object {}, not array []
+                'tools' => new \JTD\LaravelMCP\Support\EmptyObject()  // Always serializes to {}
             ],
             'serverInfo' => $this->serverInfo,
         ];
-
-        // Debug: Check what we're actually returning
-        Log::info('MessageProcessor returning initialize response', [
-            'response' => $response,
-            'tools_type' => gettype($response['capabilities']['tools']),
-            'tools_json' => json_encode($response['capabilities']['tools']),
-        ]);
 
         return $response;
     }
@@ -341,7 +334,10 @@ class MessageProcessor implements MessageHandlerInterface
     {
         $this->initialized = true;
 
-        Log::info('MCP server initialized - sending proactive roots/list request like Playwright');
+        Log::info('MCP server initialized - sending proactive roots/list request like Playwright', [
+            'params' => $params,
+            'has_transport' => !!$this->currentTransport
+        ]);
 
         // Send proactive roots/list request like Playwright does
         $this->sendProactiveRootsList();
@@ -352,6 +348,11 @@ class MessageProcessor implements MessageHandlerInterface
      */
     protected function sendProactiveRootsList(): void
     {
+        Log::info('sendProactiveRootsList called', [
+            'has_transport' => !!$this->currentTransport,
+            'transport_type' => $this->currentTransport ? get_class($this->currentTransport) : 'none'
+        ]);
+
         $rootsListRequest = [
             'method' => 'roots/list',
             'jsonrpc' => '2.0',
@@ -361,11 +362,14 @@ class MessageProcessor implements MessageHandlerInterface
         if ($this->currentTransport) {
             try {
                 $requestJson = json_encode($rootsListRequest, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                Log::info('About to call send()', ['json' => $requestJson]);
                 $this->currentTransport->send($requestJson);
                 Log::info('Sent proactive roots/list request like Playwright', ['request' => $rootsListRequest]);
 
                 // For STDIO transport, we should exit after sending like Playwright does
-                if ($this->currentTransport instanceof \JTD\LaravelMCP\Transport\StdioTransport) {
+                // But not during testing
+                if ($this->currentTransport instanceof \JTD\LaravelMCP\Transport\StdioTransport &&
+                    !app()->environment('testing')) {
                     Log::info('Exiting after proactive roots/list like Playwright');
                     exit(0);
                 }

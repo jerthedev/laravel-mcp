@@ -447,6 +447,10 @@ class StdioTransport extends BaseTransport
                             if (json_last_error() !== JSON_ERROR_NONE) {
                                 throw new TransportException('Failed to encode response: '.json_last_error_msg());
                             }
+
+                            // Fix empty object markers for Claude CLI compatibility
+                            $responseJson = str_replace('"__EMPTY_OBJECT__"', '{}', $responseJson);
+
                             $this->send($responseJson);
                         }
                     } catch (\Throwable $e) {

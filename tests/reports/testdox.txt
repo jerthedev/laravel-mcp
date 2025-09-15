@@ -1,20 +1,3 @@
-Serve Command (JTD\LaravelMCP\Tests\Unit\Commands\ServeCommand)
- [x] It has correct command signature
- [x] It starts stdio transport successfully
- [x] It starts http transport successfully
- [x] It validates invalid transport type
- [x] It validates disabled transport
- [x] It validates unregistered transport in manager
- [x] It validates timeout option
- [x] It validates port option for http transport
- [x] It enables debug mode
- [x] It handles transport creation failure
- [x] It handles stdio transport errors
- [x] It builds correct transport configuration
- [x] It handles invalid transport instance
- [x] It handles shutdown signals with pcntl
- [x] It configures server info correctly
- [x] It displays transport stats in verbose mode
- [x] It returns error when mcp is disabled
- [x] It attempts reconnection for http transport
+Claude Cli Health Check (JTD\LaravelMCP\Tests\Feature\ClaudeCliHealthCheck)
+ [ ] It handles notifications initialized and sends proactive roots list
 
