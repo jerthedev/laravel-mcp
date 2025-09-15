@@ -589,7 +589,9 @@ class ComponentDiscovery implements DiscoveryInterface
             $instance = new $className();
 
             if (method_exists($instance, 'getName')) {
-                return $instance->getName();
+                $name = $instance->getName();
+                // TEMPORARY: Convert dots to underscores for Claude Code compatibility testing
+                return str_replace('.', '_', $name);
             }
         } catch (\Throwable $e) {
             // If instantiation fails, fall back to generating from class name
