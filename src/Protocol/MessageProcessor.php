@@ -377,18 +377,28 @@ class MessageProcessor implements MessageHandlerInterface
             'transport_type' => $this->currentTransport ? get_class($this->currentTransport) : 'none'
         ]);
 
-        $rootsListRequest = [
-            'method' => 'roots/list',
-            'jsonrpc' => '2.0',
-            'id' => 0
-        ];
-
         if ($this->currentTransport) {
             try {
-                $requestJson = json_encode($rootsListRequest, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-                Log::info('About to call send()', ['json' => $requestJson]);
-                $this->currentTransport->send($requestJson);
-                Log::info('Sent proactive roots/list request like Playwright', ['request' => $rootsListRequest]);
+                // Send two roots/list requests like Playwright does
+                $rootsListRequest1 = [
+                    'method' => 'roots/list',
+                    'jsonrpc' => '2.0',
+                    'id' => 0
+                ];
+
+                $rootsListRequest2 = [
+                    'method' => 'roots/list',
+                    'jsonrpc' => '2.0',
+                    'id' => 1
+                ];
+
+                $requestJson1 = json_encode($rootsListRequest1, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                $requestJson2 = json_encode($rootsListRequest2, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+                Log::info('About to send two roots/list requests like Playwright');
+                $this->currentTransport->send($requestJson1);
+                $this->currentTransport->send($requestJson2);
+                Log::info('Sent two proactive roots/list requests like Playwright');
 
                 // DO NOT EXIT - Server must stay running to handle tools/list and other requests
                 // The exit(0) was causing the server to terminate immediately after initialization
