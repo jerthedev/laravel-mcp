@@ -334,13 +334,14 @@ class MessageProcessor implements MessageHandlerInterface
     {
         $this->initialized = true;
 
-        Log::info('MCP server initialized - sending proactive roots/list request like Playwright', [
+        Log::info('MCP server initialized - NOT sending proactive roots/list to test stability', [
             'params' => $params,
             'has_transport' => !!$this->currentTransport
         ]);
 
-        // Send proactive roots/list request like Playwright does
-        $this->sendProactiveRootsList();
+        // TEMPORARILY DISABLED: Send proactive roots/list request like Playwright does
+        // $this->sendProactiveRootsList();
+        Log::info('Skipping proactive roots/list - server will wait for client requests');
     }
 
     /**
