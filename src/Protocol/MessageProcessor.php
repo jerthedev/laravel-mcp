@@ -455,6 +455,10 @@ class MessageProcessor implements MessageHandlerInterface
                 error_log('MessageProcessor: Response ID: ' . $jsonRpcResponse['id']);
                 error_log('MessageProcessor: About to return wrapped response');
 
+                // Add final confirmation that we're returning properly
+                error_log('MessageProcessor: FINAL RETURN - Response type: ' . gettype($jsonRpcResponse));
+                error_log('MessageProcessor: FINAL RETURN - Response size: ' . strlen(json_encode($jsonRpcResponse)));
+
                 return $jsonRpcResponse;
             } catch (\Throwable $e) {
                 error_log('MessageProcessor: EXCEPTION during JSON-RPC wrapping: ' . $e->getMessage());
