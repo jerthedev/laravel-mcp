@@ -102,6 +102,7 @@ class ToolHandler extends BaseHandler
      */
     protected function handleToolsList(array $params, array $context = []): array
     {
+        error_log('=== CRITICAL: handleToolsList ENTRY - checking if this runs ===');
         error_log('handleToolsList: ENTRY POINT');
         $this->logInfo('=== ToolHandler::handleToolsList STARTING ===');
         error_log('handleToolsList: After first log');
