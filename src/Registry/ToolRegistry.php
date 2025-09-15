@@ -181,7 +181,8 @@ class ToolRegistry implements RegistryInterface
      */
     public function filter(array $criteria): array
     {
-        return array_filter($this->tools, function ($tool, $name) use ($criteria) {
+        $tools = $this->factory->getAllOfType('tool');
+        return array_filter($tools, function ($tool, $name) use ($criteria) {
             $metadata = $this->metadata[$name];
 
             foreach ($criteria as $key => $value) {
@@ -199,7 +200,8 @@ class ToolRegistry implements RegistryInterface
      */
     public function search(string $pattern): array
     {
-        return array_filter($this->tools, function ($tool, $name) use ($pattern) {
+        $tools = $this->factory->getAllOfType('tool');
+        return array_filter($tools, function ($tool, $name) use ($pattern) {
             return fnmatch($pattern, $name);
         }, ARRAY_FILTER_USE_BOTH);
     }
@@ -218,8 +220,9 @@ class ToolRegistry implements RegistryInterface
     public function getToolDefinitions(): array
     {
         $definitions = [];
+        $tools = $this->factory->getAllOfType('tool');
 
-        foreach ($this->tools as $name => $tool) {
+        foreach ($tools as $name => $tool) {
             $metadata = $this->metadata[$name];
 
             $definitions[] = [
@@ -297,7 +300,8 @@ class ToolRegistry implements RegistryInterface
      */
     public function getToolsByCapability(array $capabilities): array
     {
-        return array_filter($this->tools, function ($tool, $name) use ($capabilities) {
+        $tools = $this->factory->getAllOfType('tool');
+        return array_filter($tools, function ($tool, $name) use ($capabilities) {
             $metadata = $this->metadata[$name];
             $toolCapabilities = $metadata['capabilities'] ?? [];
 

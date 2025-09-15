@@ -530,8 +530,9 @@ class MessageProcessor implements MessageHandlerInterface
     {
         if (! $this->initialized) {
             throw new ProtocolException(
-                -32002,
                 'Server not initialized',
+                -32002,
+                null,
                 null,
                 'Server must be initialized before processing requests'
             );

@@ -66,14 +66,15 @@ class ClaudeCliHealthCheckTest extends TestCase
         $this->assertEquals(0, $response['id']);
 
         // Step 3: CRITICAL TEST - Check tools capability format
+        // NOTE: Claude Code requires simple {} format, not spec-compliant {"listChanged":true}
         $toolsValue = $response['result']['capabilities']['tools'];
         $toolsJson = json_encode($toolsValue);
 
-        $this->assertEquals('{"listChanged":true}', $toolsJson,
-            'Tools capability MUST be {"listChanged":true} per MCP specification for tools support.');
+        $this->assertEquals('{}', $toolsJson,
+            'Tools capability MUST be {} for Claude Code compatibility (not spec-compliant but required).');
 
-        $this->assertIsArray($toolsValue,
-            'Tools value must be an associative array with MCP capability properties');
+        $this->assertIsObject($toolsValue,
+            'Tools value must be an empty object for Claude Code compatibility');
 
         // Step 4: Validate complete response JSON matches Playwright format
         $responseJson = json_encode($response, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
@@ -142,8 +143,8 @@ class ClaudeCliHealthCheckTest extends TestCase
     /** @test */
     public function it_matches_exact_playwright_response_byte_for_byte()
     {
-        // MCP specification compliant format (required for proper tools support)
-        $playwrightResponse = '{"result":{"protocolVersion":"2025-06-18","capabilities":{"tools":{"listChanged":true}},"serverInfo":{"name":"Playwright","version":"0.0.37"}},"jsonrpc":"2.0","id":0}';
+        // Claude Code compatible format (simple {} instead of {"listChanged":true})
+        $playwrightResponse = '{"result":{"protocolVersion":"2025-06-18","capabilities":{"tools":{}},"serverInfo":{"name":"Playwright","version":"0.0.37"}},"jsonrpc":"2.0","id":0}';
 
         // Our server's response
         $initMessage = [
@@ -224,7 +225,7 @@ class ClaudeCliHealthCheckTest extends TestCase
 
         $initResponse = $this->messageProcessor->handle($initMessage, $mockTransport);
         $this->assertNotNull($initResponse);
-        $this->assertEquals('{"listChanged":true}', json_encode($initResponse['result']['capabilities']['tools']));
+        $this->assertEquals('{}', json_encode($initResponse['result']['capabilities']['tools']));
 
         // Step 2: notifications/initialized
         $initializedMessage = [

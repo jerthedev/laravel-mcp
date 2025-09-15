@@ -97,15 +97,39 @@ class ToolHandler extends BaseHandler
         }
 
         try {
-            // Debug: Log registry state
+            // Debug: Log registry state before tool discovery
             $allTools = $this->toolRegistry->all();
-            $this->logInfo('Tools registry state', [
+            $this->logInfo('Tools registry state (before discovery check)', [
                 'tool_count' => count($allTools),
                 'tool_names' => array_keys($allTools),
                 'registry_class' => get_class($this->toolRegistry),
             ]);
 
-            $tools = $this->getToolDefinitions($params['cursor'] ?? null);
+            // Failsafe: If registry is empty, try to trigger discovery
+            if (empty($allTools)) {
+                $this->logWarning('Tool registry is empty, attempting to trigger discovery');
+                $this->ensureToolsDiscovered();
+
+                // Re-check after discovery attempt
+                $allTools = $this->toolRegistry->all();
+                $this->logInfo('Tools registry state (after discovery attempt)', [
+                    'tool_count' => count($allTools),
+                    'tool_names' => array_keys($allTools),
+                ]);
+            }
+
+            try {
+                $tools = $this->getToolDefinitions($params['cursor'] ?? null);
+                $this->logInfo('Tool definitions retrieved', [
+                    'tool_count' => count($tools),
+                ]);
+            } catch (\Throwable $e) {
+                $this->logError('Error in getToolDefinitions', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                throw $e;
+            }
 
             $response = [
                 'tools' => $tools,
@@ -129,8 +153,14 @@ class ToolHandler extends BaseHandler
                 'trace' => $e->getTraceAsString(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
+                'error_class' => get_class($e),
             ]);
-            throw new ProtocolException('Failed to retrieve tools list: '.$e->getMessage(), -32603);
+            // Include more detailed error in development/testing environments
+            $errorMessage = 'Failed to retrieve tools list';
+            if (config('app.debug', false)) {
+                $errorMessage .= ': ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine();
+            }
+            throw new ProtocolException($errorMessage, -32603);
         }
     }
 
@@ -265,7 +295,12 @@ class ToolHandler extends BaseHandler
      */
     protected function getToolDefinitions(?string $cursor = null): array
     {
+        $this->logDebug('Getting tool definitions');
         $tools = $this->toolRegistry->all();
+        $this->logDebug('Retrieved tools from registry', [
+            'tool_count' => count($tools),
+            'tool_names' => array_keys($tools),
+        ]);
         $definitions = [];
 
         foreach ($tools as $name => $toolData) {
@@ -578,5 +613,61 @@ class ToolHandler extends BaseHandler
         $cursorData['offset'] = ($cursorData['offset'] ?? 0) + ($cursorData['limit'] ?? 50);
 
         return base64_encode(json_encode($cursorData));
+    }
+
+    /**
+     * Ensure tools are discovered and registered.
+     *
+     * This method triggers component discovery if the tool registry is empty,
+     * which can happen in JSON-RPC context where the service provider boot
+     * process may not have run.
+     */
+    protected function ensureToolsDiscovered(): void
+    {
+        try {
+            // Get the Laravel container to access discovery service
+            $container = app();
+
+            // Check if ComponentDiscovery is available
+            if ($container->bound(\JTD\LaravelMCP\Registry\ComponentDiscovery::class)) {
+                $discovery = $container->make(\JTD\LaravelMCP\Registry\ComponentDiscovery::class);
+
+                // Get discovery paths from config
+                $paths = config('laravel-mcp.discovery.paths', [
+                    app_path('Mcp/Tools'),
+                    app_path('Mcp/Resources'),
+                    app_path('Mcp/Prompts'),
+                ]);
+
+                // Ensure paths is an array
+                if (! is_array($paths)) {
+                    $paths = [$paths];
+                }
+
+                $this->logInfo('Triggering component discovery', [
+                    'paths' => $paths,
+                    'discovery_class' => get_class($discovery),
+                ]);
+
+                // Discover and register components
+                $discovered = $discovery->discoverComponents($paths);
+                $this->logInfo('Discovery found components', [
+                    'component_count' => count($discovered),
+                    'components' => array_keys($discovered),
+                ]);
+
+                $discovery->registerDiscoveredComponents();
+
+                $this->logInfo('Component discovery completed');
+            } else {
+                $this->logWarning('ComponentDiscovery service not available in container');
+            }
+        } catch (\Throwable $e) {
+            $this->logError('Failed to trigger tool discovery', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            // Don't throw - this is a failsafe mechanism
+        }
     }
 }
