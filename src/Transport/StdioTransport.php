@@ -394,7 +394,7 @@ class StdioTransport extends BaseTransport
         $lastKeepalive = time();
 
         try {
-            while ($this->isConnected() && $this->inputHandler && ! $this->inputHandler->isEof()) {
+            while ($this->isConnected() && $this->inputHandler) {
                 // Check for incoming messages
                 $message = $this->receive();
 
