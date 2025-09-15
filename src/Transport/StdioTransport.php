@@ -448,8 +448,8 @@ class StdioTransport extends BaseTransport
                                 throw new TransportException('Failed to encode response: '.json_last_error_msg());
                             }
 
-                            // Fix empty object markers for Claude CLI compatibility
-                            $responseJson = str_replace('"__EMPTY_OBJECT__"', '{}', $responseJson);
+                            // CRITICAL FIX: Force tools to be {} not [] for Claude CLI compatibility
+                            $responseJson = str_replace('"tools":[]', '"tools":{}', $responseJson);
 
                             $this->send($responseJson);
                         }

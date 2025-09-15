@@ -183,13 +183,16 @@ class ClaudeCliHealthCheckTest extends TestCase
             'Capabilities structure must match Playwright exactly'
         );
 
-        // Most critical: tools format
+        // Most critical: tools format - check raw JSON, not decoded arrays
+        // (json_decode with true converts {} to [], but we need to verify the actual JSON)
+        $this->assertStringContainsString('"tools":{}', $playwrightResponse, 'Playwright should have tools: {} in raw JSON');
+        $this->assertStringContainsString('"tools":{}', $ourJson, 'Our server must have tools: {} in raw JSON');
+        $this->assertStringNotContainsString('"tools":[]', $ourJson, 'Our server must NOT have tools: [] in raw JSON');
+
+        // Legacy assertion for debugging (will fail due to json_decode behavior)
         $playwrightTools = json_encode($playwrightParsed['result']['capabilities']['tools']);
         $ourTools = json_encode($ourParsed['result']['capabilities']['tools']);
-
-        $this->assertEquals('{}', $playwrightTools, 'Playwright should have tools: {}');
-        $this->assertEquals('{}', $ourTools, 'Our server must have tools: {} to match Playwright');
-        $this->assertEquals($playwrightTools, $ourTools, 'Tools format must match Playwright exactly');
+        // Note: Both will be "[]" due to json_decode('{}', true) -> array() -> json_encode() -> "[]"
     }
 
     /** @test */

@@ -301,6 +301,7 @@ class MessageProcessor implements MessageHandlerInterface
             'serverInfo' => $this->serverInfo,
         ];
 
+
         return $response;
     }
 

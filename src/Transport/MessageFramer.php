@@ -91,6 +91,9 @@ class MessageFramer
             throw new TransportException('Failed to encode message: '.json_last_error_msg());
         }
 
+        // CRITICAL FIX: Force tools to be {} not [] for Claude CLI compatibility
+        $json = str_replace('"tools":[]', '"tools":{}', $json);
+
         // Check message size
         if (strlen($json) > $this->maxMessageSize) {
             $this->stats['buffer_overflows']++;
