@@ -77,6 +77,8 @@ class StdioTransport extends BaseTransport
      */
     protected function doStart(): void
     {
+        error_log('StdioTransport: doStart() called');
+
         $this->initializeHandlers();
         $this->openStreams();
         $this->registerSignalHandlers();
@@ -84,6 +86,7 @@ class StdioTransport extends BaseTransport
         // Register shutdown handler
         register_shutdown_function([$this, 'handleShutdown']);
 
+        error_log('StdioTransport: doStart() completed successfully');
         Log::info('Stdio transport started', [
             'config' => $this->getSafeConfigForLogging(),
         ]);
@@ -108,22 +111,14 @@ class StdioTransport extends BaseTransport
     }
 
     /**
-     * Perform transport-specific send operations.
-     *
-     * FIXED: Use simple fwrite() + fflush() instead of complex OutputHandler
-     * This matches our working minimal server approach.
-     *
-     * @param  string  $message  The message to send
-     *
-     * @throws \Throwable If send fails
+     * COMPLETE OVERRIDE: Bypass all Laravel send complexity
      */
-    protected function doSend(string $message): void
+    public function send(string $message): void
     {
-        error_log('StdioTransport: doSend() called with message: ' . $message);
+        error_log('StdioTransport: OVERRIDDEN send() called with message: ' . $message);
 
         try {
-            // SIMPLE APPROACH: Direct fwrite() + fflush() like our working minimal server
-            // Add newline for proper message framing
+            // DIRECT APPROACH: Simple fwrite + fflush like our working minimal server
             $messageWithNewline = $message . "\n";
 
             error_log('StdioTransport: Writing to STDOUT: ' . trim($messageWithNewline));
@@ -133,37 +128,33 @@ class StdioTransport extends BaseTransport
                 throw new TransportException('Failed to write message to stdout');
             }
 
-            // Immediately flush to prevent buffering
             fflush(STDOUT);
-
             error_log('StdioTransport: Message sent and flushed successfully');
 
         } catch (\Throwable $e) {
             error_log('StdioTransport: Send error: ' . $e->getMessage());
-            Log::error('Failed to send message via stdio', [
-                'error' => $e->getMessage(),
-            ]);
             throw $e;
         }
     }
 
     /**
-     * Perform transport-specific receive operations.
-     *
-     * FIXED: Use simple blocking fgets() instead of complex non-blocking stream_select()
-     * This matches our working minimal server approach.
-     *
-     * @return string|null The received message, or null if none available
-     *
-     * @throws \Throwable If receive fails
+     * Legacy doSend - no longer used since we override send() directly
      */
-    protected function doReceive(): ?string
+    protected function doSend(string $message): void
     {
-        error_log('StdioTransport: doReceive() called');
+        error_log('StdioTransport: doSend() called - this should not happen');
+    }
+
+    /**
+     * COMPLETE OVERRIDE: Bypass all Laravel transport complexity
+     * Use direct STDIN/STDOUT like our working minimal server
+     */
+    public function receive(): ?string
+    {
+        error_log('StdioTransport: OVERRIDDEN receive() called');
 
         try {
-            // SIMPLE APPROACH: Use blocking fgets() like our working minimal server
-            // This eliminates the complex stream_select() timeout issues
+            // DIRECT APPROACH: Completely bypass BaseTransport and handlers
             $line = fgets(STDIN);
 
             if ($line === false) {
@@ -190,11 +181,19 @@ class StdioTransport extends BaseTransport
 
             return $message;
         } catch (\Throwable $e) {
-            Log::error('Failed to receive message via stdio', [
-                'error' => $e->getMessage(),
-            ]);
-            throw $e;
+            error_log('StdioTransport: Exception in receive(): ' . $e->getMessage());
+            return null;
         }
+    }
+
+    /**
+     * Legacy doReceive - no longer used since we override receive() directly
+     */
+    protected function doReceive(): ?string
+    {
+        // This method is no longer called since we override receive() completely
+        error_log('StdioTransport: doReceive() called - this should not happen');
+        return null;
     }
 
     /**
@@ -374,22 +373,32 @@ class StdioTransport extends BaseTransport
      */
     public function listen(): void
     {
+        error_log('StdioTransport: listen() method called');
+
         if (! $this->isConnected()) {
+            error_log('StdioTransport: Not connected, calling start()');
             $this->start();
         }
 
         $lastKeepalive = time();
 
         try {
+            error_log('StdioTransport: Starting listen loop');
             Log::info('StdioTransport: Starting listen loop', [
                 'connected' => $this->isConnected(),
                 'has_input_handler' => !!$this->inputHandler,
                 'running' => $this->running ?? 'unknown',
             ]);
 
+            $iteration = 0;
             while ($this->isConnected() && $this->inputHandler) {
+                $iteration++;
+                error_log("StdioTransport: Loop iteration #$iteration");
+
                 // Check for incoming messages
+                error_log('StdioTransport: About to call receive()');
                 $message = $this->receive();
+                error_log('StdioTransport: receive() returned: ' . ($message ? 'MESSAGE' : 'NULL'));
 
                 // Debug: Log loop iteration
                 if ($this->config['debug'] ?? false) {
