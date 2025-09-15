@@ -400,28 +400,42 @@ class MessageProcessor implements MessageHandlerInterface
      */
     protected function handleToolsList(array $params, array $request = []): array
     {
-        $this->checkInitialized();
+        try {
+            Log::info('MessageProcessor: handleToolsList starting', [
+                'params' => $params,
+                'request_id' => $request['id'] ?? null,
+                'initialized' => $this->initialized,
+                'tool_handler_exists' => isset($this->toolHandler),
+            ]);
 
-        // Debug logging to trace the issue
-        Log::info('MessageProcessor: handleToolsList called', [
-            'params' => $params,
-            'request_id' => $request['id'] ?? null,
-            'initialized' => $this->initialized,
-            'tool_handler_exists' => isset($this->toolHandler),
-        ]);
+            $this->checkInitialized();
 
-        $context = [
-            'request_id' => $request['id'] ?? null,
-        ];
+            Log::info('MessageProcessor: checkInitialized passed');
 
-        $result = $this->toolHandler->handle('tools/list', $params, $context);
+            $context = [
+                'request_id' => $request['id'] ?? null,
+            ];
 
-        Log::info('MessageProcessor: tools/list result', [
-            'result_keys' => array_keys($result),
-            'tool_count' => isset($result['tools']) ? count($result['tools']) : 'no tools key',
-        ]);
+            Log::info('MessageProcessor: calling toolHandler->handle');
 
-        return $result;
+            $result = $this->toolHandler->handle('tools/list', $params, $context);
+
+            Log::info('MessageProcessor: tools/list result', [
+                'result_keys' => array_keys($result),
+                'tool_count' => isset($result['tools']) ? count($result['tools']) : 'no tools key',
+            ]);
+
+            return $result;
+
+        } catch (\Throwable $e) {
+            Log::error('MessageProcessor: handleToolsList failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            throw $e;
+        }
     }
 
     /**

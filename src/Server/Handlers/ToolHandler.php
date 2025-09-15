@@ -97,6 +97,14 @@ class ToolHandler extends BaseHandler
         }
 
         try {
+            // Debug: Log registry state
+            $allTools = $this->toolRegistry->all();
+            $this->logInfo('Tools registry state', [
+                'tool_count' => count($allTools),
+                'tool_names' => array_keys($allTools),
+                'registry_class' => get_class($this->toolRegistry),
+            ]);
+
             $tools = $this->getToolDefinitions($params['cursor'] ?? null);
 
             $response = [
@@ -118,6 +126,9 @@ class ToolHandler extends BaseHandler
         } catch (\Throwable $e) {
             $this->logError('Failed to list tools', [
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
             ]);
             throw new ProtocolException('Failed to retrieve tools list: '.$e->getMessage(), -32603);
         }
