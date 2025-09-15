@@ -749,9 +749,18 @@ class LaravelMcpServiceProvider extends ServiceProvider
 
     private function bootDiscovery(): void
     {
+        // EMERGENCY FIX: Prevent multiple discovery calls that cause hanging
+        static $discoveryCompleted = false;
+        if ($discoveryCompleted) {
+            \Illuminate\Support\Facades\Log::info('bootDiscovery: Skipping - already completed');
+            return;
+        }
+
         if (! config('laravel-mcp.discovery.enabled', true)) {
             return;
         }
+
+        \Illuminate\Support\Facades\Log::info('bootDiscovery: Starting discovery process');
 
         try {
             $discovery = $this->app->make(ComponentDiscovery::class);
@@ -772,6 +781,9 @@ class LaravelMcpServiceProvider extends ServiceProvider
 
             // Register discovered components
             $discovery->registerDiscoveredComponents();
+
+            $discoveryCompleted = true;
+            \Illuminate\Support\Facades\Log::info('bootDiscovery: Discovery completed successfully');
         } catch (\Throwable $e) {
             // Log discovery errors but don't fail the boot process
             if ($this->app->bound('log')) {

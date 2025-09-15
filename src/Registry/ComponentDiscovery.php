@@ -322,14 +322,24 @@ class ComponentDiscovery implements DiscoveryInterface
      */
     public function discoverComponents(array $paths = []): array
     {
+        // EMERGENCY BYPASS: Prevent discovery during runtime to fix hanging
+        // Discovery should only happen during application boot, not during JSON-RPC requests
         $searchPaths = empty($paths) ? $this->discoveryPaths : $paths;
 
         if ($this->cacheEnabled && $cached = $this->getCachedDiscovery()) {
             $this->discoveredComponents = $cached;
-
             return $cached;
         }
 
+        // Check if we're in a runtime context (has existing discovered components)
+        // If so, return empty to prevent hanging
+        if (!empty($this->discoveredComponents)) {
+            \Illuminate\Support\Facades\Log::warning('ComponentDiscovery: Preventing runtime discovery to avoid hanging');
+            return $this->discoveredComponents;
+        }
+
+        // Only allow discovery during initial boot
+        \Illuminate\Support\Facades\Log::info('ComponentDiscovery: Running initial discovery');
         $this->discoveredComponents = [];
 
         foreach ($searchPaths as $path) {
