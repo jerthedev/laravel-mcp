@@ -655,12 +655,18 @@ class RegisterCommand extends BaseCommand
         $command[] = '--scope';
         $command[] = 'user';
 
-        // Add environment variables if provided
-        if (!empty($options['env'])) {
-            foreach ($options['env'] as $key => $value) {
-                $command[] = '--env';
-                $command[] = "$key=$value";
-            }
+        // Add working directory for Laravel to find .env file
+        $cwd = $options['cwd'] ?: getcwd() ?: base_path();
+        if ($cwd) {
+            $command[] = '--cwd';
+            $command[] = $cwd;
+        }
+
+        // Add essential Laravel environment variables for Claude Code compatibility
+        $essentialEnvVars = $this->getEssentialEnvVars($options['env'] ?? []);
+        foreach ($essentialEnvVars as $key => $value) {
+            $command[] = '--env';
+            $command[] = "$key=$value";
         }
 
         // Add server name
@@ -763,5 +769,35 @@ class RegisterCommand extends BaseCommand
     {
         $cwd = $this->option('cwd') ?: getcwd() ?: base_path();
         return $cwd . '/artisan';
+    }
+
+    /**
+     * Get essential environment variables for Laravel MCP server.
+     */
+    protected function getEssentialEnvVars(array $userEnvVars = []): array
+    {
+        // Start with user-provided env vars
+        $envVars = $userEnvVars;
+
+        // Add essential Laravel environment variables if not already set
+        $essentialVars = [
+            'APP_ENV' => config('app.env', 'local'),
+            'APP_DEBUG' => config('app.debug', false) ? 'true' : 'false',
+            'LOG_CHANNEL' => config('logging.default', 'stack'),
+        ];
+
+        // Only add if not already specified by user
+        foreach ($essentialVars as $key => $value) {
+            if (!isset($envVars[$key])) {
+                $envVars[$key] = $value;
+            }
+        }
+
+        // Add database connection if available (for DB tools)
+        if (!isset($envVars['DB_CONNECTION']) && config('database.default')) {
+            $envVars['DB_CONNECTION'] = config('database.default');
+        }
+
+        return $envVars;
     }
 }
