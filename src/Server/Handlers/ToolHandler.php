@@ -591,6 +591,10 @@ class ToolHandler extends BaseHandler
      */
     protected function ensureToolsDiscovered(): void
     {
+        // EMERGENCY DISABLE: This method was causing 60s hangs during JSON-RPC requests
+        $this->logInfo('ensureToolsDiscovered: DISABLED to prevent hanging');
+        return;
+
         try {
             $this->logInfo('ensureToolsDiscovered: Starting failsafe discovery');
 
