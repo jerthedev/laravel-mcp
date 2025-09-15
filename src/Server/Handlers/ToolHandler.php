@@ -309,47 +309,41 @@ class ToolHandler extends BaseHandler
     {
         $this->logInfo('getToolDefinitions: Starting');
 
-        // TEMPORARY FIX: Return empty list to debug hanging issue
-        // The hanging might be in tool instantiation during toolRegistry->all()
-        $this->logWarning('getToolDefinitions: Returning empty list temporarily to debug hanging');
+        $this->logInfo('getToolDefinitions: About to call toolRegistry->names() for lightweight approach');
 
-        return [];
+        // Use a more efficient approach - get tool names without instantiating all tools
+        $toolNames = $this->toolRegistry->names();
 
-        // Original code (temporarily disabled):
-        /*
-        $this->logInfo('getToolDefinitions: About to call toolRegistry->all()');
-
-        $tools = $this->toolRegistry->all();
-
-        $this->logInfo('getToolDefinitions: Retrieved tools from registry', [
-            'tool_count' => count($tools),
-            'tool_names' => array_keys($tools),
+        $this->logInfo('getToolDefinitions: Retrieved tool names', [
+            'tool_count' => count($toolNames),
+            'tool_names' => $toolNames,
         ]);
 
         $definitions = [];
-        $this->logInfo('getToolDefinitions: Starting foreach loop');
-        */
+        $this->logInfo('getToolDefinitions: Building definitions from metadata only');
 
-        foreach ($tools as $name => $toolData) {
+        foreach ($toolNames as $name) {
             try {
-                // Extract the tool handler from the data array or use directly
-                $tool = is_array($toolData) ? ($toolData['handler'] ?? $toolData) : $toolData;
+                // Get metadata without instantiating the tool
+                $metadata = $this->toolRegistry->getMetadata($name);
 
                 $definition = [
                     'name' => $name,
-                    'description' => $this->getToolDescription($tool),
-                    'inputSchema' => $this->getToolInputSchema($tool),
+                    'description' => $metadata['description'] ?? "Tool: {$name}",
+                    'inputSchema' => $metadata['input_schema'] ?? [
+                        'type' => 'object',
+                        'properties' => [],
+                        'additionalProperties' => true,
+                    ],
                 ];
 
-                // Add optional fields if available
-                $title = $this->getToolTitle($tool);
-                if ($title !== null) {
-                    $definition['title'] = $title;
+                // Add optional fields if available in metadata
+                if (!empty($metadata['title'])) {
+                    $definition['title'] = $metadata['title'];
                 }
 
-                $outputSchema = $this->getToolOutputSchema($tool);
-                if ($outputSchema !== null) {
-                    $definition['outputSchema'] = $outputSchema;
+                if (!empty($metadata['output_schema'])) {
+                    $definition['outputSchema'] = $metadata['output_schema'];
                 }
 
                 $definitions[] = $definition;
