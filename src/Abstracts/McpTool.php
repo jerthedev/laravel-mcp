@@ -100,6 +100,8 @@ abstract class McpTool
             'type' => 'object',
             'properties' => $this->getParameterSchema(),
             'required' => $this->getRequiredParameters(),
+            'additionalProperties' => false,
+            '$schema' => 'http://json-schema.org/draft-07/schema#',
         ];
     }
 
@@ -199,6 +201,36 @@ abstract class McpTool
             'name' => $this->getName(),
             'description' => $this->getDescription(),
             'inputSchema' => $this->getInputSchema(),
+            'annotations' => $this->getAnnotations(),
         ];
+    }
+
+    /**
+     * Get tool annotations (required by Claude Code).
+     */
+    protected function getAnnotations(): array
+    {
+        return [
+            'title' => $this->getDescription(),
+            'readOnlyHint' => $this->isReadOnly(),
+            'destructiveHint' => $this->isDestructive(),
+            'openWorldHint' => true,
+        ];
+    }
+
+    /**
+     * Whether this tool is read-only (doesn't modify data).
+     */
+    protected function isReadOnly(): bool
+    {
+        return false; // Override in individual tools as needed
+    }
+
+    /**
+     * Whether this tool is destructive (makes significant changes).
+     */
+    protected function isDestructive(): bool
+    {
+        return false; // Override in individual tools as needed
     }
 }
