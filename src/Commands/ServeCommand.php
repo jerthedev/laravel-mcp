@@ -256,10 +256,13 @@ class ServeCommand extends BaseCommand
             return self::EXIT_ERROR;
         }
 
-        $this->success('MCP server started (stdio transport)');
-        $this->info('Listening on standard input/output...');
-        $this->comment('Press Ctrl+C to stop the server');
-        $this->newLine();
+        // Only show startup messages in debug mode
+        if ($this->option('debug')) {
+            $this->success('MCP server started (stdio transport)');
+            $this->info('Listening on standard input/output...');
+            $this->comment('Press Ctrl+C to stop the server');
+            $this->newLine();
+        }
 
         // Enable debug logging if requested
         if ($this->option('debug')) {
@@ -299,20 +302,23 @@ class ServeCommand extends BaseCommand
 
         $url = $this->transport->getBaseUrl();
 
-        $this->success('MCP server started (HTTP transport)');
-        $this->info("Server listening at: $url");
-        $this->comment('Press Ctrl+C to stop the server');
-        $this->newLine();
+        // Only show startup messages in debug mode
+        if ($this->option('debug')) {
+            $this->success('MCP server started (HTTP transport)');
+            $this->info("Server listening at: $url");
+            $this->comment('Press Ctrl+C to stop the server');
+            $this->newLine();
 
-        // Note: For HTTP transport, the actual serving is handled by Laravel's web server
-        // This command would typically be used with `php artisan serve` or a proper web server
+            // Note: For HTTP transport, the actual serving is handled by Laravel's web server
+            // This command would typically be used with `php artisan serve` or a proper web server
 
-        $this->warning('Note: HTTP transport requires a web server to handle requests.');
-        $this->line('You can use one of the following:');
-        $this->line('  - php artisan serve (for development)');
-        $this->line('  - nginx/apache (for production)');
-        $this->line('  - Laravel Octane (for high performance)');
-        $this->newLine();
+            $this->warning('Note: HTTP transport requires a web server to handle requests.');
+            $this->line('You can use one of the following:');
+            $this->line('  - php artisan serve (for development)');
+            $this->line('  - nginx/apache (for production)');
+            $this->line('  - Laravel Octane (for high performance)');
+            $this->newLine();
+        }
 
         // Start the transport (registers routes and middleware)
         $this->transport->start();
