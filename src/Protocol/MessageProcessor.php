@@ -178,6 +178,7 @@ class MessageProcessor implements MessageHandlerInterface
             'resources/list',
             'resources/read',
             'resources/templates/list',
+            'roots/list',
             'prompts/list',
             'prompts/get',
         ];
@@ -225,6 +226,11 @@ class MessageProcessor implements MessageHandlerInterface
             return $this->handleResourceTemplatesList($params);
         });
 
+        // Roots methods
+        $this->jsonRpcHandler->onRequest('roots/list', function (array $params, array $request = []) {
+            return $this->handleRootsList($params, $request);
+        });
+
         // Prompt methods
         $this->jsonRpcHandler->onRequest('prompts/list', function (array $params, array $request = []) {
             return $this->handlePromptsList($params, $request);
@@ -246,6 +252,9 @@ class MessageProcessor implements MessageHandlerInterface
             ],
             'resources' => [
                 'subscribe' => false,
+                'listChanged' => false,
+            ],
+            'roots' => [
                 'listChanged' => false,
             ],
             'prompts' => [
@@ -407,6 +416,19 @@ class MessageProcessor implements MessageHandlerInterface
     }
 
     /**
+     * Handle roots/list request.
+     */
+    protected function handleRootsList(array $params, array $request = []): array
+    {
+        $this->checkInitialized();
+
+        // Return empty roots list - can be extended later for filesystem roots
+        return [
+            'roots' => [],
+        ];
+    }
+
+    /**
      * Handle prompts/list request.
      */
     protected function handlePromptsList(array $params, array $request = []): array
@@ -440,35 +462,15 @@ class MessageProcessor implements MessageHandlerInterface
     protected function checkInitialized(): void
     {
         if (! $this->initialized) {
-            // Auto-initialize for HTTP context with default capabilities
-            $this->autoInitializeForHttp();
+            throw new ProtocolException(
+                -32002,
+                'Server not initialized',
+                null,
+                'Server must be initialized before processing requests'
+            );
         }
     }
 
-    /**
-     * Auto-initialize server for HTTP context when not explicitly initialized.
-     */
-    protected function autoInitializeForHttp(): void
-    {
-        // Simulate an initialize request with basic capabilities
-        $this->handleInitialize([
-            'protocolVersion' => '2024-11-05',
-            'capabilities' => [
-                'tools' => [],
-                'resources' => [],
-                'prompts' => [],
-            ],
-            'clientInfo' => [
-                'name' => 'HTTP Client',
-                'version' => '1.0.0',
-            ],
-        ]);
-
-        // Mark as initialized
-        $this->handleInitialized([]);
-
-        Log::info('MCP server auto-initialized for HTTP request');
-    }
 
     /**
      * Get initialization status.

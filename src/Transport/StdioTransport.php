@@ -141,6 +141,9 @@ class StdioTransport extends BaseTransport
                 throw new TransportException('Incomplete message write to stdout');
             }
 
+            // Flush output immediately to prevent buffering delays
+            fflush(STDOUT);
+
             Log::debug('Message sent via stdio', [
                 'message_length' => strlen($framedMessage),
                 'method' => $messageData['method'] ?? null,
@@ -409,6 +412,8 @@ class StdioTransport extends BaseTransport
                 if ($this->config['debug'] ?? false) {
                     Log::debug('StdioTransport: Loop iteration', [
                         'connected' => $this->isConnected(),
+                        'running' => $this->running,
+                        'connected_property' => $this->connected,
                         'has_input_handler' => !!$this->inputHandler,
                         'message_received' => !!$message,
                     ]);
@@ -470,13 +475,15 @@ class StdioTransport extends BaseTransport
                     pcntl_signal_dispatch();
                 }
 
-                // Prevent busy waiting
-                usleep(10000); // 10ms
+                // Prevent busy waiting - reduced delay for faster response
+                usleep(1000); // 1ms
             }
 
             Log::info('StdioTransport: Listen loop ended', [
                 'connected' => $this->isConnected(),
                 'has_input_handler' => !!$this->inputHandler,
+                'running' => $this->running,
+                'connected_property' => $this->connected,
                 'final_state' => 'loop_exit',
             ]);
 
