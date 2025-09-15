@@ -76,6 +76,25 @@ class ServeCommand extends BaseCommand
     protected function executeCommand(): int
     {
         error_log('=== ServeCommand: executeCommand() STARTED ===');
+
+        // Ensure we're in the correct project directory
+        $currentDir = getcwd();
+        $projectRoot = base_path();
+        error_log('ServeCommand: Current working directory: ' . $currentDir);
+        error_log('ServeCommand: Laravel project root: ' . $projectRoot);
+
+        if ($currentDir !== $projectRoot) {
+            error_log('ServeCommand: Changing working directory to project root');
+            if (!chdir($projectRoot)) {
+                error_log('ServeCommand: FAILED to change to project directory');
+                $this->displayError('Failed to change to project directory: ' . $projectRoot);
+                return self::EXIT_ERROR;
+            }
+            error_log('ServeCommand: Successfully changed to project directory');
+        } else {
+            error_log('ServeCommand: Already in correct project directory');
+        }
+
         try {
             // Suppress all logging unless debug mode is enabled (for clean JSON-RPC)
             if (!$this->option('debug')) {
