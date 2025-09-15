@@ -421,7 +421,9 @@ class StdioTransport extends BaseTransport
                             $response = $this->messageHandler->handle($messageData, $this);
 
                             if ($response) {
-                                $responseJson = json_encode($response);
+                                $responseJson = json_encode($response, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                                error_log('StdioTransport: CRITICAL - Final response structure: ' . json_encode(array_keys($response)));
+                                error_log('StdioTransport: CRITICAL - Response has ID: ' . (isset($response['id']) ? $response['id'] : 'NO ID'));
                                 error_log('StdioTransport: Sending response: ' . $responseJson);
 
                                 fwrite(STDOUT, $responseJson . "\n");
@@ -588,7 +590,7 @@ class StdioTransport extends BaseTransport
         ];
 
         try {
-            $responseJson = json_encode($errorResponse);
+            $responseJson = json_encode($errorResponse, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
             $this->send($responseJson);
         } catch (\Throwable $e) {
             Log::error('Failed to send error response', [

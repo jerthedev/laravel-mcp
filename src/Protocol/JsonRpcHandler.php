@@ -125,7 +125,12 @@ class JsonRpcHandler implements JsonRpcHandlerInterface
             try {
                 $result = $handler($params, $request);
 
-                return $this->createSuccessResponse($result, $id);
+                error_log('JsonRpcHandler: Handler returned result, creating success response with ID: ' . $id);
+                $successResponse = $this->createSuccessResponse($result, $id);
+                error_log('JsonRpcHandler: Success response created: ' . json_encode(array_keys($successResponse)));
+                error_log('JsonRpcHandler: Success response ID: ' . ($successResponse['id'] ?? 'NO ID'));
+
+                return $successResponse;
             } catch (\InvalidArgumentException $e) {
                 return $this->createErrorResponse(
                     self::ERROR_INVALID_PARAMS,
