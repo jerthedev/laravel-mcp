@@ -91,28 +91,40 @@ class ToolHandler extends BaseHandler
      */
     protected function handleToolsList(array $params, array $context = []): array
     {
+        error_log('handleToolsList: ENTRY POINT');
         $this->logInfo('=== ToolHandler::handleToolsList STARTING ===');
+        error_log('handleToolsList: After first log');
         $this->logDebug('Processing tools/list request');
+        error_log('handleToolsList: After debug log');
 
         // Validate cursor parameter if provided
         if (isset($params['cursor'])) {
+            error_log('handleToolsList: Validating cursor');
             $this->logInfo('Validating cursor parameter');
             $this->validateRequest($params, [
                 'cursor' => 'string',
             ]);
+            error_log('handleToolsList: Cursor validated');
         }
 
+        error_log('handleToolsList: About to enter try block');
         $this->logInfo('About to enter try block');
         try {
+            error_log('handleToolsList: Inside try block');
             $this->logInfo('=== SKIPPING REGISTRY ACCESS IN FAST BYPASS MODE ===');
+            error_log('handleToolsList: After bypass log');
 
             $this->logInfo('About to call getToolDefinitions');
+            error_log('handleToolsList: About to call getToolDefinitions');
             try {
                 $tools = $this->getToolDefinitions($params['cursor'] ?? null);
+                error_log('handleToolsList: getToolDefinitions returned');
                 $this->logInfo('Tool definitions retrieved successfully', [
                     'tool_count' => count($tools),
                 ]);
+                error_log('handleToolsList: After success log');
             } catch (\Throwable $e) {
+                error_log('handleToolsList: Exception in getToolDefinitions: ' . $e->getMessage());
                 $this->logError('Error in getToolDefinitions', [
                     'error' => $e->getMessage(),
                     'trace' => $e->getTraceAsString(),
@@ -284,10 +296,13 @@ class ToolHandler extends BaseHandler
      */
     protected function getToolDefinitions(?string $cursor = null): array
     {
+        error_log('getToolDefinitions: ENTRY POINT');
         $this->logInfo('getToolDefinitions: Starting FAST BYPASS MODE');
+        error_log('getToolDefinitions: After first log');
 
         // FAST BYPASS: Return a hardcoded successful response for now
         // This will prove the hanging is in the registry access, not elsewhere
+        error_log('getToolDefinitions: About to create definitions array');
         $definitions = [
             [
                 'name' => 'test_tool',
@@ -304,8 +319,10 @@ class ToolHandler extends BaseHandler
                 ]
             ]
         ];
+        error_log('getToolDefinitions: Definitions array created');
 
         $this->logInfo('getToolDefinitions: Returning hardcoded test tool');
+        error_log('getToolDefinitions: About to return');
         return $definitions;
     }
 
