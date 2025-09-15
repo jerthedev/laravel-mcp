@@ -664,9 +664,6 @@ class RegisterCommand extends BaseCommand
             $command[] = "$key=$value";
         }
 
-        // Add server name
-        $command[] = $serverName;
-
         if ($transport === 'stdio') {
             // For stdio transport, add command and args with absolute paths
             $baseCommand = $options['command'][0] ?? 'php';
@@ -687,16 +684,19 @@ class RegisterCommand extends BaseCommand
 
             // Note: --transport=stdio is the default, so we don't need to specify it
 
+            // Add server name first, then command and args
+            $command[] = $serverName;
             $command[] = $baseCommand;
             $command = array_merge($command, $args);
         } else {
-            // For HTTP/SSE transport, add URL
+            // For HTTP/SSE transport, add server name then URL
             $host = $options['host'] ?? '127.0.0.1';
             $port = $options['port'] ?? 8000;
             $path = $transport === 'http' ? '/mcp' : '';
             $protocol = $transport === 'sse' ? 'https' : 'http';
 
             $url = "$protocol://$host:$port$path";
+            $command[] = $serverName;
             $command[] = $url;
         }
 
