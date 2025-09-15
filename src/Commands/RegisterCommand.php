@@ -676,9 +676,9 @@ class RegisterCommand extends BaseCommand
                 $args = array_merge($args, $options['args']);
             }
 
-            // Build complete command as single string after --
-            $fullCommand = $baseCommand . ' ' . implode(' ', $args);
-            $command[] = $fullCommand;
+            // Add command parts as separate arguments after --
+            $command[] = $baseCommand;
+            $command = array_merge($command, $args);
         } else {
             // For HTTP/SSE transport, add URL after server name
             $host = $options['host'] ?? '127.0.0.1';
