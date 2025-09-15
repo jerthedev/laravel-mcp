@@ -308,11 +308,26 @@ class MessageProcessor implements MessageHandlerInterface
     {
         $this->checkInitialized();
 
+        // Debug logging to trace the issue
+        Log::info('MessageProcessor: handleToolsList called', [
+            'params' => $params,
+            'request_id' => $request['id'] ?? null,
+            'initialized' => $this->initialized,
+            'tool_handler_exists' => isset($this->toolHandler),
+        ]);
+
         $context = [
             'request_id' => $request['id'] ?? null,
         ];
 
-        return $this->toolHandler->handle('tools/list', $params, $context);
+        $result = $this->toolHandler->handle('tools/list', $params, $context);
+
+        Log::info('MessageProcessor: tools/list result', [
+            'result_keys' => array_keys($result),
+            'tool_count' => isset($result['tools']) ? count($result['tools']) : 'no tools key',
+        ]);
+
+        return $result;
     }
 
     /**

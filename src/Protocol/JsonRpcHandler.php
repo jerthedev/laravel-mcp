@@ -99,6 +99,10 @@ class JsonRpcHandler implements JsonRpcHandlerInterface
 
             // Find and execute handler
             if (! isset($this->requestHandlers[$method])) {
+                Log::warning('JsonRpcHandler: Method not found', [
+                    'method' => $method,
+                    'available_methods' => array_keys($this->requestHandlers),
+                ]);
                 return $this->createErrorResponse(
                     self::ERROR_METHOD_NOT_FOUND,
                     "Method '{$method}' not found",
