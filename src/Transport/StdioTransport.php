@@ -395,9 +395,24 @@ class StdioTransport extends BaseTransport
         $lastKeepalive = time();
 
         try {
+            Log::info('StdioTransport: Starting listen loop', [
+                'connected' => $this->isConnected(),
+                'has_input_handler' => !!$this->inputHandler,
+                'running' => $this->running ?? 'unknown',
+            ]);
+
             while ($this->isConnected() && $this->inputHandler) {
                 // Check for incoming messages
                 $message = $this->receive();
+
+                // Debug: Log loop iteration
+                if ($this->config['debug'] ?? false) {
+                    Log::debug('StdioTransport: Loop iteration', [
+                        'connected' => $this->isConnected(),
+                        'has_input_handler' => !!$this->inputHandler,
+                        'message_received' => !!$message,
+                    ]);
+                }
 
                 if ($message && $this->messageHandler) {
                     try {
@@ -411,6 +426,8 @@ class StdioTransport extends BaseTransport
                             'method' => $messageData['method'] ?? 'no method',
                             'id' => $messageData['id'] ?? 'no id',
                             'message_length' => strlen($message),
+                            'raw_message' => $message,
+                            'parsed_data' => $messageData,
                         ]);
 
                         $response = $this->messageHandler->handle($messageData, $this);
@@ -439,14 +456,14 @@ class StdioTransport extends BaseTransport
                     }
                 }
 
-                // Send keepalive if enabled
-                if ($this->config['enable_keepalive']) {
-                    $now = time();
-                    if ($now - $lastKeepalive >= $this->config['keepalive_interval']) {
-                        $this->sendKeepalive();
-                        $lastKeepalive = $now;
-                    }
-                }
+                // Keepalive disabled for stdio transport - Claude CLI doesn't expect it
+                // if ($this->config['enable_keepalive']) {
+                //     $now = time();
+                //     if ($now - $lastKeepalive >= $this->config['keepalive_interval']) {
+                //         $this->sendKeepalive();
+                //         $lastKeepalive = $now;
+                //     }
+                // }
 
                 // Handle signals if available
                 if (function_exists('pcntl_signal_dispatch')) {
@@ -456,6 +473,13 @@ class StdioTransport extends BaseTransport
                 // Prevent busy waiting
                 usleep(10000); // 10ms
             }
+
+            Log::info('StdioTransport: Listen loop ended', [
+                'connected' => $this->isConnected(),
+                'has_input_handler' => !!$this->inputHandler,
+                'final_state' => 'loop_exit',
+            ]);
+
         } catch (\Throwable $e) {
             Log::error('Stdio transport listen error', [
                 'error' => $e->getMessage(),
