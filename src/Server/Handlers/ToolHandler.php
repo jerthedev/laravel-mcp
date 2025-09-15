@@ -104,30 +104,7 @@ class ToolHandler extends BaseHandler
 
         $this->logInfo('About to enter try block');
         try {
-            $this->logInfo('=== POTENTIAL HANG POINT 1: About to call toolRegistry->all() ===');
-            // Debug: Log registry state before tool discovery
-            $allTools = $this->toolRegistry->all();
-            $this->logInfo('=== toolRegistry->all() completed successfully ===');
-
-            $this->logInfo('Tools registry state (before discovery check)', [
-                'tool_count' => count($allTools),
-                'tool_names' => array_keys($allTools),
-                'registry_class' => get_class($this->toolRegistry),
-            ]);
-
-            // Failsafe: If registry is empty, try to trigger discovery
-            if (empty($allTools)) {
-                $this->logWarning('Tool registry is empty, but skipping discovery for now to debug hanging issue');
-                // Temporarily disabled to debug hanging issue
-                // $this->ensureToolsDiscovered();
-
-                // Re-check after discovery attempt
-                $allTools = $this->toolRegistry->all();
-                $this->logInfo('Tools registry state (discovery skipped)', [
-                    'tool_count' => count($allTools),
-                    'tool_names' => array_keys($allTools),
-                ]);
-            }
+            $this->logInfo('=== SKIPPING REGISTRY ACCESS IN FAST BYPASS MODE ===');
 
             $this->logInfo('About to call getToolDefinitions');
             try {
@@ -307,65 +284,28 @@ class ToolHandler extends BaseHandler
      */
     protected function getToolDefinitions(?string $cursor = null): array
     {
-        $this->logInfo('getToolDefinitions: Starting');
+        $this->logInfo('getToolDefinitions: Starting FAST BYPASS MODE');
 
-        $this->logInfo('getToolDefinitions: About to call toolRegistry->names() for lightweight approach');
-
-        // Use a more efficient approach - get tool names without instantiating all tools
-        $toolNames = $this->toolRegistry->names();
-
-        $this->logInfo('getToolDefinitions: Retrieved tool names', [
-            'tool_count' => count($toolNames),
-            'tool_names' => $toolNames,
-        ]);
-
-        $definitions = [];
-        $this->logInfo('getToolDefinitions: Building definitions from metadata only');
-
-        foreach ($toolNames as $name) {
-            try {
-                // Get metadata without instantiating the tool
-                $metadata = $this->toolRegistry->getMetadata($name);
-
-                $definition = [
-                    'name' => $name,
-                    'description' => $metadata['description'] ?? "Tool: {$name}",
-                    'inputSchema' => $metadata['input_schema'] ?? [
-                        'type' => 'object',
-                        'properties' => [],
-                        'additionalProperties' => true,
+        // FAST BYPASS: Return a hardcoded successful response for now
+        // This will prove the hanging is in the registry access, not elsewhere
+        $definitions = [
+            [
+                'name' => 'test_tool',
+                'description' => 'A test tool to verify tools/list functionality',
+                'inputSchema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'message' => [
+                            'type' => 'string',
+                            'description' => 'Test message'
+                        ]
                     ],
-                ];
+                    'required' => ['message']
+                ]
+            ]
+        ];
 
-                // Add optional fields if available in metadata
-                if (!empty($metadata['title'])) {
-                    $definition['title'] = $metadata['title'];
-                }
-
-                if (!empty($metadata['output_schema'])) {
-                    $definition['outputSchema'] = $metadata['output_schema'];
-                }
-
-                $definitions[] = $definition;
-            } catch (\Throwable $e) {
-                $this->logWarning("Failed to get definition for tool: {$name}", [
-                    'error' => $e->getMessage(),
-                ]);
-                // Skip tools that can't be properly defined
-            }
-        }
-
-        $this->logInfo('getToolDefinitions: Finished foreach loop', [
-            'definitions_count' => count($definitions),
-        ]);
-
-        // Apply cursor-based pagination if needed
-        if ($cursor !== null) {
-            $this->logInfo('getToolDefinitions: Applying cursor pagination');
-            return $this->applyCursorPagination($definitions, $cursor);
-        }
-
-        $this->logInfo('getToolDefinitions: Returning definitions');
+        $this->logInfo('getToolDefinitions: Returning hardcoded test tool');
         return $definitions;
     }
 
