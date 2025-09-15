@@ -115,13 +115,14 @@ class StdioTransport extends BaseTransport
      */
     public function send(string $message): void
     {
-        error_log('StdioTransport: OVERRIDDEN send() called with message: ' . $message);
+        // LOG RAW OUTPUT like wrapper script
+        error_log('=== RAW OUTPUT TO CLAUDE CODE ===');
+        error_log('OUTPUT: ' . $message);
+        error_log('=== END RAW OUTPUT ===');
 
         try {
             // DIRECT APPROACH: Simple fwrite + fflush like our working minimal server
             $messageWithNewline = $message . "\n";
-
-            error_log('StdioTransport: Writing to STDOUT: ' . trim($messageWithNewline));
 
             $written = fwrite(STDOUT, $messageWithNewline);
             if ($written === false) {
@@ -405,7 +406,10 @@ class StdioTransport extends BaseTransport
                     continue;
                 }
 
-                error_log('StdioTransport: Received: ' . $message);
+                // LOG RAW INPUT like wrapper script
+                error_log('=== RAW INPUT FROM CLAUDE CODE ===');
+                error_log('INPUT: ' . $message);
+                error_log('=== END RAW INPUT ===');
 
                 // Process with Laravel's MessageProcessor
                 if ($this->messageHandler) {
