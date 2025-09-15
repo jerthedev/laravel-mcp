@@ -282,23 +282,17 @@ class MessageProcessor implements MessageHandlerInterface
         $clientProtocolVersion = $params['protocolVersion'] ?? '2024-11-05';
         $negotiatedProtocolVersion = $this->negotiateProtocolVersion($clientProtocolVersion);
 
-        // Negotiate capabilities
-        $negotiatedCapabilities = $this->capabilityNegotiator->negotiate(
-            $this->clientCapabilities,
-            $this->serverCapabilities
-        );
-
-        $this->serverCapabilities = $negotiatedCapabilities;
-
+        // Store client capabilities but don't negotiate complex capabilities for Claude CLI
+        // Claude CLI expects simple Playwright-style capabilities
         Log::info('MCP initialization', [
             'client_info' => $params['clientInfo'] ?? 'Unknown client',
             'client_protocol_version' => $clientProtocolVersion,
             'negotiated_protocol_version' => $negotiatedProtocolVersion,
             'client_capabilities' => $this->clientCapabilities,
-            'server_capabilities' => $this->serverCapabilities,
         ]);
 
         // Match Playwright's exact response format for Claude CLI compatibility
+        // Don't use complex negotiated capabilities - Claude CLI expects simple format
         $response = [
             'protocolVersion' => $negotiatedProtocolVersion,
             'capabilities' => [
