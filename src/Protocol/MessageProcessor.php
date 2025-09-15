@@ -298,9 +298,12 @@ class MessageProcessor implements MessageHandlerInterface
             'server_capabilities' => $this->serverCapabilities,
         ]);
 
+        // Match Playwright's exact response format for Claude CLI compatibility
         return [
             'protocolVersion' => $negotiatedProtocolVersion,
-            'capabilities' => $this->serverCapabilities,
+            'capabilities' => [
+                'tools' => []
+            ],
             'serverInfo' => $this->serverInfo,
         ];
     }

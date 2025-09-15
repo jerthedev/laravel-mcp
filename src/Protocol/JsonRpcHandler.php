@@ -283,9 +283,10 @@ class JsonRpcHandler implements JsonRpcHandlerInterface
      */
     public function createSuccessResponse($result, $id): array
     {
+        // Match Playwright's field order: result first, then jsonrpc, then id
         return [
-            'jsonrpc' => self::JSONRPC_VERSION,
             'result' => $result,
+            'jsonrpc' => self::JSONRPC_VERSION,
             'id' => $id,
         ];
     }
