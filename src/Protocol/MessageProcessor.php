@@ -409,9 +409,11 @@ class MessageProcessor implements MessageHandlerInterface
             ];
 
             Log::info('MessageProcessor: calling toolHandler->handle');
+            error_log('=== CRITICAL: About to call toolHandler->handle() ===');
 
             $result = $this->toolHandler->handle('tools/list', $params, $context);
 
+            error_log('=== CRITICAL: toolHandler->handle() RETURNED ===');
             Log::info('MessageProcessor: tools/list result', [
                 'result_keys' => array_keys($result),
                 'tool_count' => isset($result['tools']) ? count($result['tools']) : 'no tools key',
