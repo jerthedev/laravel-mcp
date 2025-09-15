@@ -418,7 +418,9 @@ class StdioTransport extends BaseTransport
                         if (json_last_error() === JSON_ERROR_NONE) {
                             error_log('StdioTransport: Processing with messageHandler');
 
+                            error_log('StdioTransport: About to call messageHandler->handle()');
                             $response = $this->messageHandler->handle($messageData, $this);
+                            error_log('StdioTransport: messageHandler->handle() returned: ' . (is_null($response) ? 'NULL' : 'RESPONSE'));
 
                             if ($response) {
                                 $responseJson = json_encode($response, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
