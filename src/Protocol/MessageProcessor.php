@@ -440,20 +440,33 @@ class MessageProcessor implements MessageHandlerInterface
                 'tool_count' => isset($result['tools']) ? count($result['tools']) : 'no tools key',
             ]);
 
-            // TEMPORARY FIX: Since JsonRpcHandler callback isn't being invoked,
-            // manually wrap in JSON-RPC 2.0 format here
-            $jsonRpcResponse = [
-                'result' => $result,
-                'jsonrpc' => '2.0',
-                'id' => $request['id'] ?? null,
-            ];
+            error_log('MessageProcessor: About to wrap response in JSON-RPC format');
 
-            error_log('MessageProcessor: MANUALLY WRAPPED RESPONSE: ' . json_encode(array_keys($jsonRpcResponse)));
-            error_log('MessageProcessor: Response ID: ' . $jsonRpcResponse['id']);
+            try {
+                // TEMPORARY FIX: Since JsonRpcHandler callback isn't being invoked,
+                // manually wrap in JSON-RPC 2.0 format here
+                $jsonRpcResponse = [
+                    'result' => $result,
+                    'jsonrpc' => '2.0',
+                    'id' => $request['id'] ?? null,
+                ];
 
-            return $jsonRpcResponse;
+                error_log('MessageProcessor: MANUALLY WRAPPED RESPONSE: ' . json_encode(array_keys($jsonRpcResponse)));
+                error_log('MessageProcessor: Response ID: ' . $jsonRpcResponse['id']);
+                error_log('MessageProcessor: About to return wrapped response');
+
+                return $jsonRpcResponse;
+            } catch (\Throwable $e) {
+                error_log('MessageProcessor: EXCEPTION during JSON-RPC wrapping: ' . $e->getMessage());
+                error_log('MessageProcessor: Exception trace: ' . $e->getTraceAsString());
+                throw $e;
+            }
 
         } catch (\Throwable $e) {
+            error_log('MessageProcessor: handleToolsList FAILED with exception: ' . $e->getMessage());
+            error_log('MessageProcessor: Exception file: ' . $e->getFile() . ':' . $e->getLine());
+            error_log('MessageProcessor: Full trace: ' . $e->getTraceAsString());
+
             Log::error('MessageProcessor: handleToolsList failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
