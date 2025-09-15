@@ -87,9 +87,7 @@ class StdioTransport extends BaseTransport
         register_shutdown_function([$this, 'handleShutdown']);
 
         error_log('StdioTransport: doStart() completed successfully');
-        Log::info('Stdio transport started', [
-            'config' => $this->getSafeConfigForLogging(),
-        ]);
+        error_log('Stdio transport started');
     }
 
     /**
@@ -479,20 +477,11 @@ class StdioTransport extends BaseTransport
                             throw new TransportException('Invalid JSON message: '.json_last_error_msg());
                         }
 
-                        Log::info('StdioTransport: Processing message', [
-                            'method' => $messageData['method'] ?? 'no method',
-                            'id' => $messageData['id'] ?? 'no id',
-                            'message_length' => strlen($message),
-                            'raw_message' => $message,
-                            'parsed_data' => $messageData,
-                        ]);
+                        error_log('StdioTransport: Processing message - method: ' . ($messageData['method'] ?? 'no method') . ' id: ' . ($messageData['id'] ?? 'no id'));
 
                         $response = $this->messageHandler->handle($messageData, $this);
 
-                        Log::info('StdioTransport: Handler response', [
-                            'response_type' => $response ? 'has response' : 'no response',
-                            'response_keys' => $response ? array_keys($response) : [],
-                        ]);
+                        error_log('StdioTransport: Handler response - ' . ($response ? 'has response' : 'no response'));
 
                         if ($response) {
                             $responseJson = json_encode($response, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);

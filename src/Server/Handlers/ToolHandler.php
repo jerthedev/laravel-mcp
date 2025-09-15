@@ -56,7 +56,7 @@ class ToolHandler extends BaseHandler
                 'tools/call' => $this->handleToolsCall($params, $context),
                 default => throw new ProtocolException("Unsupported method: {$method}", -32601),
             };
-            $this->logInfo("=== Match statement completed successfully for method: {$method} ===");
+            error_log("[ToolHandler] === Match statement completed successfully for method: {$method} ===");
 
             // Debug the actual response being returned
             if ($method === 'tools/list') {
