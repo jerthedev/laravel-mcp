@@ -80,6 +80,11 @@ class MessageProcessor implements MessageHandlerInterface
     protected bool $initialized = false;
 
     /**
+     * Current transport instance for sending proactive messages.
+     */
+    protected ?TransportInterface $currentTransport = null;
+
+    /**
      * Create a new message processor instance.
      */
     public function __construct(
@@ -111,6 +116,9 @@ class MessageProcessor implements MessageHandlerInterface
      */
     public function handle(array $message, TransportInterface $transport): ?array
     {
+        // Store transport reference for proactive messaging
+        $this->currentTransport = $transport;
+
         // Check if this is a batch request (array of messages)
         if ($this->isBatchRequest($message)) {
             return $this->handleBatchRequest($message, $transport);
@@ -321,7 +329,41 @@ class MessageProcessor implements MessageHandlerInterface
     {
         $this->initialized = true;
 
-        Log::info('MCP server initialized');
+        Log::info('MCP server initialized - sending proactive roots/list request like Playwright');
+
+        // Send proactive roots/list request like Playwright does
+        $this->sendProactiveRootsList();
+    }
+
+    /**
+     * Send proactive roots/list request like Playwright does.
+     */
+    protected function sendProactiveRootsList(): void
+    {
+        $rootsListRequest = [
+            'method' => 'roots/list',
+            'jsonrpc' => '2.0',
+            'id' => 0
+        ];
+
+        if ($this->currentTransport) {
+            try {
+                $requestJson = json_encode($rootsListRequest, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                $this->currentTransport->send($requestJson);
+                Log::info('Sent proactive roots/list request like Playwright', ['request' => $rootsListRequest]);
+
+                // For STDIO transport, we should exit after sending like Playwright does
+                if ($this->currentTransport instanceof \JTD\LaravelMCP\Transport\StdioTransport) {
+                    Log::info('Exiting after proactive roots/list like Playwright');
+                    exit(0);
+                }
+            } catch (\Throwable $e) {
+                Log::error('Failed to send proactive roots/list request', [
+                    'error' => $e->getMessage(),
+                    'request' => $rootsListRequest
+                ]);
+            }
+        }
     }
 
     /**

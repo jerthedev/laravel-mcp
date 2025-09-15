@@ -92,6 +92,22 @@ if (isset($data['method']) && $data['method'] === 'roots/list') {
     exit();
 }
 
+// Handle notifications/initialized - this is key for Claude CLI compatibility
+if (isset($data['method']) && $data['method'] === 'notifications/initialized') {
+    error_log("MCP: Received notifications/initialized - sending proactive roots/list like Playwright");
+
+    // Send proactive roots/list request like Playwright does
+    $rootsListRequest = [
+        'method' => 'roots/list',
+        'jsonrpc' => '2.0',
+        'id' => 0
+    ];
+
+    error_log("MCP: Sending proactive roots/list: " . json_encode($rootsListRequest));
+    echo json_encode($rootsListRequest);
+    exit(0); // Exit like Playwright does
+}
+
 // Handle other requests with a generic response
 $response = [
     'jsonrpc' => '2.0',
