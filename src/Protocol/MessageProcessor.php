@@ -292,11 +292,11 @@ class MessageProcessor implements MessageHandlerInterface
         ]);
 
         // Match Playwright's exact response format for Claude CLI compatibility
-        // Use simple empty object format that Claude Code expects (not specification-compliant but works)
+        // Use EmptyObject to ensure tools:{} not tools:[] (Claude Code requirement)
         $response = [
             'protocolVersion' => $negotiatedProtocolVersion,
             'capabilities' => [
-                'tools' => new \stdClass()  // Empty object {} exactly like Playwright
+                'tools' => new \JTD\LaravelMCP\Support\EmptyObject()  // Always serializes to {} not []
             ],
             'serverInfo' => $this->serverInfo,
         ];
