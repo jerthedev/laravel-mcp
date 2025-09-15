@@ -552,7 +552,7 @@ class ComponentDiscovery implements DiscoveryInterface
         if ($reflection->isSubclassOf(McpTool::class)) {
             return [
                 'type' => 'tool',
-                'name' => $this->generateComponentName($className, 'Tool'),
+                'name' => $this->getActualComponentName($className),
                 'class' => $className,
                 'file' => $reflection->getFileName(),
             ];
@@ -561,7 +561,7 @@ class ComponentDiscovery implements DiscoveryInterface
         if ($reflection->isSubclassOf(McpResource::class)) {
             return [
                 'type' => 'resource',
-                'name' => $this->generateComponentName($className, 'Resource'),
+                'name' => $this->getActualComponentName($className),
                 'class' => $className,
                 'file' => $reflection->getFileName(),
             ];
@@ -570,7 +570,7 @@ class ComponentDiscovery implements DiscoveryInterface
         if ($reflection->isSubclassOf(McpPrompt::class)) {
             return [
                 'type' => 'prompt',
-                'name' => $this->generateComponentName($className, 'Prompt'),
+                'name' => $this->getActualComponentName($className),
                 'class' => $className,
                 'file' => $reflection->getFileName(),
             ];
@@ -580,7 +580,31 @@ class ComponentDiscovery implements DiscoveryInterface
     }
 
     /**
-     * Generate component name from class name.
+     * Get actual component name by instantiating the class and calling getName().
+     */
+    private function getActualComponentName(string $className): string
+    {
+        try {
+            // Try to instantiate the component to get its actual name
+            $instance = new $className();
+
+            if (method_exists($instance, 'getName')) {
+                return $instance->getName();
+            }
+        } catch (\Throwable $e) {
+            // If instantiation fails, fall back to generating from class name
+            logger()->debug('Failed to instantiate component for name discovery, falling back to generated name', [
+                'class' => $className,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // Fallback: generate name from class name
+        return $this->generateComponentName($className, $this->getComponentSuffix($className));
+    }
+
+    /**
+     * Generate component name from class name (fallback method).
      */
     private function generateComponentName(string $className, string $suffix): string
     {
@@ -588,6 +612,24 @@ class ComponentDiscovery implements DiscoveryInterface
         $name = str_replace($suffix, '', $baseName);
 
         return Str::snake($name);
+    }
+
+    /**
+     * Get the suffix for a component class.
+     */
+    private function getComponentSuffix(string $className): string
+    {
+        if (str_ends_with($className, 'Tool')) {
+            return 'Tool';
+        }
+        if (str_ends_with($className, 'Resource')) {
+            return 'Resource';
+        }
+        if (str_ends_with($className, 'Prompt')) {
+            return 'Prompt';
+        }
+
+        return '';
     }
 
     /**
