@@ -366,13 +366,9 @@ class MessageProcessor implements MessageHandlerInterface
                 $this->currentTransport->send($requestJson);
                 Log::info('Sent proactive roots/list request like Playwright', ['request' => $rootsListRequest]);
 
-                // For STDIO transport, we should exit after sending like Playwright does
-                // But not during testing
-                if ($this->currentTransport instanceof \JTD\LaravelMCP\Transport\StdioTransport &&
-                    !app()->environment('testing')) {
-                    Log::info('Exiting after proactive roots/list like Playwright');
-                    exit(0);
-                }
+                // DO NOT EXIT - Server must stay running to handle tools/list and other requests
+                // The exit(0) was causing the server to terminate immediately after initialization
+                Log::info('Proactive roots/list sent, server will continue running to handle requests');
             } catch (\Throwable $e) {
                 Log::error('Failed to send proactive roots/list request', [
                     'error' => $e->getMessage(),
