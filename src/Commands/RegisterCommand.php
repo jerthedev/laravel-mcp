@@ -655,10 +655,11 @@ class RegisterCommand extends BaseCommand
             $command[] = "$key=$value";
         }
 
-        // No separator needed for the working syntax
+        // Add separator (needed for working syntax)
+        $command[] = '--';
 
         if ($transport === 'stdio') {
-            // For stdio transport, add individual command parts after --
+            // For stdio transport, build complete command as single quoted string
             $baseCommand = $options['command'][0] ?? 'php';
             $args = array_slice($options['command'], 1);
 
@@ -675,9 +676,9 @@ class RegisterCommand extends BaseCommand
                 $args = array_merge($args, $options['args']);
             }
 
-            // Add command and args as separate elements (not quoted as single string)
-            $command[] = $baseCommand;
-            $command = array_merge($command, $args);
+            // Build complete command as single string after --
+            $fullCommand = $baseCommand . ' ' . implode(' ', $args);
+            $command[] = $fullCommand;
         } else {
             // For HTTP/SSE transport, add URL after server name
             $host = $options['host'] ?? '127.0.0.1';
