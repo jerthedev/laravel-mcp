@@ -74,6 +74,12 @@ class ServeCommand extends BaseCommand
     protected function executeCommand(): int
     {
         try {
+            // Suppress all logging unless debug mode is enabled (for clean JSON-RPC)
+            if (!$this->option('debug')) {
+                // Set log level to emergency to suppress most logs
+                Log::getLogger()->setLevel(\Monolog\Level::Emergency);
+            }
+
             // Register signal handlers for graceful shutdown
             $this->registerSignalHandlers();
 
@@ -84,14 +90,16 @@ class ServeCommand extends BaseCommand
                 return self::EXIT_INVALID_INPUT;
             }
 
-            // Display startup information
-            $this->displayStartupInfo($transportType);
+            // Display startup information (only in debug mode)
+            if ($this->option('debug')) {
+                $this->displayStartupInfo($transportType);
+            }
 
             // Start the appropriate transport
             $exitCode = $this->startTransport($transportType);
 
-            // Display shutdown message
-            if ($exitCode === self::EXIT_SUCCESS) {
+            // Display shutdown message (only in debug mode)
+            if ($exitCode === self::EXIT_SUCCESS && $this->option('debug')) {
                 $this->success('MCP server stopped gracefully');
             }
 

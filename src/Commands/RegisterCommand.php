@@ -684,10 +684,7 @@ class RegisterCommand extends BaseCommand
                 $args = array_merge($args, $options['args']);
             }
 
-            // Add --transport=stdio if not already present
-            if (!in_array('--transport=stdio', $args)) {
-                $args[] = '--transport=stdio';
-            }
+            // Note: --transport=stdio is the default, so we don't need to specify it
 
             $command[] = $baseCommand;
             $command = array_merge($command, $args);
