@@ -406,7 +406,8 @@ class ComponentDiscovery implements DiscoveryInterface
      */
     public function validateDiscoveredComponents(): void
     {
-        $discovered = $this->discover([]);
+        // Use already discovered components instead of re-discovering
+        $discovered = $this->discoveredComponents;
 
         foreach ($discovered as $component) {
             try {
