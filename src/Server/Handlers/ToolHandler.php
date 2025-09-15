@@ -296,33 +296,50 @@ class ToolHandler extends BaseHandler
      */
     protected function getToolDefinitions(?string $cursor = null): array
     {
-        error_log('getToolDefinitions: ENTRY POINT');
-        $this->logInfo('getToolDefinitions: Starting FAST BYPASS MODE');
-        error_log('getToolDefinitions: After first log');
+        $this->logDebug('Getting tool definitions');
+        $tools = $this->toolRegistry->all();
+        $this->logDebug('Retrieved tools from registry', [
+            'tool_count' => count($tools),
+            'tool_names' => array_keys($tools),
+        ]);
+        $definitions = [];
 
-        // FAST BYPASS: Return a hardcoded successful response for now
-        // This will prove the hanging is in the registry access, not elsewhere
-        error_log('getToolDefinitions: About to create definitions array');
-        $definitions = [
-            [
-                'name' => 'test_tool',
-                'description' => 'A test tool to verify tools/list functionality',
-                'inputSchema' => [
-                    'type' => 'object',
-                    'properties' => [
-                        'message' => [
-                            'type' => 'string',
-                            'description' => 'Test message'
-                        ]
-                    ],
-                    'required' => ['message']
-                ]
-            ]
-        ];
-        error_log('getToolDefinitions: Definitions array created');
+        foreach ($tools as $name => $toolData) {
+            try {
+                // Extract the tool handler from the data array or use directly
+                $tool = is_array($toolData) ? ($toolData['handler'] ?? $toolData) : $toolData;
 
-        $this->logInfo('getToolDefinitions: Returning hardcoded test tool');
-        error_log('getToolDefinitions: About to return');
+                $definition = [
+                    'name' => $name,
+                    'description' => $this->getToolDescription($tool),
+                    'inputSchema' => $this->getToolInputSchema($tool),
+                ];
+
+                // Add optional fields if available
+                $title = $this->getToolTitle($tool);
+                if ($title !== null) {
+                    $definition['title'] = $title;
+                }
+
+                $outputSchema = $this->getToolOutputSchema($tool);
+                if ($outputSchema !== null) {
+                    $definition['outputSchema'] = $outputSchema;
+                }
+
+                $definitions[] = $definition;
+            } catch (\Throwable $e) {
+                $this->logWarning("Failed to get definition for tool: {$name}", [
+                    'error' => $e->getMessage(),
+                ]);
+                // Skip tools that can't be properly defined
+            }
+        }
+
+        // Apply cursor-based pagination if needed
+        if ($cursor !== null) {
+            return $this->applyCursorPagination($definitions, $cursor);
+        }
+
         return $definitions;
     }
 
@@ -608,9 +625,8 @@ class ToolHandler extends BaseHandler
      */
     protected function ensureToolsDiscovered(): void
     {
-        // EMERGENCY DISABLE: This method was causing 60s hangs during JSON-RPC requests
-        $this->logInfo('ensureToolsDiscovered: DISABLED to prevent hanging');
-        return;
+        // FIXED: Re-enabled now that stdio communication issue is resolved
+        $this->logInfo('ensureToolsDiscovered: Re-enabled after fixing stdio communication');
 
         try {
             $this->logInfo('ensureToolsDiscovered: Starting failsafe discovery');
