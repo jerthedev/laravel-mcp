@@ -662,7 +662,7 @@ class RegisterCommand extends BaseCommand
             $command[] = "$key=$value";
         }
 
-        // Add server name AFTER environment variables
+        // Add server name (comes right before command according to help)
         $command[] = $serverName;
 
         if ($transport === 'stdio') {
@@ -685,8 +685,7 @@ class RegisterCommand extends BaseCommand
 
             // Note: --transport=stdio is the default, so we don't need to specify it
 
-            // Add separator, then command and args
-            $command[] = '--';  // Separator between Claude flags and server command
+            // Add command and args (no separator needed according to help)
             $command[] = $baseCommand;
             $command = array_merge($command, $args);
         } else {
