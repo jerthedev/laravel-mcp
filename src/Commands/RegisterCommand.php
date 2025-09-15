@@ -658,11 +658,11 @@ class RegisterCommand extends BaseCommand
         // Add essential Laravel environment variables for Claude Code compatibility
         $essentialEnvVars = $this->getEssentialEnvVars($options['env'] ?? []);
         foreach ($essentialEnvVars as $key => $value) {
-            $command[] = '--env';
+            $command[] = '-e';
             $command[] = "$key=$value";
         }
 
-        // Add server name AFTER all flags but BEFORE the separator
+        // Add server name AFTER environment variables
         $command[] = $serverName;
 
         if ($transport === 'stdio') {
