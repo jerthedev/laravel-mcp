@@ -266,6 +266,9 @@ class LaravelMcpServiceProvider extends ServiceProvider
             );
         });
 
+        // Register alias for component discovery
+        $this->app->alias(ComponentDiscovery::class, 'mcp.component-discovery');
+
         // Register route registrar
         $this->app->singleton(RouteRegistrar::class, function ($app) {
             return new RouteRegistrar($app->make(McpRegistry::class));
