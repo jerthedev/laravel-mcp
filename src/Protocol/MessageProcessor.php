@@ -455,23 +455,12 @@ class MessageProcessor implements MessageHandlerInterface
             error_log('MessageProcessor: About to wrap response in JSON-RPC format');
 
             try {
-                // TEMPORARY FIX: Since JsonRpcHandler callback isn't being invoked,
-                // manually wrap in JSON-RPC 2.0 format here
-                $jsonRpcResponse = [
-                    'result' => $result,
-                    'jsonrpc' => '2.0',
-                    'id' => $request['id'] ?? null,
-                ];
+                // Return raw result - JsonRpcHandler will wrap it in JSON-RPC format
+                error_log('MessageProcessor: Returning raw result - JsonRpcHandler will handle JSON-RPC wrapping');
+                error_log('MessageProcessor: Raw result type: ' . gettype($result));
+                error_log('MessageProcessor: Raw result keys: ' . json_encode(array_keys($result)));
 
-                error_log('MessageProcessor: MANUALLY WRAPPED RESPONSE: ' . json_encode(array_keys($jsonRpcResponse)));
-                error_log('MessageProcessor: Response ID: ' . $jsonRpcResponse['id']);
-                error_log('MessageProcessor: About to return wrapped response');
-
-                // Add final confirmation that we're returning properly
-                error_log('MessageProcessor: FINAL RETURN - Response type: ' . gettype($jsonRpcResponse));
-                error_log('MessageProcessor: FINAL RETURN - Response size: ' . strlen(json_encode($jsonRpcResponse)));
-
-                return $jsonRpcResponse;
+                return $result;
             } catch (\Throwable $e) {
                 error_log('MessageProcessor: EXCEPTION during JSON-RPC wrapping: ' . $e->getMessage());
                 error_log('MessageProcessor: Exception trace: ' . $e->getTraceAsString());
