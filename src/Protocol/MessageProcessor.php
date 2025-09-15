@@ -440,7 +440,18 @@ class MessageProcessor implements MessageHandlerInterface
                 'tool_count' => isset($result['tools']) ? count($result['tools']) : 'no tools key',
             ]);
 
-            return $result;
+            // TEMPORARY FIX: Since JsonRpcHandler callback isn't being invoked,
+            // manually wrap in JSON-RPC 2.0 format here
+            $jsonRpcResponse = [
+                'result' => $result,
+                'jsonrpc' => '2.0',
+                'id' => $request['id'] ?? null,
+            ];
+
+            error_log('MessageProcessor: MANUALLY WRAPPED RESPONSE: ' . json_encode(array_keys($jsonRpcResponse)));
+            error_log('MessageProcessor: Response ID: ' . $jsonRpcResponse['id']);
+
+            return $jsonRpcResponse;
 
         } catch (\Throwable $e) {
             Log::error('MessageProcessor: handleToolsList failed', [
