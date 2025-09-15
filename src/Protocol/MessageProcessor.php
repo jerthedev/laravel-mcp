@@ -292,13 +292,21 @@ class MessageProcessor implements MessageHandlerInterface
         ]);
 
         // Match Playwright's exact response format for Claude CLI compatibility
-        // Use proper MCP specification capabilities format
+        // Use proper MCP specification capabilities format with comprehensive capabilities
         $response = [
             'protocolVersion' => $negotiatedProtocolVersion,
             'capabilities' => [
                 'tools' => [
                     'listChanged' => true  // Support for tools/list notifications
-                ]
+                ],
+                'resources' => [
+                    'listChanged' => true,
+                    'subscribe' => false
+                ],
+                'prompts' => [
+                    'listChanged' => true
+                ],
+                'logging' => []
             ],
             'serverInfo' => $this->serverInfo,
         ];
