@@ -667,9 +667,17 @@ class RegisterCommand extends BaseCommand
         $command[] = $serverName;
 
         if ($transport === 'stdio') {
-            // For stdio transport, add command and args
+            // For stdio transport, add command and args with absolute paths
             $baseCommand = $options['command'][0] ?? 'php';
             $args = array_slice($options['command'], 1);
+
+            // Convert to absolute paths for Claude Code compatibility
+            $baseCommand = $this->getAbsolutePath($baseCommand);
+
+            // Convert artisan to absolute path if present
+            if (!empty($args) && $args[0] === 'artisan') {
+                $args[0] = $this->getAbsoluteArtisanPath();
+            }
 
             // Add any additional args
             if (!empty($options['args'])) {
@@ -727,5 +735,36 @@ class RegisterCommand extends BaseCommand
 
         // Return success indicator for the calling code
         return ['success' => true, 'command' => $commandString, 'output' => $output];
+    }
+
+    /**
+     * Get absolute path for a command executable.
+     */
+    protected function getAbsolutePath(string $command): string
+    {
+        // If already absolute path, return as-is
+        if (str_starts_with($command, '/')) {
+            return $command;
+        }
+
+        // For common commands, try to find their absolute path
+        if (in_array($command, ['php', 'node', 'python', 'python3'])) {
+            $result = shell_exec("which $command 2>/dev/null");
+            if ($result) {
+                return trim($result);
+            }
+        }
+
+        // Fallback to original command
+        return $command;
+    }
+
+    /**
+     * Get absolute path to artisan script.
+     */
+    protected function getAbsoluteArtisanPath(): string
+    {
+        $cwd = $this->option('cwd') ?: getcwd() ?: base_path();
+        return $cwd . '/artisan';
     }
 }
