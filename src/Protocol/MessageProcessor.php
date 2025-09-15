@@ -443,6 +443,18 @@ class MessageProcessor implements MessageHandlerInterface
                 'tool_count' => isset($result['tools']) ? count($result['tools']) : 'no tools key',
             ]);
 
+            // EMERGENCY TEST: Direct output to see if we can reach Claude Code at all
+            $emergencyResponse = [
+                'result' => $result,
+                'jsonrpc' => '2.0',
+                'id' => $request['id'] ?? 1,
+            ];
+            $emergencyJson = json_encode($emergencyResponse, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            error_log('EMERGENCY: About to echo response directly to STDOUT');
+            echo $emergencyJson . "\n";
+            flush();
+            error_log('EMERGENCY: Echoed response to STDOUT');
+
             error_log('MessageProcessor: About to wrap response in JSON-RPC format');
 
             try {
