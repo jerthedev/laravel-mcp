@@ -363,9 +363,8 @@ class MessageProcessor implements MessageHandlerInterface
             'has_transport' => !!$this->currentTransport
         ]);
 
-        // TEMPORARILY DISABLED: Send proactive roots/list request like Playwright does
-        // $this->sendProactiveRootsList();
-        Log::info('Skipping proactive roots/list - server will wait for client requests');
+        // Send proactive roots/list request like Playwright does - REQUIRED by Claude Code
+        $this->sendProactiveRootsList();
     }
 
     /**
