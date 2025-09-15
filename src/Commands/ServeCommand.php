@@ -62,10 +62,12 @@ class ServeCommand extends BaseCommand
      */
     public function __construct(TransportManager $transportManager, MessageProcessor $messageProcessor)
     {
+        error_log('=== ServeCommand: __construct() CALLED ===');
         parent::__construct();
 
         $this->transportManager = $transportManager;
         $this->messageProcessor = $messageProcessor;
+        error_log('ServeCommand: Constructor completed successfully');
     }
 
     /**
