@@ -59,7 +59,7 @@ class ToolsListTest extends TestCase
         // Send initialized notification (required by MCP protocol)
         $initializedMessage = [
             'jsonrpc' => '2.0',
-            'method' => 'initialized',
+            'method' => 'notifications/initialized',
             'params' => []
         ];
 
@@ -113,7 +113,7 @@ class ToolsListTest extends TestCase
         // Send initialized notification (required by MCP protocol)
         $initializedMessage = [
             'jsonrpc' => '2.0',
-            'method' => 'initialized',
+            'method' => 'notifications/initialized',
             'params' => []
         ];
 

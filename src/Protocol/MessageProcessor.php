@@ -180,6 +180,7 @@ class MessageProcessor implements MessageHandlerInterface
         return [
             'initialize',
             'initialized',
+            'notifications/initialized',
             'ping',
             'tools/list',
             'tools/call',
@@ -202,8 +203,12 @@ class MessageProcessor implements MessageHandlerInterface
             return $this->handleInitialize($params);
         });
 
-        // Initialized notification
+        // Initialized notification - handle both 'initialized' and 'notifications/initialized'
         $this->jsonRpcHandler->onNotification('initialized', function (array $params) {
+            $this->handleInitialized($params);
+        });
+
+        $this->jsonRpcHandler->onNotification('notifications/initialized', function (array $params) {
             $this->handleInitialized($params);
         });
 
