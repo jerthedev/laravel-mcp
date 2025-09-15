@@ -69,11 +69,11 @@ class ClaudeCliHealthCheckTest extends TestCase
         $toolsValue = $response['result']['capabilities']['tools'];
         $toolsJson = json_encode($toolsValue);
 
-        $this->assertEquals('{}', $toolsJson,
-            'Tools capability MUST be {} (empty object) not [] (empty array). Claude CLI rejects [] format.');
+        $this->assertEquals('{"listChanged":true}', $toolsJson,
+            'Tools capability MUST be {"listChanged":true} per MCP specification for tools support.');
 
-        $this->assertIsObject($toolsValue,
-            'Tools value must be an object (stdClass) before JSON encoding');
+        $this->assertIsArray($toolsValue,
+            'Tools value must be an associative array with MCP capability properties');
 
         // Step 4: Validate complete response JSON matches Playwright format
         $responseJson = json_encode($response, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
@@ -142,8 +142,8 @@ class ClaudeCliHealthCheckTest extends TestCase
     /** @test */
     public function it_matches_exact_playwright_response_byte_for_byte()
     {
-        // What Playwright returns (known working format)
-        $playwrightResponse = '{"result":{"protocolVersion":"2025-06-18","capabilities":{"tools":{}},"serverInfo":{"name":"Playwright","version":"0.0.37"}},"jsonrpc":"2.0","id":0}';
+        // MCP specification compliant format (required for proper tools support)
+        $playwrightResponse = '{"result":{"protocolVersion":"2025-06-18","capabilities":{"tools":{"listChanged":true}},"serverInfo":{"name":"Playwright","version":"0.0.37"}},"jsonrpc":"2.0","id":0}';
 
         // Our server's response
         $initMessage = [
@@ -183,10 +183,10 @@ class ClaudeCliHealthCheckTest extends TestCase
             'Capabilities structure must match Playwright exactly'
         );
 
-        // Most critical: tools format - check raw JSON, not decoded arrays
-        // (json_decode with true converts {} to [], but we need to verify the actual JSON)
-        $this->assertStringContainsString('"tools":{}', $playwrightResponse, 'Playwright should have tools: {} in raw JSON');
-        $this->assertStringContainsString('"tools":{}', $ourJson, 'Our server must have tools: {} in raw JSON');
+        // Most critical: tools format - check for MCP specification compliance
+        // Servers supporting tools must declare listChanged capability
+        $this->assertStringContainsString('"tools":{"listChanged":true}', $playwrightResponse, 'Expected response should have MCP-compliant tools capability');
+        $this->assertStringContainsString('"tools":{"listChanged":true}', $ourJson, 'Our server must have MCP-compliant tools capability');
         $this->assertStringNotContainsString('"tools":[]', $ourJson, 'Our server must NOT have tools: [] in raw JSON');
 
         // Legacy assertion for debugging (will fail due to json_decode behavior)
@@ -224,7 +224,7 @@ class ClaudeCliHealthCheckTest extends TestCase
 
         $initResponse = $this->messageProcessor->handle($initMessage, $mockTransport);
         $this->assertNotNull($initResponse);
-        $this->assertEquals('{}', json_encode($initResponse['result']['capabilities']['tools']));
+        $this->assertEquals('{"listChanged":true}', json_encode($initResponse['result']['capabilities']['tools']));
 
         // Step 2: notifications/initialized
         $initializedMessage = [

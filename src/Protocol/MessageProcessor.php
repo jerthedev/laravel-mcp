@@ -292,11 +292,13 @@ class MessageProcessor implements MessageHandlerInterface
         ]);
 
         // Match Playwright's exact response format for Claude CLI compatibility
-        // Don't use complex negotiated capabilities - Claude CLI expects simple format
+        // Use proper MCP specification capabilities format
         $response = [
             'protocolVersion' => $negotiatedProtocolVersion,
             'capabilities' => [
-                'tools' => new \JTD\LaravelMCP\Support\EmptyObject()  // Always serializes to {}
+                'tools' => [
+                    'listChanged' => true  // Support for tools/list notifications
+                ]
             ],
             'serverInfo' => $this->serverInfo,
         ];

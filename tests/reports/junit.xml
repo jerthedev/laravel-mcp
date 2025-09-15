@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="JTD\LaravelMCP\Tests\Feature\ClaudeCliHealthCheckTest" file="/home/jeremyfall/Internal/JTD-Packages/laravel-mcp.git/main/tests/Feature/ClaudeCliHealthCheckTest.php" tests="4" assertions="18" errors="0" failures="3" skipped="0" time="0.153494">
+    <testcase name="it_matches_exact_playwright_response_byte_for_byte" file="/home/jeremyfall/Internal/JTD-Packages/laravel-mcp.git/main/tests/Feature/ClaudeCliHealthCheckTest.php" line="143" class="JTD\LaravelMCP\Tests\Feature\ClaudeCliHealthCheckTest" classname="JTD.LaravelMCP.Tests.Feature.ClaudeCliHealthCheckTest" assertions="6" time="0.121920"/>
+    <testcase name="it_completes_full_claude_cli_handshake_flow" file="/home/jeremyfall/Internal/JTD-Packages/laravel-mcp.git/main/tests/Feature/ClaudeCliHealthCheckTest.php" line="199" class="JTD\LaravelMCP\Tests\Feature\ClaudeCliHealthCheckTest" classname="JTD.LaravelMCP.Tests.Feature.ClaudeCliHealthCheckTest" assertions="3" time="0.018661">
+      <failure type="PHPUnit\Framework\ExpectationFailedException">JTD\LaravelMCP\Tests\Feature\ClaudeCliHealthCheckTest::it_completes_full_claude_cli_handshake_flow
+Should send exactly one proactive message
+Failed asserting that actual size 0 matches expected size 1.
+
+/home/jeremyfall/Internal/JTD-Packages/laravel-mcp.git/main/tests/Feature/ClaudeCliHealthCheckTest.php:239</failure>
+    </testcase>
+    <testcase name="it_handles_notifications_initialized_and_sends_proactive_roots_list" file="/home/jeremyfall/Internal/JTD-Packages/laravel-mcp.git/main/tests/Feature/ClaudeCliHealthCheckTest.php" line="94" class="JTD\LaravelMCP\Tests\Feature\ClaudeCliHealthCheckTest" classname="JTD.LaravelMCP.Tests.Feature.ClaudeCliHealthCheckTest" assertions="2" time="0.006149">
+      <failure type="PHPUnit\Framework\ExpectationFailedException">JTD\LaravelMCP\Tests\Feature\ClaudeCliHealthCheckTest::it_handles_notifications_initialized_and_sends_proactive_roots_list
+Server must send proactive roots/list after notifications/initialized
+Failed asserting that null is not null.
+
+/home/jeremyfall/Internal/JTD-Packages/laravel-mcp.git/main/tests/Feature/ClaudeCliHealthCheckTest.php:133</failure>
+    </testcase>
+    <testcase name="it_responds_to_initialize_with_exact_playwright_format" file="/home/jeremyfall/Internal/JTD-Packages/laravel-mcp.git/main/tests/Feature/ClaudeCliHealthCheckTest.php" line="36" class="JTD\LaravelMCP\Tests\Feature\ClaudeCliHealthCheckTest" classname="JTD.LaravelMCP.Tests.Feature.ClaudeCliHealthCheckTest" assertions="7" time="0.006764">
+      <failure type="PHPUnit\Framework\ExpectationFailedException">JTD\LaravelMCP\Tests\Feature\ClaudeCliHealthCheckTest::it_responds_to_initialize_with_exact_playwright_format
+Tools value must be an object (stdClass) before JSON encoding
+Failed asserting that Array &amp;0 [
+    'listChanged' =&gt; true,
+] is of type object.
+
+/home/jeremyfall/Internal/JTD-Packages/laravel-mcp.git/main/tests/Feature/ClaudeCliHealthCheckTest.php:75</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

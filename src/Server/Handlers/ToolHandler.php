@@ -268,6 +268,17 @@ class ToolHandler extends BaseHandler
                     'inputSchema' => $this->getToolInputSchema($tool),
                 ];
 
+                // Add optional fields if available
+                $title = $this->getToolTitle($tool);
+                if ($title !== null) {
+                    $definition['title'] = $title;
+                }
+
+                $outputSchema = $this->getToolOutputSchema($tool);
+                if ($outputSchema !== null) {
+                    $definition['outputSchema'] = $outputSchema;
+                }
+
                 $definitions[] = $definition;
             } catch (\Throwable $e) {
                 $this->logWarning("Failed to get definition for tool: {$name}", [
@@ -413,6 +424,65 @@ class ToolHandler extends BaseHandler
             'properties' => [],
             'additionalProperties' => true,
         ];
+    }
+
+    /**
+     * Get tool title (optional MCP field).
+     *
+     * @param  mixed  $tool  Tool instance
+     * @return string|null Tool title or null if not available
+     */
+    protected function getToolTitle($tool): ?string
+    {
+        // Try getTitle method first
+        try {
+            if (is_callable([$tool, 'getTitle'])) {
+                return $tool->getTitle();
+            }
+        } catch (\Throwable $e) {
+            // Method doesn't exist or failed, try next approach
+        }
+
+        // Try title property
+        try {
+            if (property_exists($tool, 'title') && !empty($tool->title)) {
+                return $tool->title;
+            }
+        } catch (\Throwable $e) {
+            // Property doesn't exist, continue
+        }
+
+        return null;
+    }
+
+    /**
+     * Get tool output schema (optional MCP field).
+     *
+     * @param  mixed  $tool  Tool instance
+     * @return array|null Output schema or null if not available
+     */
+    protected function getToolOutputSchema($tool): ?array
+    {
+        // Try getOutputSchema method first
+        try {
+            if (is_callable([$tool, 'getOutputSchema'])) {
+                $schema = $tool->getOutputSchema();
+                return is_array($schema) ? $schema : null;
+            }
+        } catch (\Throwable $e) {
+            // Method doesn't exist or failed, try next approach
+        }
+
+        // Try outputSchema property
+        try {
+            if (property_exists($tool, 'outputSchema') && is_array($tool->outputSchema)) {
+                return $tool->outputSchema;
+            }
+        } catch (\Throwable $e) {
+            // Property doesn't exist, continue
+        }
+
+        return null;
     }
 
     /**
