@@ -703,6 +703,9 @@ class RegisterCommand extends BaseCommand
         // Build command string for display/execution
         $commandString = implode(' ', array_map('escapeshellarg', $command));
 
+        // Debug: Show the exact command being executed
+        $this->line("Debug: Command being executed: $commandString");
+
         if ($this->option('dry-run')) {
             return ['command' => $commandString];
         }
