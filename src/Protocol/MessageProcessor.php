@@ -116,6 +116,9 @@ class MessageProcessor implements MessageHandlerInterface
      */
     public function handle(array $message, TransportInterface $transport): ?array
     {
+        error_log('MessageProcessor: handle() called with message: ' . ($message['method'] ?? 'NO METHOD'));
+        error_log('MessageProcessor: handle() transport type: ' . get_class($transport));
+
         // Store transport reference for proactive messaging
         $this->currentTransport = $transport;
 
