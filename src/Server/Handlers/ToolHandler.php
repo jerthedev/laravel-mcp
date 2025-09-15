@@ -146,7 +146,13 @@ class ToolHandler extends BaseHandler
                 'has_cursor' => isset($params['cursor']),
             ]);
 
-            return $this->createSuccessResponse($response, $context);
+            error_log('handleToolsList: Final response tools count: ' . count($tools));
+            error_log('handleToolsList: Sample tool names: ' . json_encode(array_slice(array_column($tools, 'name'), 0, 5)));
+
+            $successResponse = $this->createSuccessResponse($response, $context);
+            error_log('handleToolsList: createSuccessResponse returned: ' . json_encode(array_keys($successResponse)));
+
+            return $successResponse;
 
         } catch (\Throwable $e) {
             $this->logError('Failed to list tools', [
@@ -297,7 +303,12 @@ class ToolHandler extends BaseHandler
     protected function getToolDefinitions(?string $cursor = null): array
     {
         $this->logDebug('Getting tool definitions');
+        error_log('ToolHandler: getToolDefinitions called');
+
         $tools = $this->toolRegistry->all();
+        error_log('ToolHandler: toolRegistry->all() returned ' . count($tools) . ' tools');
+        error_log('ToolHandler: tool names: ' . json_encode(array_keys($tools)));
+
         $this->logDebug('Retrieved tools from registry', [
             'tool_count' => count($tools),
             'tool_names' => array_keys($tools),
@@ -337,8 +348,13 @@ class ToolHandler extends BaseHandler
 
         // Apply cursor-based pagination if needed
         if ($cursor !== null) {
-            return $this->applyCursorPagination($definitions, $cursor);
+            $paginated = $this->applyCursorPagination($definitions, $cursor);
+            error_log('ToolHandler: Returning paginated definitions: ' . count($paginated) . ' tools');
+            return $paginated;
         }
+
+        error_log('ToolHandler: Returning ' . count($definitions) . ' tool definitions');
+        error_log('ToolHandler: Definition names: ' . json_encode(array_column($definitions, 'name')));
 
         return $definitions;
     }
