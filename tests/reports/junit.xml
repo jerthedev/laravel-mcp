@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-  <testsuite name="JTD\LaravelMCP\Tests\Feature\ToolsListTest" file="/home/jeremyfall/Internal/JTD-Packages/laravel-mcp.git/main/tests/Feature/ToolsListTest.php" tests="1" assertions="7" errors="0" failures="0" skipped="0" time="0.233194">
-    <testcase name="it_returns_tools_via_json_rpc_request" file="/home/jeremyfall/Internal/JTD-Packages/laravel-mcp.git/main/tests/Feature/ToolsListTest.php" line="43" class="JTD\LaravelMCP\Tests\Feature\ToolsListTest" classname="JTD.LaravelMCP.Tests.Feature.ToolsListTest" assertions="7" time="0.233194"/>
+  <testsuite name="JTD\LaravelMCP\Tests\Feature\ClaudeCodeStdioTest" file="/home/jeremyfall/Internal/JTD-Packages/laravel-mcp.git/main/tests/Feature/ClaudeCodeStdioTest.php" tests="1" assertions="7" errors="0" failures="0" skipped="0" time="0.261089">
+    <testcase name="it_processes_claude_code_initialization_sequence" file="/home/jeremyfall/Internal/JTD-Packages/laravel-mcp.git/main/tests/Feature/ClaudeCodeStdioTest.php" line="43" class="JTD\LaravelMCP\Tests\Feature\ClaudeCodeStdioTest" classname="JTD.LaravelMCP.Tests.Feature.ClaudeCodeStdioTest" assertions="7" time="0.261089"/>
   </testsuite>
 </testsuites>

@@ -1,3 +1,3 @@
-Tools List (JTD\LaravelMCP\Tests\Feature\ToolsList)
- [x] It returns tools via json rpc request
+Claude Code Stdio (JTD\LaravelMCP\Tests\Feature\ClaudeCodeStdio)
+ [x] It processes claude code initialization sequence
 
