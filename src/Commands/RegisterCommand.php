@@ -655,8 +655,7 @@ class RegisterCommand extends BaseCommand
             $command[] = "$key=$value";
         }
 
-        // Add separator
-        $command[] = '--';
+        // No separator needed for the working syntax
 
         if ($transport === 'stdio') {
             // For stdio transport, add individual command parts after --
@@ -747,7 +746,7 @@ class RegisterCommand extends BaseCommand
         }
 
         $this->info("Successfully registered '$serverName' with Claude Code");
-        $this->line("Command executed: $fullCommand");
+        $this->line("Command executed: $commandString");
 
         // Return success indicator for the calling code
         return ['success' => true, 'command' => $commandString, 'output' => $output];
