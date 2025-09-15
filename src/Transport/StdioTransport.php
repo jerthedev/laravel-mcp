@@ -373,7 +373,8 @@ class StdioTransport extends BaseTransport
      */
     public function listen(): void
     {
-        error_log('StdioTransport: listen() method called');
+        error_log('=== StdioTransport::listen() CALLED ===');
+        error_log('StdioTransport class: ' . get_class($this));
 
         if (! $this->isConnected()) {
             error_log('StdioTransport: Not connected, calling start()');
@@ -383,7 +384,58 @@ class StdioTransport extends BaseTransport
         $lastKeepalive = time();
 
         try {
-            error_log('StdioTransport: Starting listen loop');
+            error_log('StdioTransport: Starting listen loop - BYPASSING ALL HANDLERS');
+
+            // EMERGENCY: Completely bypass the complex listen loop
+            // Use our simple minimal server approach directly
+            error_log('StdioTransport: Entering simple blocking loop');
+
+            while (true) {
+                error_log('StdioTransport: Waiting for input with fgets(STDIN)...');
+
+                $line = fgets(STDIN);
+                if ($line === false) {
+                    error_log('StdioTransport: EOF received, breaking');
+                    break;
+                }
+
+                $message = trim($line);
+                if (empty($message)) {
+                    error_log('StdioTransport: Empty message, continuing');
+                    continue;
+                }
+
+                error_log('StdioTransport: Received: ' . $message);
+
+                // Process with Laravel's MessageProcessor
+                if ($this->messageHandler) {
+                    try {
+                        $messageData = json_decode($message, true);
+                        if (json_last_error() === JSON_ERROR_NONE) {
+                            error_log('StdioTransport: Processing with messageHandler');
+
+                            $response = $this->messageHandler->handle($messageData, $this);
+
+                            if ($response) {
+                                $responseJson = json_encode($response);
+                                error_log('StdioTransport: Sending response: ' . $responseJson);
+
+                                fwrite(STDOUT, $responseJson . "\n");
+                                fflush(STDOUT);
+
+                                error_log('StdioTransport: Response sent');
+                            } else {
+                                error_log('StdioTransport: No response from messageHandler');
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                        error_log('StdioTransport: Error processing message: ' . $e->getMessage());
+                    }
+                }
+            }
+
+            return; // Skip the original complex loop
+
             Log::info('StdioTransport: Starting listen loop', [
                 'connected' => $this->isConnected(),
                 'has_input_handler' => !!$this->inputHandler,
