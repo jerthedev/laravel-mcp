@@ -128,7 +128,7 @@ abstract class BaseCommand extends Command
      */
     protected function isTransportEnabled(string $transport): bool
     {
-        return (bool) config("mcp-transports.{$transport}.enabled", false);
+        return (bool) config("mcp-transports.transports.{$transport}.enabled", false);
     }
 
     /**
