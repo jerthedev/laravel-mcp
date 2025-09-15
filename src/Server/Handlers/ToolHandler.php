@@ -57,6 +57,17 @@ class ToolHandler extends BaseHandler
                 default => throw new ProtocolException("Unsupported method: {$method}", -32601),
             };
             $this->logInfo("=== Match statement completed successfully for method: {$method} ===");
+
+            // Debug the actual response being returned
+            if ($method === 'tools/list') {
+                $this->logInfo('[ToolHandler] FINAL RESPONSE BEING RETURNED', [
+                    'response_structure' => array_keys($result),
+                    'tools_count' => count($result['tools'] ?? []),
+                    'sample_tool' => isset($result['tools'][0]) ? array_keys($result['tools'][0]) : 'no tools',
+                    'full_response_json' => json_encode($result)
+                ]);
+            }
+
             return $result;
         } catch (ProtocolException $e) {
             // Re-throw validation and method not found errors
