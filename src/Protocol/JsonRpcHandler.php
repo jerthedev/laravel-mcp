@@ -283,12 +283,32 @@ class JsonRpcHandler implements JsonRpcHandlerInterface
      */
     public function createSuccessResponse($result, $id): array
     {
+        // Debug: Check if tools is still an object here
+        if (isset($result['capabilities']['tools'])) {
+            Log::info('JsonRpcHandler creating success response', [
+                'tools_type' => gettype($result['capabilities']['tools']),
+                'tools_json' => json_encode($result['capabilities']['tools']),
+                'full_result' => $result,
+            ]);
+        }
+
         // Match Playwright's field order: result first, then jsonrpc, then id
-        return [
+        $response = [
             'result' => $result,
             'jsonrpc' => self::JSONRPC_VERSION,
             'id' => $id,
         ];
+
+        // Debug: Check if tools is still an object in final response
+        if (isset($response['result']['capabilities']['tools'])) {
+            Log::info('JsonRpcHandler final response', [
+                'tools_type' => gettype($response['result']['capabilities']['tools']),
+                'tools_json' => json_encode($response['result']['capabilities']['tools']),
+                'final_json' => json_encode($response, JSON_UNESCAPED_SLASHES),
+            ]);
+        }
+
+        return $response;
     }
 
     /**

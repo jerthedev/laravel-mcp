@@ -299,13 +299,22 @@ class MessageProcessor implements MessageHandlerInterface
         ]);
 
         // Match Playwright's exact response format for Claude CLI compatibility
-        return [
+        $response = [
             'protocolVersion' => $negotiatedProtocolVersion,
             'capabilities' => [
                 'tools' => new \stdClass()  // Empty object {}, not array []
             ],
             'serverInfo' => $this->serverInfo,
         ];
+
+        // Debug: Check what we're actually returning
+        Log::info('MessageProcessor returning initialize response', [
+            'response' => $response,
+            'tools_type' => gettype($response['capabilities']['tools']),
+            'tools_json' => json_encode($response['capabilities']['tools']),
+        ]);
+
+        return $response;
     }
 
     /**
