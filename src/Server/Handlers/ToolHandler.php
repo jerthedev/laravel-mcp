@@ -107,12 +107,13 @@ class ToolHandler extends BaseHandler
 
             // Failsafe: If registry is empty, try to trigger discovery
             if (empty($allTools)) {
-                $this->logWarning('Tool registry is empty, attempting to trigger discovery');
-                $this->ensureToolsDiscovered();
+                $this->logWarning('Tool registry is empty, but skipping discovery for now to debug hanging issue');
+                // Temporarily disabled to debug hanging issue
+                // $this->ensureToolsDiscovered();
 
                 // Re-check after discovery attempt
                 $allTools = $this->toolRegistry->all();
-                $this->logInfo('Tools registry state (after discovery attempt)', [
+                $this->logInfo('Tools registry state (discovery skipped)', [
                     'tool_count' => count($allTools),
                     'tool_names' => array_keys($allTools),
                 ]);
@@ -625,11 +626,15 @@ class ToolHandler extends BaseHandler
     protected function ensureToolsDiscovered(): void
     {
         try {
+            $this->logInfo('ensureToolsDiscovered: Starting failsafe discovery');
+
             // Get the Laravel container to access discovery service
             $container = app();
 
             // Check if ComponentDiscovery is available
             if ($container->bound(\JTD\LaravelMCP\Registry\ComponentDiscovery::class)) {
+                $this->logInfo('ensureToolsDiscovered: ComponentDiscovery service is bound');
+
                 $discovery = $container->make(\JTD\LaravelMCP\Registry\ComponentDiscovery::class);
 
                 // Get discovery paths from config
@@ -644,21 +649,36 @@ class ToolHandler extends BaseHandler
                     $paths = [$paths];
                 }
 
+                // Filter to only existing directories to avoid hanging on non-existent paths
+                $existingPaths = array_filter($paths, function($path) {
+                    $exists = is_dir($path);
+                    $this->logDebug('Path check', ['path' => $path, 'exists' => $exists]);
+                    return $exists;
+                });
+
                 $this->logInfo('Triggering component discovery', [
-                    'paths' => $paths,
+                    'paths' => $existingPaths,
                     'discovery_class' => get_class($discovery),
                 ]);
 
+                if (empty($existingPaths)) {
+                    $this->logInfo('No existing MCP component directories found, skipping discovery');
+                    return;
+                }
+
                 // Discover and register components
-                $discovered = $discovery->discoverComponents($paths);
+                $this->logDebug('Calling discoverComponents...');
+                $discovered = $discovery->discoverComponents($existingPaths);
+
                 $this->logInfo('Discovery found components', [
                     'component_count' => count($discovered),
                     'components' => array_keys($discovered),
                 ]);
 
+                $this->logDebug('Calling registerDiscoveredComponents...');
                 $discovery->registerDiscoveredComponents();
 
-                $this->logInfo('Component discovery completed');
+                $this->logInfo('Component discovery completed successfully');
             } else {
                 $this->logWarning('ComponentDiscovery service not available in container');
             }
@@ -666,6 +686,8 @@ class ToolHandler extends BaseHandler
             $this->logError('Failed to trigger tool discovery', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
             ]);
             // Don't throw - this is a failsafe mechanism
         }
