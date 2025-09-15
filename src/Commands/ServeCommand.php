@@ -329,15 +329,15 @@ class ServeCommand extends BaseCommand
 
         try {
             // Debug transport information
-            error_log('ServeCommand: About to call transport->listen()');
-            error_log('ServeCommand: Transport class: ' . get_class($this->transport));
-            error_log('ServeCommand: Transport connected: ' . ($this->transport->isConnected() ? 'YES' : 'NO'));
+            Log::info('ServeCommand: About to call transport->listen()');
+            Log::info('ServeCommand: Transport class: ' . get_class($this->transport));
+            Log::info('ServeCommand: Transport connected: ' . ($this->transport->isConnected() ? 'YES' : 'NO'));
 
             // Start listening (blocking call)
-            error_log('ServeCommand: Calling transport->listen()');
+            Log::info('ServeCommand: Calling transport->listen()');
             $this->transport->listen();
 
-            error_log('ServeCommand: transport->listen() returned');
+            Log::info('ServeCommand: transport->listen() returned');
             return self::EXIT_SUCCESS;
         } catch (\Throwable $e) {
             $this->displayError('Stdio transport error', [
