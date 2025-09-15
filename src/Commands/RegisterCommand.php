@@ -655,12 +655,7 @@ class RegisterCommand extends BaseCommand
         $command[] = '--scope';
         $command[] = 'user';
 
-        // Add working directory for Laravel to find .env file
-        $cwd = $options['cwd'] ?: getcwd() ?: base_path();
-        if ($cwd) {
-            $command[] = '--cwd';
-            $command[] = $cwd;
-        }
+        // Note: Claude CLI doesn't support --cwd, but we'll ensure artisan is called from the right directory
 
         // Add essential Laravel environment variables for Claude Code compatibility
         $essentialEnvVars = $this->getEssentialEnvVars($options['env'] ?? []);
@@ -724,7 +719,11 @@ class RegisterCommand extends BaseCommand
 
         $output = [];
         $returnCode = 0;
-        exec($commandString . ' 2>&1', $output, $returnCode);
+
+        // Execute from the working directory to ensure proper context
+        $cwd = $options['cwd'] ?: getcwd() ?: base_path();
+        $fullCommand = "cd " . escapeshellarg($cwd) . " && " . $commandString . ' 2>&1';
+        exec($fullCommand, $output, $returnCode);
 
         if ($returnCode !== 0) {
             $errorMessage = implode("\n", $output);
@@ -734,7 +733,7 @@ class RegisterCommand extends BaseCommand
         }
 
         $this->info("Successfully registered '$serverName' with Claude Code");
-        $this->line("Command executed: $commandString");
+        $this->line("Command executed: $fullCommand");
 
         // Return success indicator for the calling code
         return ['success' => true, 'command' => $commandString, 'output' => $output];
