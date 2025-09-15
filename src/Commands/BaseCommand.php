@@ -201,9 +201,11 @@ abstract class BaseCommand extends Command
      */
     public function handle(): int
     {
+        error_log('=== BaseCommand: handle() STARTED ===');
         $startTime = microtime(true);
 
         try {
+            error_log('BaseCommand: Starting command execution for ' . get_class($this));
             $this->debug('Starting command execution', [
                 'command' => get_class($this),
                 'arguments' => $this->arguments(),
@@ -212,12 +214,15 @@ abstract class BaseCommand extends Command
 
             // Check if MCP is enabled
             $mcpEnabled = $this->isMcpEnabled();
+            error_log('BaseCommand: MCP enabled check: ' . ($mcpEnabled ? 'YES' : 'NO'));
             if (! $mcpEnabled) {
+                error_log('BaseCommand: MCP is DISABLED - exiting');
                 $this->displayError('MCP is disabled. Enable it by setting MCP_ENABLED=true in your .env file.');
 
                 return self::EXIT_ERROR;
             }
 
+            error_log('BaseCommand: MCP is enabled, proceeding with validation');
             $this->debug('MCP is enabled, proceeding with validation');
 
             // Validate input
@@ -227,10 +232,13 @@ abstract class BaseCommand extends Command
                 return self::EXIT_INVALID_INPUT;
             }
 
+            error_log('BaseCommand: Input validation passed, about to call executeCommand()');
             $this->debug('Input validation passed, executing command');
 
             // Execute the command logic
+            error_log('BaseCommand: Calling executeCommand() on ' . get_class($this));
             $result = $this->executeCommand();
+            error_log('BaseCommand: executeCommand() returned: ' . $result);
 
             $this->debug('Command execution completed', ['result' => $result]);
 
