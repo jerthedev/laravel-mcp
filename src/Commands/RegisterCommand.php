@@ -655,14 +655,15 @@ class RegisterCommand extends BaseCommand
         $command[] = '--scope';
         $command[] = 'user';
 
-        // Note: Claude CLI doesn't support --cwd, but we'll ensure artisan is called from the right directory
-
         // Add essential Laravel environment variables for Claude Code compatibility
         $essentialEnvVars = $this->getEssentialEnvVars($options['env'] ?? []);
         foreach ($essentialEnvVars as $key => $value) {
             $command[] = '--env';
             $command[] = "$key=$value";
         }
+
+        // Add server name AFTER all flags but BEFORE the separator
+        $command[] = $serverName;
 
         if ($transport === 'stdio') {
             // For stdio transport, add command and args with absolute paths
@@ -684,20 +685,18 @@ class RegisterCommand extends BaseCommand
 
             // Note: --transport=stdio is the default, so we don't need to specify it
 
-            // Add server name, then separator, then command and args
-            $command[] = $serverName;
+            // Add separator, then command and args
             $command[] = '--';  // Separator between Claude flags and server command
             $command[] = $baseCommand;
             $command = array_merge($command, $args);
         } else {
-            // For HTTP/SSE transport, add server name then URL
+            // For HTTP/SSE transport, add URL after server name
             $host = $options['host'] ?? '127.0.0.1';
             $port = $options['port'] ?? 8000;
             $path = $transport === 'http' ? '/mcp' : '';
             $protocol = $transport === 'sse' ? 'https' : 'http';
 
             $url = "$protocol://$host:$port$path";
-            $command[] = $serverName;
             $command[] = $url;
         }
 
