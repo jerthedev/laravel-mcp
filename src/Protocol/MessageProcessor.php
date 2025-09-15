@@ -659,7 +659,11 @@ class MessageProcessor implements MessageHandlerInterface
             }
 
             if ($this->jsonRpcHandler->isRequest($message)) {
-                return $this->jsonRpcHandler->handleRequest($message);
+                error_log('MessageProcessor: About to call jsonRpcHandler->handleRequest for method: ' . ($message['method'] ?? 'NO METHOD'));
+                error_log('MessageProcessor: Message ID: ' . ($message['id'] ?? 'NO ID'));
+                $result = $this->jsonRpcHandler->handleRequest($message);
+                error_log('MessageProcessor: jsonRpcHandler->handleRequest returned: ' . json_encode(array_keys($result ?? [])));
+                return $result;
             }
 
             if ($this->jsonRpcHandler->isNotification($message)) {
