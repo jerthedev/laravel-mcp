@@ -296,13 +296,23 @@ class MessageProcessor implements MessageHandlerInterface
             'client_capabilities' => $this->clientCapabilities,
         ]);
 
+        // Check if we have tools available and indicate in capabilities
+        $toolCount = $this->container->make('mcp.registry.tool')->count();
+
         // Match Playwright's exact response format for Claude CLI compatibility
-        // Use EmptyObject to ensure tools:{} not tools:[] (Claude Code requirement)
+        $capabilities = [];
+
+        if ($toolCount > 0) {
+            // Indicate tools are available - use simple object per MCP spec
+            $capabilities['tools'] = new \stdClass();
+        } else {
+            // No tools available - use empty object
+            $capabilities['tools'] = new \JTD\LaravelMCP\Support\EmptyObject();
+        }
+
         $response = [
             'protocolVersion' => $negotiatedProtocolVersion,
-            'capabilities' => [
-                'tools' => new \JTD\LaravelMCP\Support\EmptyObject()  // Always serializes to {} not []
-            ],
+            'capabilities' => $capabilities,
             'serverInfo' => $this->serverInfo,
         ];
 
