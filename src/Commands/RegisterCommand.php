@@ -724,8 +724,29 @@ class RegisterCommand extends BaseCommand
 
         // Execute from the working directory to ensure proper context
         $cwd = $options['cwd'] ?: getcwd() ?: base_path();
-        $fullCommand = "cd " . escapeshellarg($cwd) . " && " . $commandString . ' 2>&1';
-        exec($fullCommand, $output, $returnCode);
+
+        // Use proc_open for better control over working directory
+        $descriptorspec = [
+            0 => ['pipe', 'r'],  // stdin
+            1 => ['pipe', 'w'],  // stdout
+            2 => ['pipe', 'w']   // stderr
+        ];
+
+        $process = proc_open($commandString, $descriptorspec, $pipes, $cwd);
+
+        if (is_resource($process)) {
+            fclose($pipes[0]); // Close stdin
+
+            $stdout = stream_get_contents($pipes[1]);
+            $stderr = stream_get_contents($pipes[2]);
+
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+
+            $returnCode = proc_close($process);
+
+            $output = array_filter(explode("\n", $stdout . $stderr));
+        }
 
         if ($returnCode !== 0) {
             $errorMessage = implode("\n", $output);
