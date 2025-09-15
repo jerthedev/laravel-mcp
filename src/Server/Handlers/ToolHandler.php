@@ -43,17 +43,21 @@ class ToolHandler extends BaseHandler
      */
     public function handle(string $method, array $params, array $context = []): array
     {
+        $this->logInfo("=== ToolHandler::handle STARTING for method: {$method} ===");
         $this->logDebug("Handling {$method}", [
             'params' => $this->sanitizeForLogging($params),
             'context' => $context,
         ]);
 
         try {
-            return match ($method) {
+            $this->logInfo("About to enter match statement for method: {$method}");
+            $result = match ($method) {
                 'tools/list' => $this->handleToolsList($params, $context),
                 'tools/call' => $this->handleToolsCall($params, $context),
                 default => throw new ProtocolException("Unsupported method: {$method}", -32601),
             };
+            $this->logInfo("=== Match statement completed successfully for method: {$method} ===");
+            return $result;
         } catch (ProtocolException $e) {
             // Re-throw validation and method not found errors
             if (in_array($e->getCode(), [-32600, -32601, -32602])) {
@@ -87,18 +91,24 @@ class ToolHandler extends BaseHandler
      */
     protected function handleToolsList(array $params, array $context = []): array
     {
+        $this->logInfo('=== ToolHandler::handleToolsList STARTING ===');
         $this->logDebug('Processing tools/list request');
 
         // Validate cursor parameter if provided
         if (isset($params['cursor'])) {
+            $this->logInfo('Validating cursor parameter');
             $this->validateRequest($params, [
                 'cursor' => 'string',
             ]);
         }
 
+        $this->logInfo('About to enter try block');
         try {
+            $this->logInfo('=== POTENTIAL HANG POINT 1: About to call toolRegistry->all() ===');
             // Debug: Log registry state before tool discovery
             $allTools = $this->toolRegistry->all();
+            $this->logInfo('=== toolRegistry->all() completed successfully ===');
+
             $this->logInfo('Tools registry state (before discovery check)', [
                 'tool_count' => count($allTools),
                 'tool_names' => array_keys($allTools),
