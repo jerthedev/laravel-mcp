@@ -118,9 +118,26 @@ abstract class McpTool
      */
     protected function getRequiredParameters(): array
     {
-        return array_keys(array_filter($this->parameterSchema, function ($schema) {
+        $required = array_keys(array_filter($this->parameterSchema, function ($schema) {
             return $schema['required'] ?? false;
         }));
+
+        // Remove 'required' field from individual properties since it belongs in the root required array
+        $this->cleanParameterSchema();
+
+        return $required;
+    }
+
+    /**
+     * Clean parameter schema by removing invalid 'required' fields from properties.
+     */
+    private function cleanParameterSchema(): void
+    {
+        foreach ($this->parameterSchema as $key => $schema) {
+            if (isset($schema['required'])) {
+                unset($this->parameterSchema[$key]['required']);
+            }
+        }
     }
 
     /**
