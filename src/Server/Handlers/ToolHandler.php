@@ -64,7 +64,7 @@ class ToolHandler extends BaseHandler
                     'response_structure' => array_keys($result),
                     'tools_count' => count($result['tools'] ?? []),
                     'sample_tool' => isset($result['tools'][0]) ? array_keys($result['tools'][0]) : 'no tools',
-                    'full_response_json' => json_encode($result)
+                    'full_response_json' => json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 ]);
             }
 
