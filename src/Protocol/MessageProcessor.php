@@ -319,11 +319,9 @@ class MessageProcessor implements MessageHandlerInterface
             'tool_names' => array_keys($tools)
         ]);
 
-        // Declare proper MCP capabilities according to specification
+        // Match Playwright's EXACT capability structure - Claude Code expects tools:{}
         $capabilities = [
-            'tools' => [
-                'listChanged' => true
-            ]
+            'tools' => new \JTD\LaravelMCP\Support\EmptyObject()  // Empty object like Playwright
         ];
 
         $response = [
